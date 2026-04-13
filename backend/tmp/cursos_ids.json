@@ -1,0 +1,234 @@
+[
+  {
+    "id": 5,
+    "nombre": "Test Course 1774630201794",
+    "institucionId": null,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-27T16:50:04.511Z"
+  },
+  {
+    "id": 6,
+    "nombre": "Test Course 1774630292605",
+    "institucionId": null,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-27T16:51:35.616Z"
+  },
+  {
+    "id": 7,
+    "nombre": "Test Course for update 1774630917398",
+    "institucionId": null,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-27T17:02:00.166Z"
+  },
+  {
+    "id": 8,
+    "nombre": "Trayectoria Master Latam 1774631012392",
+    "institucionId": null,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-27T17:03:34.394Z"
+  },
+  {
+    "id": 11,
+    "nombre": "Nivel 1 · Reconocimiento – 2.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:39.792Z"
+  },
+  {
+    "id": 12,
+    "nombre": "Nivel 2 · Comprensión – 3.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:40.940Z"
+  },
+  {
+    "id": 13,
+    "nombre": "Nivel 2 · Comprensión – 4.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:41.783Z"
+  },
+  {
+    "id": 14,
+    "nombre": "Nivel 3 · Aplicación – 5.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:42.629Z"
+  },
+  {
+    "id": 15,
+    "nombre": "Nivel 3 · Aplicación – 6.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:43.512Z"
+  },
+  {
+    "id": 16,
+    "nombre": "Nivel 3 · Aplicación – 7.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:44.342Z"
+  },
+  {
+    "id": 17,
+    "nombre": "Nivel 4 · Diseño – 8.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:45.175Z"
+  },
+  {
+    "id": 18,
+    "nombre": "Nivel 4 · Diseño – 9.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:46.726Z"
+  },
+  {
+    "id": 19,
+    "nombre": "Nivel 4 · Diseño – 10.º de EGB",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:48.290Z"
+  },
+  {
+    "id": 20,
+    "nombre": "Nivel 5 · Innovación – 1.º de BGU (Innovación emergente)",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:49.856Z"
+  },
+  {
+    "id": 21,
+    "nombre": "Nivel 5 · Innovación – 2.º de BGU (Innovación aplicada)",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:51.432Z"
+  },
+  {
+    "id": 22,
+    "nombre": "Nivel 5 · Innovación – 3.º de BGU (Innovación proyectiva)",
+    "institucionId": 7,
+    "profesorId": null,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T19:25:52.984Z"
+  },
+  {
+    "id": 9,
+    "nombre": "1ro de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T16:09:48.329Z"
+  },
+  {
+    "id": 23,
+    "nombre": "Nivel 1 · Reconocimiento – 2.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:54.627Z"
+  },
+  {
+    "id": 24,
+    "nombre": "Nivel 2 · Comprensión – 3.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:55.786Z"
+  },
+  {
+    "id": 25,
+    "nombre": "Nivel 2 · Comprensión – 4.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:56.622Z"
+  },
+  {
+    "id": 26,
+    "nombre": "Nivel 3 · Aplicación – 5.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:57.450Z"
+  },
+  {
+    "id": 27,
+    "nombre": "Nivel 3 · Aplicación – 6.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:58.279Z"
+  },
+  {
+    "id": 28,
+    "nombre": "Nivel 3 · Aplicación – 7.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:59.108Z"
+  },
+  {
+    "id": 29,
+    "nombre": "Nivel 4 · Diseño – 8.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:21:59.928Z"
+  },
+  {
+    "id": 30,
+    "nombre": "Nivel 4 · Diseño – 9.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:22:01.478Z"
+  },
+  {
+    "id": 31,
+    "nombre": "Nivel 4 · Diseño – 10.º de EGB",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:22:03.077Z"
+  },
+  {
+    "id": 32,
+    "nombre": "Nivel 5 · Innovación – 1.º de BGU (Innovación emergente)",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:22:04.622Z"
+  },
+  {
+    "id": 33,
+    "nombre": "Nivel 5 · Innovación – 2.º de BGU (Innovación aplicada)",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:22:06.170Z"
+  },
+  {
+    "id": 34,
+    "nombre": "Nivel 5 · Innovación – 3.º de BGU (Innovación proyectiva)",
+    "institucionId": 6,
+    "profesorId": 145,
+    "companiaId": null,
+    "fechaCreacion": "2026-03-30T20:22:07.749Z"
+  }
+]

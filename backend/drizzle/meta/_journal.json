@@ -1,0 +1,104 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1768959914421,
+      "tag": "0000_supreme_the_professor",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769012993270,
+      "tag": "0001_thankful_mephistopheles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769111728167,
+      "tag": "0002_strong_obadiah_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769188420010,
+      "tag": "0003_add_imagen_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769441371323,
+      "tag": "0004_add_plantillas_pim",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769572356328,
+      "tag": "0005_bouncy_human_fly",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770431700797,
+      "tag": "0006_add_profesor_id_to_modulos",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770848107350,
+      "tag": "0007_hard_venom",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774103247964,
+      "tag": "0008_late_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1774292168980,
+      "tag": "0009_typical_james_howlett",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1774293189890,
+      "tag": "0010_aberrant_dragon_lord",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1774407250852,
+      "tag": "0011_flashy_lilith",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1774626813119,
+      "tag": "0012_adorable_the_captain",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1774794630486,
+      "tag": "0013_early_the_hand",
+      "breakpoints": true
+    }
+  ]
+}

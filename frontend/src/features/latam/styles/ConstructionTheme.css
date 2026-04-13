@@ -1,0 +1,130 @@
+
+/* 
+ * Construction Theme v2.0 for LATAM Interactive Sessions
+ * Aesthetics: Quantum Tech, Immersive Blueprint, Neon Glass
+ */
+
+:root {
+  --latam-blue: #3b82f6;
+  --latam-indigo: #6366f1;
+  --latam-cyan: #06b6d4;
+  --latam-void: #020617;
+  --latam-glass-border: rgba(59, 130, 246, 0.3);
+  --latam-neon-glow: rgba(59, 130, 246, 0.5);
+}
+
+.construction-grid {
+  background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.header-glass {
+  background: rgba(2, 6, 23, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--latam-glass-border);
+}
+
+.quantum-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--latam-glass-border);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    inset 0 0 20px rgba(59, 130, 246, 0.05);
+  border-radius: 2.5rem;
+}
+
+.neon-border {
+  position: relative;
+}
+
+.neon-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, var(--latam-blue), transparent, var(--latam-cyan));
+  border-radius: inherit;
+  z-index: -1;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+  opacity: 0.5;
+}
+
+/* Mentor Character Aura */
+.mentor-aura {
+  filter: drop-shadow(0 0 20px var(--latam-neon-glow));
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Speech Bubble */
+.bubble-glass {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.bubble-glass::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right: 12px solid rgba(255, 255, 255, 0.95);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+}
+
+/* HUD Scanning Line */
+.hud-scanner {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--latam-cyan), transparent);
+  box-shadow: 0 0 15px var(--latam-cyan);
+  opacity: 0.3;
+  animation: scan-vertical 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scan-vertical {
+  from { top: 0%; }
+  to { top: 100%; }
+}
+
+/* HUD Rotating Elements */
+.hud-spinner {
+  animation: rotate-inf 20s linear infinite;
+}
+
+@keyframes rotate-inf {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Custom Scrollbar for Quantum Card */
+.quantum-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.quantum-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.quantum-scroll::-webkit-scrollbar-thumb {
+  background: var(--latam-blue);
+  border-radius: 10px;
+  opacity: 0.5;
+}

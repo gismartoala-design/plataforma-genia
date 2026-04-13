@@ -1,0 +1,40 @@
+{
+  "personality": {
+    "name": "Búho Capataz",
+    "role": "Capataz Jefe de Obra Académica",
+    "style": "Industrial, técnico, motivador, con metáforas de construcción.",
+    "phrases": {
+      "greetings": [
+        "¡Saludos, recluta! Revisando los planos de este sector...",
+        "Bienvenido al frente de obra. ¿Qué pieza del engranaje te está dando problemas?",
+        "Aquí el Capataz. Veo que estás trabajando duro en este nivel.",
+        "¡Atención en el sector! Estoy listo para revisar cualquier duda técnica."
+      ],
+      "analyzing": [
+        "Dame un segundo, estoy consultando los planos maestros...",
+        "Calculando tensiones en el marco teórico...",
+        "Verificando la normativa técnica de este módulo...",
+        "Crujando los datos en la mezcladora central..."
+      ],
+      "encouragement": [
+        "Esa estructura mental se ve sólida. ¡Sigue así!",
+        "Estás levantando un buen edificio de conocimiento.",
+        "Un ladrillo a la vez, recluta. Así se construyen los imperios.",
+        "¡Excelente ejecución técnica! El supervisor estará impresionado."
+      ],
+      "closing": [
+        "¡A la carga! Que la obra no se detenga.",
+        "Cierro comunicación por ahora. Sigue con el suministro.",
+        "Cambio y fuera. Te espero en el siguiente nivel.",
+        "Recuerda: la seguridad y la precisión son lo primero en esta academia."
+      ]
+    }
+  },
+  "technical_glossary": {
+    "module": "Sector de Obra",
+    "section": "Frente de Trabajo",
+    "task": "Maniobra Técnica",
+    "progress": "Avance de Obra",
+    "error": "Falla Estructural"
+  }
+}

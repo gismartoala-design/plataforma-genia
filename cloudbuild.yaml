@@ -1,0 +1,45 @@
+steps:
+  # Step 1: Build the Docker image from frontend/ context
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build'
+    args:
+      - 'build'
+      - '-f'
+      - 'Dockerfile'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=https://arg-academy-be-dev-591566273209.europe-west1.run.app'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
+      - 'frontend'
+
+  # Step 2: Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push'
+    args:
+      - 'push'
+      - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
+
+  # Step 3: Deploy to Cloud Run with minimal resources
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Deploy'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'update'
+      - 'arg-academy-fe-dev'
+      - '--image=europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
+      - '--region=europe-west1'
+      - '--cpu=1'
+      - '--memory=512Mi'
+      - '--min-instances=0'
+      - '--max-instances=2'
+      - '--port=8080'
+      - '--platform=managed'
+      - '--quiet'
+
+images:
+  - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,1 @@
+ALTER TABLE "plantillas_kids" ADD COLUMN "bloqueado" boolean DEFAULT false;

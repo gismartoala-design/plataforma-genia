@@ -1,0 +1,75 @@
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DatabaseModule } from './database/database.module';
+import { UsersModule } from './modules/users/users.module';
+import { ModulesModule } from './modules/modules.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ProfessorModule } from './modules/professor/professor.module';
+import { StudentModule } from './modules/student/student.module';
+import { PlansModule } from './modules/plans/plans.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PremiosModule } from './modules/premios/premios.module';
+import { AiModule } from './modules/ai/ai.module';
+import { KidsModule } from './modules/kids/kids.module';
+import { InstitutionModule } from './modules/institution/institution.module';
+import { InstitutionalCurriculumModule } from './modules/institution-curriculum/institution-curriculum.module';
+import { InstitutionalCloningModule } from './modules/institutional-cloning/institutional-cloning.module';
+import { TokenExpiryMiddleware } from './modules/auth/middleware/token-expiry.middleware';
+
+@Module({
+  imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.SMTP_HOST || '',
+        port: Number(process.env.SMTP_PORT) || 587,
+        auth: {
+          user: process.env.SMTP_USER || '',
+          pass: process.env.SMTP_PASS || '',
+        },
+      },
+      defaults: {
+        from: '"ARG Academy" <notifications@arg-academy.com>',
+      },
+    }),
+    DatabaseModule,
+    UsersModule,
+    ModulesModule,
+    AuthModule,
+    ProfessorModule,
+    StudentModule,
+    PlansModule,
+    AdminModule,
+    NotificationsModule,
+    PremiosModule,
+    AiModule,
+    KidsModule,
+    InstitutionModule,
+    InstitutionalCurriculumModule,
+    InstitutionalCloningModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService, TokenExpiryMiddleware],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(TokenExpiryMiddleware)
+      .forRoutes(
+        { path: 'student', method: RequestMethod.ALL },
+        { path: 'student/*path', method: RequestMethod.ALL },
+      );
+  }
+}

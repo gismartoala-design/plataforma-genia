@@ -1,0 +1,827 @@
+{
+  "instituciones": [
+    {
+      "id": 1,
+      "nombre": "Colegio Tech Demo",
+      "logoUrl": null,
+      "configuracionVisual": null,
+      "fechaCreacion": "2026-03-24T16:17:55.968Z"
+    },
+    {
+      "id": 2,
+      "nombre": "AHS HOMEASCHOOLING",
+      "logoUrl": null,
+      "configuracionVisual": null,
+      "fechaCreacion": "2026-03-25T12:18:59.872Z"
+    },
+    {
+      "id": 3,
+      "nombre": "Unidad Educativa fenix",
+      "logoUrl": null,
+      "configuracionVisual": null,
+      "fechaCreacion": "2026-03-27T15:24:41.868Z"
+    },
+    {
+      "id": 4,
+      "nombre": "Unidad Educativa Los Ateneos",
+      "logoUrl": null,
+      "configuracionVisual": null,
+      "fechaCreacion": "2026-03-28T14:15:45.982Z"
+    }
+  ],
+  "usuarios": [
+    {
+      "id": 4,
+      "nombre": "Oscar",
+      "email": "oscar@geniosbot.org",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 71,
+      "nombre": "MARTIN ZAMBRANO",
+      "email": "martin.zambrano@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 128,
+      "nombre": "JOSTIN DUARTE",
+      "email": "jostin.duarte@intuit.com",
+      "roleId": 9,
+      "institucionId": 1
+    },
+    {
+      "id": 12,
+      "nombre": "Melany Rosales",
+      "email": "m.rosales@geniosbot.org",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 15,
+      "nombre": "Luciano Vega",
+      "email": "luciano.vega@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 3,
+      "nombre": "Gismar",
+      "email": "gismartoala@argsoft.tech",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 28,
+      "nombre": "Melanie San Lucas",
+      "email": "melanie.sanlucas@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 32,
+      "nombre": "Jorge Andrés Ortega Calvas",
+      "email": "jorge.ortega@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 21,
+      "nombre": "Jeremias Gabriel ",
+      "email": "Delgado Cobos",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 19,
+      "nombre": "Yeshua Benjamín ",
+      "email": "León Alvarado ",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 18,
+      "nombre": "Juan Suarez",
+      "email": "juan.suarez",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 9,
+      "nombre": "Emerson Cajape",
+      "email": "emerson.admin@geniosbot.com",
+      "roleId": 1,
+      "institucionId": null
+    },
+    {
+      "id": 10,
+      "nombre": "",
+      "email": "emerson.profersor@geniosbot.com",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 42,
+      "nombre": "Leonardo Salazar Ibarra ",
+      "email": "leonardo.salazar@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 11,
+      "nombre": "Emerson Cajape",
+      "email": "emerson.estudiante@geniosbot.com",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 79,
+      "nombre": "Geanella Milagros Paredes Gancino ",
+      "email": "geanella.paredes@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 74,
+      "nombre": "RENATO EMILIANO MENDOZA CEME",
+      "email": "renato.mendoza@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 129,
+      "nombre": "Gismar Toala",
+      "email": "gismar.toala@intuit.com",
+      "roleId": 10,
+      "institucionId": 1
+    },
+    {
+      "id": 69,
+      "nombre": "Diego Gabriel Vera",
+      "email": "diego.vera@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 23,
+      "nombre": "Yeshua Benjamín León Alvarado ",
+      "email": "yeshua.leon@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 59,
+      "nombre": "EMILIO CHEVEZ CEDILLO",
+      "email": "emilio.chevez@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 135,
+      "nombre": "Latam Prueba",
+      "email": "latam.prueba@geniosbot.org",
+      "roleId": 12,
+      "institucionId": null
+    },
+    {
+      "id": 58,
+      "nombre": "Libana Madyson Muñoz Espin",
+      "email": "libana.muñoz@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 2,
+      "nombre": "Administrador Principal",
+      "email": "admin@edu.com",
+      "roleId": 1,
+      "institucionId": null
+    },
+    {
+      "id": 137,
+      "nombre": "GabrielaM",
+      "email": "gabriela.monteros.kids@geniosbot.org",
+      "roleId": 6,
+      "institucionId": null
+    },
+    {
+      "id": 13,
+      "nombre": "Jhon Zuñiga",
+      "email": "j.zuñiga@geniosbot.org",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 61,
+      "nombre": "Matheo Vargas",
+      "email": "matheo.vargas@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 80,
+      "nombre": "Natán Loor Correa ",
+      "email": "natan.correa@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 17,
+      "nombre": "Miguel Quezada",
+      "email": "miguel.quezada@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 56,
+      "nombre": "Gabriela Monteros Redwood",
+      "email": "gabriela.monteros@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 6,
+      "nombre": "Sebastian Muñoz",
+      "email": "s.muñoz@geniosbot.org",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 24,
+      "nombre": "Jeremias Gabriel Delgado Cobos",
+      "email": "jeremias.delgado@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 65,
+      "nombre": "NAISHA NAIR",
+      "email": "naisha.nair@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 47,
+      "nombre": "MATIAS GUAMAN",
+      "email": "matias.guaman@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 73,
+      "nombre": "Juan Javier Suarez",
+      "email": "juan.suarez@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 134,
+      "nombre": "LucianoV",
+      "email": "luciano.vega.kids@geniosbot.org",
+      "roleId": 6,
+      "institucionId": null
+    },
+    {
+      "id": 45,
+      "nombre": "MIA ALICIA GONZALEZ ARIAS",
+      "email": "mia.gonzales@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 138,
+      "nombre": "MateoS",
+      "email": "mateo.sanandres.kids@geniosbot.org",
+      "roleId": 6,
+      "institucionId": null
+    },
+    {
+      "id": 1,
+      "nombre": "Admin Genios Bot",
+      "email": "admin@geniosbot.com",
+      "roleId": 1,
+      "institucionId": 1
+    },
+    {
+      "id": 14,
+      "nombre": "Jostin Duarte",
+      "email": "jostin.duarte@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 43,
+      "nombre": "Arturo Artieda",
+      "email": "arturo.artieda@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 136,
+      "nombre": "Latam Profe",
+      "email": "latam.profe@geniosbot.org",
+      "roleId": 11,
+      "institucionId": null
+    },
+    {
+      "id": 27,
+      "nombre": "Marcos Matías Franco Vélez",
+      "email": "marcos.franco@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 25,
+      "nombre": "Benjamín Camilo Guarochico Alvarado",
+      "email": "benjamin.guarochico@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 132,
+      "nombre": "Liam",
+      "email": "liam.macio.kids@geniosbot.org",
+      "roleId": 6,
+      "institucionId": null
+    },
+    {
+      "id": 81,
+      "nombre": "Bruno Calderon",
+      "email": "bruno.calderon@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 83,
+      "nombre": "Esteban Benjamin Santos Espinoza ",
+      "email": "esteban.santos@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 86,
+      "nombre": "JOHAN PIRUCH MEJIA",
+      "email": "johan.piruch@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 84,
+      "nombre": "Elhian David Gaete Pasmai",
+      "email": "elhian.gaete@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 85,
+      "nombre": "Jeremy Javier Avilés Cumbe",
+      "email": "jeremy.aviles@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 91,
+      "nombre": "Matias Soto",
+      "email": "matias.soto@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 75,
+      "nombre": "Rafaela Armijos",
+      "email": "rafaela.armijos@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 108,
+      "nombre": "Jeremy  Rizo",
+      "email": "jeremy.rizo@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 16,
+      "nombre": "Liam Macio",
+      "email": "liam.macio@geniosbot.org",
+      "roleId": 6,
+      "institucionId": null
+    },
+    {
+      "id": 78,
+      "nombre": "Etha Jeremias Segura",
+      "email": "ethan.segura@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 103,
+      "nombre": "Diego Zambrano",
+      "email": "diego.zambrano@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 89,
+      "nombre": "Ing. Cyber Arge",
+      "email": "profe_tech@edu.com",
+      "roleId": 5,
+      "institucionId": null
+    },
+    {
+      "id": 90,
+      "nombre": "Neo Specialist",
+      "email": "specialist@edu.com",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 93,
+      "nombre": "Sebastian Muñoz",
+      "email": "sebastian.muñoz@geniosbot.org",
+      "roleId": 5,
+      "institucionId": null
+    },
+    {
+      "id": 107,
+      "nombre": "Luciana Paredes",
+      "email": "luciana.paredes@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 109,
+      "nombre": "Jeremy Ricaurte",
+      "email": "jeremy.ricaurte@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 62,
+      "nombre": "Amy Lisbeth Ceme Morales",
+      "email": "amy.ceme@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 122,
+      "nombre": "Profesor Kids",
+      "email": "profe.kids@geniosbot.org",
+      "roleId": 7,
+      "institucionId": null
+    },
+    {
+      "id": 66,
+      "nombre": "Mathías Samuel Córdova Díaz",
+      "email": "mathias.cordova@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 7,
+      "nombre": "prueba",
+      "email": "prueba@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 70,
+      "nombre": "KRISTEL TOASA",
+      "email": "kristel.toasa@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 92,
+      "nombre": "Gismar Toala",
+      "email": "gismar.toala@geniosbot.org",
+      "roleId": 5,
+      "institucionId": null
+    },
+    {
+      "id": 95,
+      "nombre": "Demo ",
+      "email": "demo@argsoft.tech",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 96,
+      "nombre": "Melany Rosales",
+      "email": "melany.rosales@geniosbot.org",
+      "roleId": 5,
+      "institucionId": null
+    },
+    {
+      "id": 113,
+      "nombre": "Karol Toasa",
+      "email": "karol.toasa@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 102,
+      "nombre": "Marina León",
+      "email": "marina.leon@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 94,
+      "nombre": "JOSTINN DUARTE",
+      "email": "raul.duarte@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 40,
+      "nombre": "Aerith Margo Verdezoto Suárez",
+      "email": "aerith.verdezoto@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 82,
+      "nombre": "Erick Kaled Gonzales Lopez",
+      "email": "erick.gonzales@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 101,
+      "nombre": "Kathrina Villón",
+      "email": "kathrina.villon@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 99,
+      "nombre": "FRANCO ESPINOZA",
+      "email": "franco.espinoza@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 48,
+      "nombre": "ELKIN BELTRAN",
+      "email": "elkin.beltran@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 72,
+      "nombre": "Samuel Javier Tasigchana Moreira ",
+      "email": "samuel.tasigchana@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 49,
+      "nombre": "Dante Vergara",
+      "email": "dante.vergara@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 26,
+      "nombre": "Ana Paula Perez Reyes",
+      "email": "ana.perez@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 112,
+      "nombre": "Daniel Kuffo",
+      "email": "daniel.kuffo@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 120,
+      "nombre": "Jordan Garcia",
+      "email": "estudiante.garcia@geniosbot.com",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 117,
+      "nombre": "emerson cajape",
+      "email": "profesor.cajape@geniosbot.com",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 30,
+      "nombre": "Julian Gallino Valdez",
+      "email": "julian.gallino@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 60,
+      "nombre": "BRUNO GAVICA MEDINA",
+      "email": "bruno.gavica@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 121,
+      "nombre": "Oscar Rivera",
+      "email": "oscar.rivera@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 124,
+      "nombre": "Admin Institucional Demo",
+      "email": "admin.inst@edu.com",
+      "roleId": 8,
+      "institucionId": 1
+    },
+    {
+      "id": 125,
+      "nombre": "Profesor Institucional Demo",
+      "email": "prof.inst@edu.com",
+      "roleId": 9,
+      "institucionId": 1
+    },
+    {
+      "id": 115,
+      "nombre": "Jose Rodriguez",
+      "email": "jose.rodriguez@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 114,
+      "nombre": "Samuel Ramirez",
+      "email": "samuel.ramirez@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 97,
+      "nombre": "Domenica Vega",
+      "email": "domenica.vega@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 123,
+      "nombre": "Admin Institucional",
+      "email": "admin.i@geniosbot.org",
+      "roleId": 8,
+      "institucionId": null
+    },
+    {
+      "id": 110,
+      "nombre": "Gabriel Monteros",
+      "email": "gabriel.monteros@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 64,
+      "nombre": "Christian Ian Ceme Morales",
+      "email": "christian.ceme@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    },
+    {
+      "id": 106,
+      "nombre": "Cesar Borja",
+      "email": "cesar.borja@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 118,
+      "nombre": "Jordan Garcia",
+      "email": "profesor.garcia@geniosbot.com",
+      "roleId": 2,
+      "institucionId": null
+    },
+    {
+      "id": 127,
+      "nombre": "Talento LATAM 001",
+      "email": "student.latam@genios.com",
+      "roleId": 12,
+      "institucionId": null
+    },
+    {
+      "id": 126,
+      "nombre": "Líder de Innovación LATAM",
+      "email": "profe.latam@genios.com",
+      "roleId": 11,
+      "institucionId": null
+    },
+    {
+      "id": 100,
+      "nombre": "Bruno Chiriboga",
+      "email": "bruno.chiriboga@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 44,
+      "nombre": "Gabriel Alois Valarezo Zúñiga",
+      "email": "gabriel.valarezo@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 104,
+      "nombre": "Natalia Poveda",
+      "email": "natalia.poveda@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 105,
+      "nombre": "Malena Chila",
+      "email": "malena.chila@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 116,
+      "nombre": "Andre Garcia",
+      "email": "andre.garcia@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 111,
+      "nombre": "Ian Piruch",
+      "email": "ian.piruch@geniosbot.org",
+      "roleId": 4,
+      "institucionId": null
+    },
+    {
+      "id": 77,
+      "nombre": "Mateo David San Andres",
+      "email": "mateo.sanandres@geniosbot.org",
+      "roleId": 3,
+      "institucionId": null
+    }
+  ],
+  "cursos": [
+    {
+      "id": 1,
+      "nombre": "10 mo",
+      "institucionId": 1,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-24T17:18:00.238Z"
+    },
+    {
+      "id": 2,
+      "nombre": "3ro EGB",
+      "institucionId": 2,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-26T02:11:40.130Z"
+    },
+    {
+      "id": 3,
+      "nombre": "1ro de Básica",
+      "institucionId": 1,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-27T15:25:22.435Z"
+    },
+    {
+      "id": 5,
+      "nombre": "Test Course 1774630201794",
+      "institucionId": null,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-27T16:50:04.511Z"
+    },
+    {
+      "id": 6,
+      "nombre": "Test Course 1774630292605",
+      "institucionId": null,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-27T16:51:35.616Z"
+    },
+    {
+      "id": 7,
+      "nombre": "Test Course for update 1774630917398",
+      "institucionId": null,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-27T17:02:00.166Z"
+    },
+    {
+      "id": 8,
+      "nombre": "Trayectoria Master Latam 1774631012392",
+      "institucionId": null,
+      "profesorId": null,
+      "companiaId": null,
+      "fechaCreacion": "2026-03-27T17:03:34.394Z"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+﻿src/features/kids/components/KidsDashboard.tsx(23,18): error TS2345: Argument of type '{ cursoNombre: string; modules: StudentModule[]; }' is not assignable to parameter of type 'SetStateAction<StudentModule[]>'.
+src/features/specialist/components/SpecialistDashboard.tsx(96,48): error TS2339: Property 'filter' does not exist on type '{ cursoNombre: string; modules: StudentModule[]; }'.
+src/features/student/components/LevelViewer.tsx(223,27): error TS2488: Type '{ cursoNombre: string; modules: StudentModule[]; }' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/features/student/components/StudentDashboard.tsx(167,9): error TS2552: Cannot find name 'setLocation'. Did you mean 'useLocation'?
+src/features/student/components/StudentDashboard.tsx(176,13): error TS2552: Cannot find name 'setLocation'. Did you mean 'useLocation'?
+src/features/student/components/StudentDashboard.tsx(210,31): error TS2339: Property 'map' does not exist on type '{ cursoNombre: string; modules: StudentModule[]; }'.
+src/features/student/components/WorldSelector.tsx(477,28): error TS2345: Argument of type '{ cursoNombre: string; modules: StudentModule[]; }' is not assignable to parameter of type 'SetStateAction<any[]>'.
+src/features/student/components/WorldSelector.tsx(481,26): error TS2339: Property 'length' does not exist on type '{ cursoNombre: string; modules: StudentModule[]; }'.

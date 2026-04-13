@@ -1,0 +1,4 @@
+c:\Users\gtoal\OneDrive\Escritorio\arg-academy-fe\frontend\src\features\institutional\styles\ConstructionTheme.css
+c:\Users\gtoal\OneDrive\Escritorio\arg-academy-fe\frontend\src\features\latam\styles\ConstructionTheme.css
+c:\Users\gtoal\OneDrive\Escritorio\arg-academy-fe\frontend\src\features\latam\styles\LatamTheme.css
+c:\Users\gtoal\OneDrive\Escritorio\arg-academy-fe\frontend\src\index.css

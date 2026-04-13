@@ -1,0 +1,94 @@
+/* 
+ * Genios Latam Academy - Tech Hub Theme
+ * Aesthetics: Professional, Innovative, High-Tech
+ */
+
+:root {
+  --latam-blue: #0066FF;
+  --latam-blue-glow: rgba(0, 102, 255, 0.4);
+  --latam-orange: #FF9900;
+  --latam-orange-glow: rgba(255, 153, 0, 0.4);
+  --latam-slate: #0F172A;
+  --latam-bg: #F8FAFC;
+  --latam-glass-bg: rgba(255, 255, 255, 0.7);
+  --latam-glass-border: rgba(255, 255, 255, 0.3);
+}
+
+.latam-gradient-bg {
+  background: radial-gradient(circle at top right, #e0f2fe, #f8fafc);
+  background-attachment: fixed;
+}
+
+.latam-grid-overlay {
+  background-image: radial-gradient(rgba(0, 102, 255, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.latam-card {
+  background: var(--latam-glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--latam-glass-border);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.05);
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.latam-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(0, 102, 255, 0.1);
+  border-color: var(--latam-blue-glow);
+}
+
+.latam-btn-primary {
+  background: var(--latam-blue);
+  color: white;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 4px 14px var(--latam-blue-glow);
+  transition: all 0.2s;
+}
+
+.latam-btn-primary:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px var(--latam-blue-glow);
+}
+
+.latam-text-gradient {
+  background: linear-gradient(135deg, var(--latam-blue), #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.latam-glow-blue {
+  box-shadow: 0 0 20px var(--latam-blue-glow);
+}
+
+.latam-glow-orange {
+  box-shadow: 0 0 20px var(--latam-orange-glow);
+}
+
+/* Level Badges */
+.latam-badge-level-1 { background: #E0F2FE; color: #0369A1; }
+.latam-badge-level-2 { background: #FEF3C7; color: #B45309; }
+.latam-badge-level-3 { background: #F1F5F9; color: #475569; }
+
+/* Dashboard Specifics */
+.latam-company-node {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #E2E8F0;
+  position: relative;
+}
+
+.latam-company-node.active {
+  border-color: var(--latam-blue);
+  box-shadow: 0 0 30px var(--latam-blue-glow);
+}
