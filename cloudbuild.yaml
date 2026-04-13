@@ -7,7 +7,7 @@ steps:
       - '-f'
       - 'Dockerfile'
       - '--build-arg'
-      - 'VITE_API_BASE_URL=https://arg-academy-be-dev-591566273209.europe-west1.run.app'
+      - 'VITE_API_BASE_URL=https://plataforma-genia-git-591566273209.europe-west1.run.app'
       - '-t'
       - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
       - 'frontend'
