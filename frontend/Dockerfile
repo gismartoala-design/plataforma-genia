@@ -25,8 +25,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments for environment variables
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=https://arg-academy-be-dev-591566273209.europe-west1.run.app
+ARG VITE_API_BASE_URL=https://plataforma-genia-git-591566273209.europe-west1.run.app
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 # imprimir variable para debug
 RUN echo "VITE_API_BASE_URL is set to: $VITE_API_BASE_URL"
 
