@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Plus, ChevronDown, ChevronUp, Users, BookOpen,
-  Trash2, GraduationCap, ShieldCheck, UserPlus, X, Check, Loader2, Hash, Copy
+  Trash2, GraduationCap, ShieldCheck, UserPlus, X, Check, Loader2, Hash, Copy, AlertTriangle, Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -299,6 +299,11 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
   const [showAddUser, setShowAddUser] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showClone, setShowClone] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showRename, setShowRename] = useState(false);
+  const [newNombre, setNewNombre] = useState(institution.nombre);
+  const [renaming, setRenaming] = useState(false);
   const { toast } = useToast();
 
   const loadDetails = async () => {
@@ -329,6 +334,42 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
     } catch {
       toast({ title: 'Error', description: 'No se pudo eliminar.', variant: 'destructive' });
     }
+  };
+
+  const handleDeleteUser = async (userId: number, nombre: string) => {
+    if (!confirm(`¿Eliminar al usuario "${nombre}" y todo su progreso asociado?`)) return;
+    try {
+      await institutionApi.deleteUser(userId);
+      toast({ title: 'Usuario eliminado' });
+      loadDetails();
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo eliminar al usuario.', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteInstitucion = async () => {
+    setDeleting(true);
+    try {
+      await institutionApi.deleteInstitucion(institution.id);
+      toast({ title: '🗑️ Institución eliminada', description: `"${institution.nombre}" fue eliminada con todos sus datos.` });
+      setShowDeleteConfirm(false);
+      onRefresh();
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo eliminar la institución.', variant: 'destructive' });
+    } finally { setDeleting(false); }
+  };
+
+  const handleRenameInstitucion = async () => {
+    if (!newNombre.trim() || newNombre.trim() === institution.nombre) return;
+    setRenaming(true);
+    try {
+      await institutionApi.renameInstitucion(institution.id, newNombre.trim());
+      toast({ title: '✅ Nombre actualizado', description: `La institución fue renombrada a "${newNombre.trim()}".` });
+      setShowRename(false);
+      onRefresh();
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo renombrar la institución.', variant: 'destructive' });
+    } finally { setRenaming(false); }
   };
 
   const roleLabel = (roleId: number) => {
@@ -365,6 +406,24 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
             title="Clonar institución (Plantilla)"
           >
             <Copy className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+            onClick={(e) => { e.stopPropagation(); setNewNombre(institution.nombre); setShowRename(true); }}
+            title="Cambiar nombre"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+            onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+            title="Eliminar institución"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
           <Badge variant="secondary" className="text-xs">ID #{institution.id}</Badge>
           {expanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
@@ -438,7 +497,7 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
                         {users.map((u: any) => {
                           const r = roleLabel(u.roleId);
                           return (
-                            <div key={u.id} className="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl border border-slate-200">
+                            <div key={u.id} className="group flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl border border-slate-200">
                               <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-black text-xs">
                                 {(u.nombre || '?')[0].toUpperCase()}
                               </div>
@@ -447,6 +506,10 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
                                 <p className="text-xs text-slate-400 truncate">{u.email}</p>
                               </div>
                               <Badge className={cn('text-[10px] shrink-0', r.color)}>{r.label}</Badge>
+                              <button onClick={() => handleDeleteUser(u.id, u.nombre)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-red-400 hover:text-red-600">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           );
                         })}
@@ -472,6 +535,75 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
         <CloneInstitutionDialog open sourceInstitution={institution}
           onClose={() => setShowClone(false)} onCreated={onRefresh} />
       )}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <DialogTitle className="text-slate-800">Eliminar Institución</DialogTitle>
+            </div>
+          </DialogHeader>
+          <p className="text-sm text-slate-600">
+            ¿Estás seguro de que quieres eliminar <span className="font-bold text-slate-800">{institution.nombre}</span>?
+          </p>
+          <p className="text-xs text-red-500 font-medium bg-red-50 rounded-xl px-3 py-2 mt-1">
+            ⚠️ Esta acción es irreversible. Se eliminarán todos los cursos, módulos, usuarios y datos asociados.
+          </p>
+          <DialogFooter className="mt-4">
+            <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteInstitucion}
+              disabled={deleting}
+              className="gap-2"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              Sí, eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showRename} onOpenChange={setShowRename}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                <Pencil className="w-5 h-5 text-amber-600" />
+              </div>
+              <DialogTitle className="text-slate-800">Renombrar Institución</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-2">
+            <Label className="text-sm font-bold text-slate-600 mb-1.5 block">Nuevo nombre</Label>
+            <Input
+              value={newNombre}
+              onChange={e => setNewNombre(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleRenameInstitucion()}
+              placeholder="Nombre de la institución"
+              className="rounded-xl"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowRename(false)} disabled={renaming}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleRenameInstitucion}
+              disabled={renaming || !newNombre.trim() || newNombre.trim() === institution.nombre}
+              className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              {renaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Guardar nombre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

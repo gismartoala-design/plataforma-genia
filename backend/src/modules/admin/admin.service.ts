@@ -14,6 +14,33 @@ export class AdminService {
     ) { }
 
     /**
+     * Get all institutions in the system
+     */
+    async getAllInstituciones() {
+        return this.db
+            .select({
+                id: schema.instituciones.id,
+                nombre: schema.instituciones.nombre,
+                logoUrl: schema.instituciones.logoUrl,
+                fechaCreacion: schema.instituciones.fechaCreacion,
+            })
+            .from(schema.instituciones)
+            .orderBy(schema.instituciones.id);
+    }
+
+    /**
+     * Update institution name (and optionally logoUrl)
+     */
+    async updateInstitucion(instId: number, data: { nombre?: string; logoUrl?: string }) {
+        const updated = await this.db
+            .update(schema.instituciones)
+            .set(data)
+            .where(eq(schema.instituciones.id, instId))
+            .returning();
+        return updated[0];
+    }
+
+    /**
      * Get all students in the system
      */
     async getSystemStudents() {
@@ -671,5 +698,132 @@ export class AdminService {
         await this.db.delete(schema.modulos).where(eq(schema.modulos.id, moduleId));
 
         return { success: true, message: 'Módulo eliminado satisfactoriamente' };
+    }
+
+    /**
+     * Delete a user and all their associated data (progress, missions, gamification, etc.)
+     */
+    async deleteUser(userId: number) {
+        // 1. Delete gamification and missions
+        await this.db.delete(schema.gamificacionEstudiante).where(eq(schema.gamificacionEstudiante.estudianteId, userId));
+        await this.db.delete(schema.progresoMisiones).where(eq(schema.progresoMisiones.estudianteId, userId));
+        await this.db.delete(schema.logrosDesbloqueados).where(eq(schema.logrosDesbloqueados.estudianteId, userId));
+        await this.db.delete(schema.progresoCity).where(eq(schema.progresoCity.estudianteId, userId));
+
+        // 2. Delete level progress and attendance
+        await this.db.delete(schema.progresoNiveles).where(eq(schema.progresoNiveles.estudianteId, userId));
+        await this.db.delete(schema.asistencia).where(eq(schema.asistencia.estudianteId, userId));
+
+        // 3. Delete deliveries
+        await this.db.delete(schema.entregasRag).where(eq(schema.entregasRag.estudianteId, userId));
+        await this.db.delete(schema.entregasHa).where(eq(schema.entregasHa.estudianteId, userId));
+        await this.db.delete(schema.entregasKids).where(eq(schema.entregasKids.estudianteId, userId));
+        await this.db.delete(schema.entregas).where(eq(schema.entregas.estudianteId, userId));
+
+        // 4. Delete assignments, course enrollments, rankings, certificates
+        await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.estudianteId, userId));
+        await this.db.delete(schema.usuariosCursos).where(eq(schema.usuariosCursos.usuarioId, userId));
+        await this.db.delete(schema.rankingAwards).where(eq(schema.rankingAwards.estudianteId, userId));
+        await this.db.delete(schema.certificados).where(eq(schema.certificados.estudianteId, userId));
+        await this.db.delete(schema.puntosLog).where(eq(schema.puntosLog.estudianteId, userId));
+        await this.db.delete(schema.usuariosSkins).where(eq(schema.usuariosSkins.usuarioId, userId));
+
+        // 5. Delete the user itself
+        await this.db.delete(schema.usuarios).where(eq(schema.usuarios.id, userId));
+
+        return { success: true, message: `Usuario ${userId} eliminado correctamente` };
+    }
+
+    /**
+     * Delete an institution and cascade: courses, modules, levels, users of that institution.
+     * Handles circular FK references between cursos.profesor_id and usuarios.curso_id.
+     */
+    async deleteInstitucion(instId: number) {
+        // 1. Get all course IDs for this institution
+        const cursos = await this.db
+            .select({ id: schema.cursos.id })
+            .from(schema.cursos)
+            .where(eq(schema.cursos.institucionId, instId));
+
+        const cursoIds = cursos.map(c => c.id);
+
+        // 2. Get all user IDs from this institution
+        const instUsers = await this.db
+            .select({ id: schema.usuarios.id })
+            .from(schema.usuarios)
+            .where(eq(schema.usuarios.institucionId, instId));
+
+        const userIds = instUsers.map(u => u.id);
+
+        // ── STEP A: Break circular FK chains ──────────────────────────────────
+        // cursos.profesor_id → usuarios  (must null before deleting users)
+        if (cursoIds.length > 0) {
+            await this.db.update(schema.cursos)
+                .set({ profesorId: null })
+                .where(inArray(schema.cursos.id, cursoIds));
+        }
+        // usuarios.curso_id → cursos  (must null before deleting cursos)
+        if (userIds.length > 0) {
+            await this.db.update(schema.usuarios)
+                .set({ cursoId: null })
+                .where(inArray(schema.usuarios.id, userIds));
+        }
+
+        // ── STEP B: Delete modules & their contents ───────────────────────────
+        if (cursoIds.length > 0) {
+            const modulos = await this.db
+                .select({ id: schema.modulos.id })
+                .from(schema.modulos)
+                .where(inArray(schema.modulos.cursoId, cursoIds));
+
+            for (const mod of modulos) {
+                await this.deleteModule(mod.id);
+            }
+
+            // ── STEP C: Delete institutional curriculum ───────────────────────
+            const secciones = await this.db
+                .select({ id: schema.seccionesInst.id })
+                .from(schema.seccionesInst)
+                .where(inArray(schema.seccionesInst.cursoId, cursoIds));
+
+            const seccionIds = secciones.map(s => s.id);
+
+            if (seccionIds.length > 0) {
+                const modulosInst = await this.db
+                    .select({ id: schema.modulosInst.id })
+                    .from(schema.modulosInst)
+                    .where(inArray(schema.modulosInst.seccionId, seccionIds));
+
+                const modInstIds = modulosInst.map(m => m.id);
+
+                if (modInstIds.length > 0) {
+                    await this.db.delete(schema.progresoModuloInst)
+                        .where(inArray(schema.progresoModuloInst.moduloInstId, modInstIds));
+                    await this.db.delete(schema.modulosInst)
+                        .where(inArray(schema.modulosInst.id, modInstIds));
+                }
+
+                await this.db.delete(schema.seccionesInst)
+                    .where(inArray(schema.seccionesInst.id, seccionIds));
+            }
+
+            // ── STEP D: Delete course enrollments and courses ─────────────────
+            await this.db.delete(schema.usuariosCursos)
+                .where(inArray(schema.usuariosCursos.cursoId, cursoIds));
+
+            await this.db.delete(schema.cursos)
+                .where(inArray(schema.cursos.id, cursoIds));
+        }
+
+        // ── STEP E: Delete each user and their personal data ─────────────────
+        for (const user of instUsers) {
+            await this.deleteUser(user.id);
+        }
+
+        // ── STEP F: Delete institution itself ─────────────────────────────────
+        await this.db.delete(schema.instituciones)
+            .where(eq(schema.instituciones.id, instId));
+
+        return { success: true, message: `Institución ${instId} y todos sus datos eliminados correctamente` };
     }
 }

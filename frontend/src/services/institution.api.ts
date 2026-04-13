@@ -89,4 +89,16 @@ export const institutionApi = {
     getGradeReport: async (courseId: number) => {
         return apiClient.get(`/api/instituciones/cursos/${courseId}/reporte-notas`);
     },
+
+    deleteInstitucion: async (instId: number) => {
+        return apiClient.delete(`/api/admin/instituciones/${instId}`);
+    },
+
+    renameInstitucion: async (instId: number, nombre: string) => {
+        return apiClient.patch(`/api/admin/instituciones/${instId}`, { nombre });
+    },
+
+    deleteUser: async (userId: number) => {
+        return apiClient.delete(`/api/admin/users/${userId}`);
+    },
 };

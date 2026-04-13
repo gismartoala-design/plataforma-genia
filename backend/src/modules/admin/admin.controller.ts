@@ -1,5 +1,6 @@
 import {
     Controller,
+    Delete,
     Get,
     Post,
     Patch,
@@ -162,5 +163,28 @@ export class AdminController {
         }
         const ids = body.userIds.map(id => Number(id)).filter(id => !isNaN(id));
         return this.adminService.bulkResetUsers(ids);
+    }
+
+    @Delete('users/:id')
+    async deleteUser(@Param('id', ParseIntPipe) userId: number) {
+        return this.adminService.deleteUser(userId);
+    }
+
+    @Delete('instituciones/:id')
+    async deleteInstitucion(@Param('id', ParseIntPipe) instId: number) {
+        return this.adminService.deleteInstitucion(instId);
+    }
+
+    @Patch('instituciones/:id')
+    async updateInstitucion(
+        @Param('id', ParseIntPipe) instId: number,
+        @Body() body: { nombre?: string; logoUrl?: string },
+    ) {
+        return this.adminService.updateInstitucion(instId, body);
+    }
+
+    @Get('instituciones')
+    async getAllInstituciones() {
+        return this.adminService.getAllInstituciones();
     }
 }
