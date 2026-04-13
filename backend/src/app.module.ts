@@ -25,16 +25,10 @@ import { TokenExpiryMiddleware } from './modules/auth/middleware/token-expiry.mi
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot(
-      {
-        rootPath: join(process.cwd(), 'uploads'),
-        serveRoot: '/uploads',
-      },
-      {
-        rootPath: join(process.cwd(), 'public'),
-        exclude: ['/api/(.*)'],
-      }
-    ),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     MailerModule.forRoot({

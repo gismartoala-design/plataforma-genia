@@ -1,27 +1,71 @@
 steps:
-  # Step 1: Build the Docker image from frontend/ context
+  # ====================================
+  # BACKEND SERVICE
+  # ====================================
+  
+  # Step 1: Build the Backend Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'Build'
+    id: 'Build-Backend'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-be/arg-academy-be-dev:$COMMIT_SHA'
+      - 'backend'
+
+  # Step 2: Push the Backend image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push-Backend'
+    args:
+      - 'push'
+      - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-be/arg-academy-be-dev:$COMMIT_SHA'
+
+  # Step 3: Deploy Backend to Cloud Run (Service: plataforma-genia-git)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Deploy-Backend'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'update'
+      - 'plataforma-genia-git'
+      - '--image=europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-be/arg-academy-be-dev:$COMMIT_SHA'
+      - '--region=europe-west1'
+      - '--cpu=1'
+      - '--memory=1Gi'
+      - '--min-instances=0'
+      - '--max-instances=2'
+      - '--port=8080'
+      - '--platform=managed'
+      - '--set-env-vars=NODE_ENV=production'
+      - '--quiet'
+
+  # ====================================
+  # FRONTEND SERVICE
+  # ====================================
+
+  # Step 4: Build the Frontend Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build-Frontend'
     args:
       - 'build'
       - '-f'
-      - 'Dockerfile'
+      - 'frontend/Dockerfile'
       - '--build-arg'
       - 'VITE_API_BASE_URL=https://plataforma-genia-git-591566273209.europe-west1.run.app'
       - '-t'
       - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
       - 'frontend'
 
-  # Step 2: Push the image to Artifact Registry
+  # Step 5: Push the Frontend image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'Push'
+    id: 'Push-Frontend'
     args:
       - 'push'
       - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
 
-  # Step 3: Deploy to Cloud Run with minimal resources
+  # Step 6: Deploy Frontend to Cloud Run (Service: arg-academy-fe-dev)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
-    id: 'Deploy'
+    id: 'Deploy-Frontend'
     entrypoint: 'gcloud'
     args:
       - 'run'
@@ -39,6 +83,7 @@ steps:
       - '--quiet'
 
 images:
+  - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-be/arg-academy-be-dev:$COMMIT_SHA'
   - 'europe-west1-docker.pkg.dev/useful-aquifer-476119-t1/cloud-run-source-deploy/arg-academy-fe/arg-academy-fe-dev:$COMMIT_SHA'
 
 options:
