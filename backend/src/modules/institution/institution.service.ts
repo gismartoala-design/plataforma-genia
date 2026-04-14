@@ -155,4 +155,12 @@ export class InstitutionService {
 
         return reports;
     }
+
+    async updateInstitutionLogo(id: number, logoUrl: string) {
+        const [inst] = await this.db.update(schema.instituciones)
+            .set({ logoUrl })
+            .where(eq(schema.instituciones.id, id))
+            .returning();
+        return inst;
+    }
 }

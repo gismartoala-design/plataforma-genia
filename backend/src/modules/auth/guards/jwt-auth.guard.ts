@@ -8,15 +8,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         const request = context.switchToHttp().getRequest();
         const authHeader = request.headers['authorization'];
         
-        console.log(`[JwtAuthGuard] Request to ${request.method} ${request.url}`);
-        console.log(`[JwtAuthGuard] Authorization Header: ${authHeader ? 'Present' : 'MISSING'}`);
-        if (authHeader) console.log(`[JwtAuthGuard] Header Value prefix: ${authHeader.substring(0, 15)}...`);
-
         if (err || !user) {
-            console.log('[JwtAuthGuard] Auth Failed for:', request.method, request.url);
-            console.log('[JwtAuthGuard] Error:', err);
-            console.log('[JwtAuthGuard] Info:', info);
-            
             let code = 'INVALID_TOKEN';
             if (info?.name === 'TokenExpiredError') {
                 code = 'TOKEN_EXPIRED';
@@ -31,7 +23,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             });
         }
         
-        console.log('[JwtAuthGuard] Auth Success. User:', user.email);
         return user;
     }
 }

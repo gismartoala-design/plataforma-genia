@@ -37,8 +37,13 @@ import {
     MessageSquare,
     Trophy,
     Gamepad2,
-    Lightbulb
+    Lightbulb,
+    Target,
+    Wand2,
+    Download,
+    Eye
 } from 'lucide-react';
+import { MissionCinematicViewer } from '../../roles/student/MissionCinematicViewer';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -68,6 +73,7 @@ import { LinkEditor } from '@/features/institutional/components/editors/LinkEdit
 import { PythonLabEditor } from '@/features/institutional/components/editors/PythonLabEditor';
 import { ActivityToolbox } from '@/features/institutional/components/editors/ActivityToolbox';
 import { InstitutionalClassBuilder } from '@/features/institutional/components/editors/InstitutionalClassBuilder';
+import { MissionEditor } from '@/features/institutional/components/editors/MissionEditor';
 import { toast } from 'sonner';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import '../../styles/ConstructionTheme.css';
@@ -94,7 +100,35 @@ const INITIAL_ACTIVITY_DATA: Record<string, any> = {
     },
     video: { titulo: '', url: '', descripcion: '' },
     pdf: { titulo: '', url: '', descripcion: '' },
-    link: { titulo: '', url: '', descripcion: '' }
+    link: { titulo: '', url: '', descripcion: '' },
+    mission: {
+        platform: { name: "Misiones Avanzadas", levels: [] },
+        mission: { 
+            id: `mision_${Math.random().toString(36).substr(2, 5)}`,
+            title: "Nueva Misión",
+            level: "6to EGB",
+            duration_minutes: 45,
+            module: "Módulo Base",
+            domain: "Pensamiento Computacional",
+            type: ["activacion"],
+            system_context: { name: "Entorno Base", initial_kpi: 0, status: "normal" }
+        },
+        visibility: {
+            teacher: { show_intention: true, show_pedagogy: true, show_script: true, show_observation: true, show_common_errors: true, show_intervention: true, show_evaluation: true },
+            student: { show_context: true, show_questions: true, show_interaction: true, show_feedback: true, show_kpi: true, show_achievements: true, show_evidence_upload: true }
+        },
+        moments: [
+            { id: "momento_1", title: "1. Activación", time_minutes: 5, config: { interaction_type: "open_response" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_2", title: "2. Conflicto Cognitivo", time_minutes: 5, config: { interaction_type: "multiple_choice" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_3", title: "3. Construcción", time_minutes: 10, config: { interaction_type: "interactive_lab" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_4", title: "4. Conceptualización", time_minutes: 5, config: { interaction_type: "content_plus_question" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_5", title: "5. Aplicación Tecnológica", time_minutes: 10, config: { interaction_type: "sequence_order" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_6", title: "6. Reflexión", time_minutes: 5, config: { interaction_type: "open_response" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_7", title: "7. Cierre e Impacto", time_minutes: 3, config: { interaction_type: "auto_display" }, teacher: { intention: "", script: "" }, student: { content: "" } },
+            { id: "momento_8", title: "8. Evidencia", time_minutes: 2, config: { interaction_type: "file_upload" }, teacher: { intention: "", script: "" }, student: { content: "" } }
+        ],
+        engine: { kpi_dynamic: true, track_attempts: true, auto_hint_system: true, progression_system: true, role_based_views: true }
+    }
 };
 
 const TYPE_CONFIG = {
@@ -110,6 +144,7 @@ const TYPE_CONFIG = {
     nota: { label: 'Nota', icon: PenTool, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
     python_lab: { label: 'Python Lab', icon: Terminal, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
     modular_class: { label: 'Sesión Modular', icon: Workflow, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+    mission: { label: 'Misión', icon: Target, color: 'text-rose-500', bg: 'bg-rose-500/10' },
 };
 
 export const InstitutionalModuleEditor = () => {
@@ -120,6 +155,45 @@ export const InstitutionalModuleEditor = () => {
         const saved = localStorage.getItem("edu_user");
         return saved ? JSON.parse(saved) : null;
     });
+
+    const handleDownloadAIPrompt = () => {
+        const prompt = `Actúa como un Diseñador Instruccional Senior y Desarrollador de Contenido Curricular GenIA. 
+Tu tarea es generar el JSON para una MISIÓN AVANZADA (Nivel: 4to EGB - 3ro Bachillerato).
+1. ENTORNO: ${selectedSection?.nombre || "Unidad de Aprendizaje"}
+2. TEMA: ${selectedSection?.nombre || "Tema General"}
+3. AUDIENCIA: Estudiantes de 4to de básica hasta 3ro de bachillerato.
+4. ESTRUCTURA: 8 Momentos (Netflix-Style):
+   - M1: Lanzamiento/Hook cinemático.
+   - M2: Diagnóstico/HUD.
+   - M3: Teoría en Acción.
+   - M4: Laboratorio/Clasificación.
+   - M5: Desafío de Ingeniería.
+   - M6: Reflexión con IA.
+   - M7: Cierre/Recompensa.
+   - M8: Evidencia/Producto.
+5. FORMATO TÉCNICO: JSON puro con este esquema:
+{
+  "mission": { "title": "...", "duration_minutes": 60, "level": "4to EGB - 3ro BGU" },
+  "moments": [
+    {
+      "id": "m1", "title": "...", "time_minutes": 5, "isVisible": true,
+      "config": { "interaction_type": "content_only" },
+      "teacher": { "intention": "...", "script": "..." },
+      "student": { "concept": "...", "content": "..." }
+    },
+    ... (hasta momento 8)
+  ]
+}
+
+Genera un guión narrativo emocionante.`;
+        
+        const blob = new Blob([prompt], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `PROMPT_IA_MISION_AVANZADA_GENIA.txt`;
+        a.click();
+    };
 
     const isReadOnly = user?.role === "profesor_vista" || user?.roleId === 13;
 
@@ -135,9 +209,20 @@ export const InstitutionalModuleEditor = () => {
     const [selectedLevel, setSelectedLevel] = useState<ModuloInst | null>(null);
     const [isEditingSectionName, setIsEditingSectionName] = useState<number | null>(null);
 
+    // Preview states
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewModule, setPreviewModule] = useState<ModuloInst | null>(null);
+
     // Inline Creation State
     const [isInlineCreating, setIsInlineCreating] = useState(false);
     const [inlineLevelName, setInlineLevelName] = useState('');
+    const [creationType, setCreationType] = useState<'modular' | 'mission' | null>(null);
+    const [selectedGrade, setSelectedGrade] = useState<string>("6to EGB");
+
+    const MISSION_GRADES = [
+        "4to EGB", "5to EGB", "6to EGB", "7mo EGB", "8vo EGB", "9no EGB", "10mo EGB",
+        "1ro Bachillerato", "2do Bachillerato", "3ro Bachillerato"
+    ];
 
     useEffect(() => {
         if (courseId) {
@@ -226,33 +311,60 @@ export const InstitutionalModuleEditor = () => {
     const handleInlineCreateConfirm = async () => {
         if (!inlineLevelName.trim() || isReadOnly) {
             setIsInlineCreating(false);
+            setCreationType(null);
             return;
         }
 
         setSaving(true);
         try {
-            const newMod = await handleAddModule('modular_class', inlineLevelName.trim());
+            const finalType = creationType === 'mission' ? 'mission' : 'modular_class';
+            const initialContent = finalType === 'mission' ? {
+                ...INITIAL_ACTIVITY_DATA.mission,
+                mission: { ...INITIAL_ACTIVITY_DATA.mission.mission, title: inlineLevelName.trim(), level: selectedGrade }
+            } : undefined;
+
+            const newMod = await handleAddModule(finalType, inlineLevelName.trim(), initialContent);
             if (newMod) {
                 setSelectedLevel(newMod);
-                toast.success(`Nivel "${inlineLevelName}" creado`);
+                toast.success(`${finalType === 'mission' ? 'Misión' : 'Nivel'} "${inlineLevelName}" creado`);
             }
             setInlineLevelName('');
             setIsInlineCreating(false);
+            setCreationType(null);
         } catch (error) {
-            toast.error("Error al crear nivel");
+            toast.error("Error al crear");
         } finally {
             setSaving(false);
         }
     };
 
-    const handleImportCurriculum = async () => {
+    const handleAIImport = async () => {
         if (!importText.trim() || !selectedSection || isReadOnly) return;
 
         setSaving(true);
-        const chunks = importText.split(/(?=CLASE\s+\d+:)/i);
-        let createdCount = 0;
-
         try {
+            // 1. Intentar detectar si es un JSON de Misión (8 momentos)
+            try {
+                const parsed = JSON.parse(importText);
+                if (parsed.mission || parsed.moments) {
+                    const title = parsed.mission?.title || "Misión GenIA";
+                    const newMod = await handleAddModule('mission', title, parsed);
+                    if (newMod) {
+                        toast.success("Misión IA instalada exitosamente");
+                        fetchModules(selectedSection.id);
+                        setIsImportOpen(false);
+                        setImportText('');
+                        return;
+                    }
+                }
+            } catch (jsonErr) {
+                // No es JSON, intentar parseo de texto Legacy "CLASE 1:"
+            }
+
+            // 2. Lógica Legacy de Texto (CLASE 1: ...)
+            const chunks = importText.split(/(?=CLASE\s+\d+:)/i);
+            let createdCount = 0;
+
             for (const chunk of chunks) {
                 if (!chunk.toUpperCase().includes('CLASE')) continue;
 
@@ -306,6 +418,8 @@ export const InstitutionalModuleEditor = () => {
                 fetchModules(selectedSection.id);
                 setIsImportOpen(false);
                 setImportText('');
+            } else {
+                toast.error("No se reconoció el formato. Usa el Prompt Maestro.");
             }
         } catch (error) {
             toast.error("Error durante la generación.");
@@ -318,42 +432,57 @@ export const InstitutionalModuleEditor = () => {
         if (!selectedSection || isReadOnly) return;
         setSaving(true);
         try {
-            const title = "CLASE 1: ¿QUÉ ES UN OBJETO TECNOLÓGICO?";
+            const title = "SESIÓN 1: Secuencias y Orden";
             const blocks = [
                 {
-                    id: 'b1',
-                    type: 'NARRATIVE',
-                    data: { titulo: '¡Bienvenidos, Mini-Científicos!', texto: 'Hoy vamos a descubrir qué cosas fueron creadas por nosotros y cuáles nos regaló la naturaleza.' }
-                },
-                {
-                    id: 'b2',
-                    type: 'EVALUATION',
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+                    type: 'KIDS_WELCOME',
                     data: {
-                        pregunta: 'Observa estos objetos: [Lápiz, Celular, Computadora]. ¿Quién los creó?',
-                        opciones: ['Persona 👤', 'Árbol 🌿'],
-                        respuestaIndex: 0
+                        titulo: "FASE 1: Bienvenida",
+                        texto: "¡Hola amigos! ¿Cómo están hoy? Me da mucho gusto verlos. Hoy vamos a aprender algo muy especial: las secuencias.",
+                        globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true },
+                        blockPerms: { allowSkip: false, bgMusic: true }
                     }
                 },
                 {
-                    id: 'b3',
-                    type: 'REWARD',
-                    data: { insignia: 'Detective de Objetos', xp: 100 }
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+                    type: 'KIDS_WARMUP',
+                    data: {
+                        titulo: "FASE 2: Calentamiento 'Simón Dice'",
+                        texto: "Juego: Simón Dice. Lógico va a mostrar movimientos. ¡Síguelos en el MISMO ORDEN!",
+                        globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true },
+                        blockPerms: { enableCamera: false, manualTime: true }
+                    }
+                },
+                {
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+                    type: 'KIDS_THEORY',
+                    data: {
+                        titulo: "FASE 3: Enseñanza - ¿Qué es una Secuencia?",
+                        texto: "Una secuencia es cuando hacemos cosas en un orden especial. Primero → Después → Luego.",
+                        globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true },
+                        blockPerms: { forceAudio: true }
+                    }
+                },
+                {
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+                    type: 'KIDS_ERROR_LAB',
+                    data: {
+                        titulo: "FASE 4: Laboratorio de Error",
+                        texto: "Orden Incorrecto: Comer con cuchara -> Echar leche -> Poner cereal -> Traer plato. ¡Eso está MAL!",
+                        globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true },
+                        blockPerms: { soundFeedback: true, showRetry: true }
+                    }
                 }
             ];
 
-            await handleAddModule('modular_class', title, {
-                metadata: { title, description: 'Misión interactiva para 1ro EGB' },
+            const newMod = await handleAddModule('modular_class', title, {
+                metadata: { title, description: 'Plan de Clases Digital - Segundo de Básica (5-6 años)' },
                 blocks
             });
 
-            await handleAddModule('desafio_algoritmo', "🎮 RETO LOGIC: Alcanza el Celular", {
-                grid: Array(25).fill(0),
-                startIdx: 0,
-                targetIdx: 24,
-                obstacles: [6, 7, 8, 11, 13, 16, 17, 18]
-            });
-
-            toast.success("Misión Interactiva instalada en Introducción");
+            if (newMod) setSelectedLevel(newMod);
+            toast.success("Secuencia Didáctica: 'Secuencias y Orden' Instalada correctamente");
             fetchModules(selectedSection.id);
         } catch (error) {
             toast.error("Error al instalar demo");
@@ -362,8 +491,123 @@ export const InstitutionalModuleEditor = () => {
         }
     };
 
+    const handleCreateDemoMission6EGB = async () => {
+        if (!selectedSection || isReadOnly) return;
+        setSaving(true);
+        try {
+            const title = "MISIÓN: Falla en la secuencia de semáforos";
+            const content = {
+                platform: {
+                    name: "Misiones Avanzadas",
+                    levels: ["4to EGB", "5to EGB", "6to EGB", "7mo EGB", "8vo EGB", "9no EGB", "10mo EGB", "1ro Bachillerato", "2do Bachillerato", "3ro Bachillerato"]
+                },
+                mission: {
+                    id: "mision_001",
+                    title: "Falla en la secuencia de semáforos",
+                    level: "6to EGB",
+                    duration_minutes: 55,
+                    module: "Programación básica",
+                    domain: "Secuencias y algoritmos",
+                    type: ["activacion", "diagnostico"],
+                    system_context: {
+                        name: "Red de semáforos inteligentes",
+                        initial_kpi: 30,
+                        status: "riesgo_alto"
+                    }
+                },
+                visibility: {
+                    teacher: { show_intention: true, show_pedagogy: true, show_script: true, show_observation: true, show_common_errors: true, show_intervention: true, show_evaluation: true },
+                    student: { show_context: true, show_questions: true, show_interaction: true, show_feedback: true, show_kpi: true, show_achievements: true, show_evidence_upload: true }
+                },
+                moments: [
+                    {
+                        id: "momento_1",
+                        title: "Activación del conocimiento previo",
+                        time_minutes: 8,
+                        config: { interaction_type: "open_response", input_mode: ["text", "oral"], affects_kpi: false, max_attempts: null, auto_feedback: false },
+                        teacher: {
+                            intention: "Activar noción de secuencia en acciones cotidianas",
+                            pedagogy: ["constructivismo", "aprendizaje_significativo"],
+                            script: "¿Qué haces primero al salir de casa? ¿Y después?",
+                            observation: "Identifica si el estudiante reconoce orden lógico",
+                            common_errors: ["No importa el orden"],
+                            intervention: "¿Puedes vestirte antes de levantarte?"
+                        },
+                        student: { content: "¿Qué haces primero al salir de casa? ¿Qué haces después?", activity: "Responder en orden lógico" },
+                        logic: { validation: "manual", store_response: true }
+                    },
+                    {
+                        id: "momento_2",
+                        title: "Conflicto cognitivo",
+                        time_minutes: 7,
+                        config: { interaction_type: "multiple_choice", affects_kpi: true, max_attempts: 2, auto_feedback: true },
+                        student: { context: "Secuencia actual: Verde → Rojo → Amarillo", question: "¿Este sistema es seguro?", options: [{ id: "A", text: "Sí" }, { id: "B", text: "No" }] },
+                        logic: { correct_answer: "B", feedback: { correct: "Correcto. El sistema es peligroso.", incorrect: "Observa el orden nuevamente." }, kpi: { correct: 0, incorrect: -5, min_value: 25 }, hint: { enabled: true, after_attempts: 2, text: "Observa el orden de los colores" } }
+                    },
+                    {
+                        id: "momento_3",
+                        title: "Construcción de la solución",
+                        time_minutes: 10,
+                        config: { interaction_type: "sequence_order", affects_kpi: true, max_attempts: null },
+                        student: { instruction: "Organiza correctamente el sistema de semáforos", items: ["Verde", "Amarillo", "Rojo"] },
+                        logic: { correct_sequence: ["Verde", "Amarillo", "Rojo"], feedback: { correct: "El sistema comienza a estabilizarse", incorrect: "El sistema sigue fallando" }, kpi: { correct: 25, total_expected: 50 } }
+                    },
+                    {
+                        id: "momento_4",
+                        title: "Conceptualización",
+                        time_minutes: 8,
+                        config: { interaction_type: "content_plus_question", affects_kpi: false },
+                        student: { concept: "Un algoritmo es una secuencia de pasos ordenados", question: "¿Qué es un algoritmo?", options: [{ id: "A", text: "Acciones desordenadas" }, { id: "B", text: "Acciones en orden" }] },
+                        logic: { correct_answer: "B", auto_feedback: true }
+                    },
+                    {
+                        id: "momento_5",
+                        title: "Aplicación tecnológica",
+                        time_minutes: 12,
+                        config: { interaction_type: "sequence_order", affects_kpi: true, max_attempts: 3 },
+                        student: { context: "Robot debe completar una tarea", items: ["Encender", "Caminar", "Girar", "Llegar"] },
+                        logic: { correct_sequence: ["Encender", "Caminar", "Girar", "Llegar"], feedback: { correct: "Robot operativo", incorrect: "Error en ejecución" }, hint: { enabled: true, after_attempts: 1, text: "¿Qué ocurre primero en la vida real?" }, kpi: { correct: 30, total_expected: 80 } }
+                    },
+                    {
+                        id: "momento_6",
+                        title: "Reflexión",
+                        time_minutes: 5,
+                        config: { interaction_type: "open_response", affects_kpi: false, teacher_review: true },
+                        student: { questions: ["¿Por qué fallaba el sistema?", "¿Qué aprendiste hoy?"] },
+                        logic: { store_response: true, evaluation_mode: "teacher" }
+                    },
+                    {
+                        id: "momento_7",
+                        title: "Cierre e impacto",
+                        time_minutes: 3,
+                        config: { interaction_type: "auto_display" },
+                        student: { final_kpi: 90, achievements: ["Restaurador del sistema de movilidad", "Pensamiento computacional activado"] }
+                    },
+                    {
+                        id: "momento_8",
+                        title: "Evidencia",
+                        time_minutes: 2,
+                        config: { interaction_type: "file_upload", allowed_formats: ["jpg", "png", "pdf"], required: false },
+                        logic: { store_file: true, visible_to_teacher: true }
+                    }
+                ],
+                engine: { kpi_dynamic: true, track_attempts: true, auto_hint_system: true, progression_system: true, role_based_views: true }
+            };
+
+            const newMod = await handleAddModule('mission', title, content);
+
+            if (newMod) setSelectedLevel(newMod);
+            toast.success("Misión 'Falla en la secuencia de semáforos' (6to EGB) Instalada correctamente");
+            fetchModules(selectedSection.id);
+        } catch (error) {
+            toast.error("Error al instalar misión avanzada");
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleEditActivity = (mod: ModuloInst) => {
-        if (mod.tipo === 'modular_class' || (mod.contenido && Array.isArray(mod.contenido?.blocks))) {
+        if (mod.tipo === 'modular_class' || mod.tipo === 'mission' || (mod.contenido && Array.isArray(mod.contenido?.blocks))) {
             setSelectedLevel(mod);
         } else {
             setEditingActivity({ id: mod.id, tipo: mod.tipo, data: mod.contenido || {} });
@@ -475,46 +719,125 @@ export const InstitutionalModuleEditor = () => {
                                                 <Badge variant="outline" className="text-[8px] font-black px-1.5 h-4 mb-1 border-slate-200 text-slate-400">POS. {i + 1}</Badge>
                                                 <h4 className="font-black text-xs truncate text-slate-800 uppercase tracking-tight">{mod.titulo}</h4>
                                             </div>
-                                            {!isReadOnly && (
-                                                <Button
-                                                    variant="ghost" size="icon"
-                                                    className="w-8 h-8 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            )}
+                                            <div className="flex items-center gap-1">
+                                                {mod.tipo === 'mission' && (
+                                                    <Button
+                                                        variant="ghost" size="icon"
+                                                        className="w-8 h-8 rounded-lg text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100"
+                                                        onClick={(e) => { 
+                                                            e.stopPropagation(); 
+                                                            setPreviewModule(mod);
+                                                            setIsPreviewOpen(true);
+                                                        }}
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                                {!isReadOnly && (
+                                                    <Button
+                                                        variant="ghost" size="icon"
+                                                        className="w-8 h-8 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </motion.div>
                                     );
                                 })}
 
                                 {isInlineCreating && !isReadOnly ? (
-                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-white border-2 border-blue-500 shadow-xl shadow-blue-500/10 space-y-3">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                                                <PenTool className="w-3.5 h-3.5 text-blue-600" />
+                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-3xl bg-white border-2 border-blue-600 shadow-xl shadow-blue-500/10 space-y-4">
+                                        {!creationType ? (
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
+                                                        <Plus className="w-4 h-4 text-blue-600" />
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo de Contenido</span>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setCreationType('modular')}
+                                                    className="w-full p-4 rounded-2xl bg-slate-50 hover:bg-white border border-transparent hover:border-blue-200 transition-all text-left flex items-center gap-3 group"
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border shadow-sm group-hover:scale-110 transition-transform"><Workflow className="w-4 h-4 text-indigo-500" /></div>
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase tracking-tight text-slate-800">Sesión Modular</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">Clase Interactiva Normal</p>
+                                                    </div>
+                                                </button>
+                                                <button 
+                                                    onClick={() => setCreationType('mission')}
+                                                    className="w-full p-4 rounded-2xl bg-slate-50 hover:bg-white border border-transparent hover:border-blue-200 transition-all text-left flex items-center gap-3 group"
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border shadow-sm group-hover:scale-110 transition-transform"><Target className="w-4 h-4 text-rose-500" /></div>
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase tracking-tight text-slate-800">Misión Avanzada</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">4to EGB a 3ro Bachillerato</p>
+                                                    </div>
+                                                </button>
+
+                                                <button 
+                                                    onClick={() => {
+                                                        setCreationType('mission');
+                                                        handleDownloadAIPrompt();
+                                                    }}
+                                                    className="w-full p-4 rounded-2xl bg-blue-50 hover:bg-white border-2 border-blue-100 hover:border-blue-400 transition-all text-left flex items-center gap-3 group"
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform"><Wand2 className="w-4 h-4 text-white" /></div>
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase tracking-tight text-blue-700">Misión con IA</p>
+                                                        <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest leading-none mt-0.5">4to EGB a 3ro BGU</p>
+                                                    </div>
+                                                </button>
+                                                <Button onClick={() => setIsInlineCreating(false)} variant="ghost" className="w-full h-10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400">Cancelar</Button>
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Nombre de Nivel</span>
-                                        </div>
-                                        <Input
-                                            autoFocus
-                                            placeholder="Ej: Clase 1: Los Objetos..."
-                                            className="h-10 border-none bg-slate-50 rounded-xl text-xs font-bold placeholder:text-slate-300 focus-visible:ring-0"
-                                            value={inlineLevelName}
-                                            onChange={(e) => setInlineLevelName(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') handleInlineCreateConfirm();
-                                                if (e.key === 'Escape') setIsInlineCreating(false);
-                                            }}
-                                        />
-                                        <div className="flex items-center gap-2 pt-1">
-                                            <Button onClick={handleInlineCreateConfirm} disabled={saving} className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white">
-                                                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirmar'}
-                                            </Button>
-                                            <Button onClick={() => setIsInlineCreating(false)} variant="ghost" className="w-9 h-9 rounded-xl border p-0 hover:bg-slate-50">
-                                                <X className="w-4 h-4 text-slate-400" />
-                                            </Button>
-                                        </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <button onClick={() => setCreationType(null)} className="text-[9px] font-black uppercase text-blue-600 flex items-center gap-1">
+                                                        <ChevronLeft className="w-3 h-3" /> Volver
+                                                    </button>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">{creationType === 'mission' ? 'Misión Avanzada' : 'Sesión Modular'}</span>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Título del Nivel</label>
+                                                        <Input
+                                                            autoFocus
+                                                            placeholder={creationType === 'mission' ? "Ej: Misión Espacial..." : "Ej: Los Objetos..."}
+                                                            className="h-10 border-none bg-slate-50 rounded-xl text-xs font-bold focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                                            value={inlineLevelName}
+                                                            onChange={(e) => setInlineLevelName(e.target.value)}
+                                                        />
+                                                    </div>
+
+                                                    {creationType === 'mission' && (
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nivel Educativo</label>
+                                                            <select 
+                                                                value={selectedGrade}
+                                                                onChange={(e) => setSelectedGrade(e.target.value)}
+                                                                className="w-full h-10 px-4 bg-slate-50 rounded-xl border-none font-bold text-xs"
+                                                            >
+                                                                {MISSION_GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                                                            </select>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-2 pt-1 border-t border-slate-50 mt-4">
+                                                    <Button onClick={handleInlineCreateConfirm} disabled={saving || !inlineLevelName.trim()} className="flex-1 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
+                                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
+                                                    </Button>
+                                                    <Button onClick={() => { setIsInlineCreating(false); setCreationType(null); }} variant="ghost" className="w-10 h-10 rounded-xl border p-0 hover:bg-slate-50">
+                                                        <X className="w-4 h-4 text-slate-400" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 ) : !isReadOnly && (
                                     <div className="pt-4 space-y-3">
@@ -526,23 +849,32 @@ export const InstitutionalModuleEditor = () => {
                                             Nuevo Nivel
                                         </Button>
 
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="flex flex-col gap-2">
                                             <Button
                                                 onClick={() => setIsImportOpen(true)}
-                                                variant="outline"
-                                                className="h-11 border-2 border-dashed rounded-xl gap-2 font-black uppercase text-[8px] tracking-widest hover:border-blue-400 hover:text-blue-600 transition-all font-sans"
+                                                className="h-12 w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white gap-2 font-black uppercase text-[9px] tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
                                             >
-                                                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                                Importar AI
+                                                <Wand2 className="w-4 h-4" /> Arquitecto IA (Prompts & Import)
                                             </Button>
-                                            <Button
-                                                onClick={() => setIsToolboxOpen(true)}
-                                                variant="outline"
-                                                className="h-11 border-2 border-dashed rounded-xl gap-2 font-black uppercase text-[8px] tracking-widest hover:border-blue-400 hover:text-blue-600 transition-all font-sans"
-                                            >
-                                                <Settings className="w-3.5 h-3.5" />
-                                                Toolbox
-                                            </Button>
+                                            
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Button
+                                                    onClick={() => setIsImportOpen(true)}
+                                                    variant="outline"
+                                                    className="h-11 border-2 border-dashed rounded-xl gap-2 font-black uppercase text-[8px] tracking-widest hover:border-blue-400 hover:text-blue-600 transition-all font-sans"
+                                                >
+                                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                                    Importar AI
+                                                </Button>
+                                                <Button
+                                                    onClick={() => setIsToolboxOpen(true)}
+                                                    variant="outline"
+                                                    className="h-11 border-2 border-dashed rounded-xl gap-2 font-black uppercase text-[8px] tracking-widest hover:border-blue-400 hover:text-blue-600 transition-all font-sans"
+                                                >
+                                                    <Settings className="w-3.5 h-3.5" />
+                                                    Toolbox
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -606,7 +938,10 @@ export const InstitutionalModuleEditor = () => {
                             {!isReadOnly && (
                                 <>
                                     <Button onClick={handleCreateDemoMission} disabled={saving} variant="outline" className="h-10 border-2 border-orange-200 text-orange-700 hover:bg-orange-50 rounded-xl gap-2 font-black uppercase text-[9px] tracking-widest transition-all px-4 shadow-sm shadow-orange-500/5">
-                                        <Gamepad2 className="w-4 h-4" /> Instalar Misión 1ro EGB
+                                        <Gamepad2 className="w-4 h-4" /> Instalar Misión 2do EGB
+                                    </Button>
+                                    <Button onClick={handleCreateDemoMission6EGB} disabled={saving} variant="outline" className="h-10 border-2 border-rose-200 text-rose-700 hover:bg-rose-50 rounded-xl gap-2 font-black uppercase text-[9px] tracking-widest transition-all px-4 shadow-sm shadow-rose-500/5">
+                                        <Target className="w-4 h-4" /> Instalar Misión 6to EGB
                                     </Button>
                                     <Button className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-black text-white font-black uppercase tracking-widest text-[10px] shadow-xl transition-all border-b-4 border-black">
                                         <Save className="w-4 h-4 mr-2" /> Guardar Cambios
@@ -619,14 +954,23 @@ export const InstitutionalModuleEditor = () => {
 
                 <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative">
                     {selectedLevel ? (
-                        <div className="max-w-[1600px] mx-auto h-full">
-                            <InstitutionalClassBuilder
-                                module={selectedLevel}
-                                inline={true}
-                                isReadOnly={isReadOnly}
-                                onSave={(content) => handleLevelSave(selectedLevel.id, content)}
-                                onClose={() => setSelectedLevel(null)}
-                            />
+                        <div className="max-w-[1700px] mx-auto h-full">
+                            {selectedLevel.tipo === 'mission' ? (
+                                <MissionEditor 
+                                    data={selectedLevel.contenido} 
+                                    isReadOnly={isReadOnly}
+                                    onSave={(content) => handleLevelSave(selectedLevel.id, content)}
+                                    onClose={() => setSelectedLevel(null)}
+                                />
+                            ) : (
+                                <InstitutionalClassBuilder
+                                    module={selectedLevel}
+                                    inline={true}
+                                    isReadOnly={isReadOnly}
+                                    onSave={(content) => handleLevelSave(selectedLevel.id, content)}
+                                    onClose={() => setSelectedLevel(null)}
+                                />
+                            )}
                         </div>
                     ) : !selectedSection ? (
                         <div className="h-full flex flex-col items-center justify-center text-center">
@@ -653,13 +997,13 @@ export const InstitutionalModuleEditor = () => {
                                     <span className="text-blue-600">Ingeniería</span>
                                 </h1>
                                 <p className="text-slate-400 text-xl max-w-xl mx-auto font-semibold">
-                                    {isReadOnly ? "Explora la secuencia didáctica del curso. Como tutor, puedes visualizar toda la estructura y misiones instaladas." : "Crea niveles con el sistema de Escritura Rápida o usa el botón Instalar Misión 1ro EGB para cargar la Clase de Objetos Tecnológicos automáticamente."}
+                                    {isReadOnly ? "Explora la secuencia didáctica del curso. Como tutor, puedes visualizar toda la estructura y misiones instaladas." : "Crea niveles con el sistema de Escritura Rápida o usa el botón Instalar Misión 2do EGB para cargar la Clase de Secuencias y Orden automáticamente."}
                                 </p>
 
                                 {!isReadOnly && (
                                     <div className="flex items-center gap-6 justify-center mt-12">
                                         <Button onClick={handleCreateDemoMission} disabled={saving} className="h-16 px-10 rounded-[2rem] bg-orange-600 hover:bg-orange-700 text-white font-black uppercase gap-4 shadow-2xl shadow-orange-500/20 active:scale-95 transition-all text-sm">
-                                            <Sparkles className="w-6 h-6" /> INSTALAR CLASE 1 INTERACTIVA
+                                            <Sparkles className="w-6 h-6" /> INSTALAR SESIÓN 1: SECUENCIAS
                                         </Button>
                                         <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-16 px-10 rounded-[2rem] border-2 border-slate-200 font-black uppercase gap-4 text-slate-500 hover:bg-slate-50 transition-all text-sm">
                                             <Upload className="w-5 h-5" /> PEGAR CURRÍCULO AI
@@ -673,33 +1017,74 @@ export const InstitutionalModuleEditor = () => {
             </main>
 
             {/* AI Curator/Importer Dialog */}
-            {!isReadOnly && (
-                <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
-                    <DialogContent className="max-w-4xl bg-white/98 backdrop-blur-3xl rounded-[3rem] p-12 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)]">
-                        <DialogHeader className="mb-10 text-left">
-                            <DialogTitle className="text-4xl font-black tracking-tighter text-slate-800 italic uppercase">GENIOS <span className="text-blue-600">AI BUILDER</span></DialogTitle>
-                            <DialogDescription className="text-base font-bold text-slate-400 uppercase tracking-widest mt-2">Transforma tu currículo en experiencias interactivas al instante.</DialogDescription>
-                        </DialogHeader>
-                        <Textarea
-                            placeholder="🧠 CLASE 1: ...
-    🎮 Actividad: ...
-    ⭐ Gamificación: ..."
-                            className="min-h-[350px] rounded-[2rem] bg-slate-50 border-none font-bold text-base p-10 focus-visible:ring-4 focus-visible:ring-blue-500/10 shadow-inner"
-                            value={importText}
-                            onChange={(e) => setImportText(e.target.value)}
-                        />
-                        <DialogFooter className="mt-12">
-                            <Button variant="ghost" onClick={() => setIsImportOpen(false)} className="rounded-2xl h-14 px-8 font-black text-slate-400 uppercase tracking-widest text-[10px]">Cancelar</Button>
-                            <Button
-                                onClick={handleImportCurriculum}
-                                disabled={saving || !importText.trim()}
-                                className="h-16 px-12 rounded-[1.5rem] bg-slate-900 border-b-8 border-black hover:bg-black text-white font-black uppercase tracking-[0.2em] text-xs gap-4 shadow-2xl active:translate-y-2 active:border-b-0 transition-all"
-                            >
-                                <Sparkles className="w-6 h-6 animate-pulse" /> Desplegar Currículo
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+            {!isReadOnly && isImportOpen && (
+                <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+                   <div className="bg-white w-full max-w-5xl rounded-[3.5rem] p-16 space-y-10 shadow-2xl relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-cyan-400" />
+                      <button onClick={() => setIsImportOpen(false)} className="absolute top-10 right-10 text-slate-300 hover:text-slate-600 transition-colors">
+                        <X className="w-8 h-8" />
+                      </button>
+        
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                          {/* Phase 1: Export Prompt */}
+                          <div className="space-y-8 border-r border-slate-100 pr-16">
+                              <div className="space-y-4">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-6">
+                                    <Download className="w-7 h-7 text-blue-600" />
+                                </div>
+                                <h3 className="text-3xl font-black italic uppercase text-slate-800 tracking-tighter">1. Descargar Formato IA</h3>
+                                <p className="text-sm font-bold text-slate-400 leading-relaxed uppercase tracking-tight">Utiliza este prompt para que tu IA favorita genere el contenido siguiendo la arquitectura pedagógica GenIA.</p>
+                              </div>
+                              
+                              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-loose">
+                                      Este prompt incluye los 8 momentos pedagógicos y la estructura técnica requerida para niveles superiores.
+                                  </p>
+                                  <Button 
+                                    onClick={handleDownloadAIPrompt} 
+                                    className="w-full h-14 bg-white border-2 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-sm"
+                                  >
+                                    Descargar Prompt Maestro
+                                  </Button>
+                              </div>
+                          </div>
+        
+                          {/* Phase 2: Import JSON */}
+                          <div className="space-y-8">
+                              <div className="space-y-4">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center mb-6">
+                                    <Upload className="w-7 h-7 text-white" />
+                                </div>
+                                <h3 className="text-3xl font-black italic uppercase text-slate-800 tracking-tighter">2. Pegar JSON GenIA</h3>
+                                <p className="text-sm font-bold text-slate-400 leading-relaxed uppercase tracking-tight">Pega el código JSON generado por la IA para poblar automáticamente los niveles.</p>
+                              </div>
+        
+                              <div className="space-y-4">
+                                <Textarea 
+                                    value={importText}
+                                    onChange={(e) => setImportText(e.target.value)}
+                                    placeholder='Pega aquí el JSON: { "mission": { ... }, "moments": [ ... ] }'
+                                    className="bg-slate-50 border-none rounded-3xl min-h-[250px] font-mono text-[11px] p-8 focus:ring-2 focus:ring-blue-500/20"
+                                />
+                                <Button 
+                                    onClick={handleAIImport} 
+                                    disabled={!importText.trim() || saving}
+                                    className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                >
+                                    {saving ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Desplegando Currículo...
+                                        </>
+                                    ) : (
+                                        "Desplegar Misiones IA"
+                                    )}
+                                </Button>
+                              </div>
+                          </div>
+                      </div>
+                   </div>
+                </div>
             )}
 
             <ActivityToolbox isOpen={isToolboxOpen} onClose={() => setIsToolboxOpen(false)} onSelect={handleAddModule} />
@@ -721,6 +1106,18 @@ export const InstitutionalModuleEditor = () => {
                     </div>
                 </SheetContent>
             </Sheet>
+
+            {/* Mission Preview Modal */}
+            {isPreviewOpen && previewModule && (
+                <MissionCinematicViewer 
+                    module={previewModule} 
+                    onClose={() => {
+                        setIsPreviewOpen(false);
+                        setPreviewModule(null);
+                    }} 
+                    isReadOnly={true}
+                />
+            )}
         </div>
     );
 };

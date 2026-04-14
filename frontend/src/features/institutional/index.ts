@@ -11,3 +11,4 @@ export { MinecraftCodeLab } from './components/labs/MinecraftCodeLab';
 export { ChatbotBuilderLab } from './components/labs/ChatbotBuilderLab';
 export { ActionPlatformerLab } from './components/labs/ActionPlatformerLab';
 export { ArduinoWokwiLab } from './components/labs/ArduinoWokwiLab';
+export { InstitutionalGradesView } from './components/reports/InstitutionalGradesView';

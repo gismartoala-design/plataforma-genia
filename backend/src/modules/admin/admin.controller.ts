@@ -14,8 +14,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminService } from './admin.service';
 import { SchedulerService } from '../notifications/scheduler.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UseGuards } from '@nestjs/common';
 
 @Controller('admin')
+@UseGuards(JwtAuthGuard)
 export class AdminController {
     constructor(
         private readonly adminService: AdminService,

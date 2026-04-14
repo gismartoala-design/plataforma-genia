@@ -22,7 +22,9 @@ import {
   Info,
   ArrowLeft,
   Copy,
-  Sparkles
+  Sparkles,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -470,6 +472,26 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
   const [showAIBuilder, setShowAIBuilder] = useState(false);
   const [aiText, setAiText] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
+  
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.institucionId) return;
+
+    setUploadingLogo(true);
+    try {
+      await institutionApi.updateInstitutionLogo(user.institucionId, file);
+      toast({ title: '✓ Marca Actualizada', description: 'El logo de la institución ha sido cargado con éxito.' });
+      // We might need to refresh user data or just reload to see the change in sidebar
+      window.location.reload(); 
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo subir el logo.', variant: 'destructive' });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   useEffect(() => {
     if (user?.institucionId) fetchData();
@@ -743,6 +765,22 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
               className="h-12 px-6 rounded-2xl bg-[var(--inst-rose)] hover:bg-[var(--inst-rose)]/90 text-white font-black uppercase italic tracking-widest shadow-lg shadow-[var(--inst-rose)]/20 active:scale-95 transition-all"
             >
               <Plus className="w-5 h-5 mr-2" /> Nuevo Curso
+            </Button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleLogoUpload} 
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingLogo}
+              variant="outline"
+              className="h-12 w-12 p-0 rounded-2xl border-[var(--inst-blue)]/30 bg-white text-[var(--inst-blue)] hover:bg-[var(--inst-blue-lt)] transition-all shadow-sm"
+              title="Configurar Logo Institucional"
+            >
+              {uploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
             </Button>
           </div>
         </header>

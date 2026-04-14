@@ -1,11 +1,16 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Patch, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { StorageService } from '../storage/storage.service';
 import { InstitutionService } from './institution.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('instituciones')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class InstitutionController {
-    constructor(private readonly institutionService: InstitutionService) {}
+    constructor(
+        private readonly institutionService: InstitutionService,
+        private readonly storageService: StorageService,
+    ) {}
 
     @Get()
     async getAll() {
@@ -90,5 +95,12 @@ export class InstitutionController {
     @Get('cursos/:id/reporte-notas')
     async getGradeReport(@Param('id') id: string) {
         return this.institutionService.getGradeReport(parseInt(id));
+    }
+
+    @Patch(':id/logo')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadLogo(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+        const logoUrl = await this.storageService.uploadFile(file);
+        return this.institutionService.updateInstitutionLogo(parseInt(id), logoUrl);
     }
 }

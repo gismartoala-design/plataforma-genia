@@ -27,6 +27,49 @@ export interface ModuloInst {
   fechaCreacion: string;
 }
 
+// Grades for Missions (4to EGB to 3ro BGU)
+export const MISSION_GRADES = [
+    "4to EGB", "5to EGB", "6to EGB", "7mo EGB", "8vo EGB", "9no EGB", "10mo EGB",
+    "1ro Bachillerato", "2do Bachillerato", "3ro Bachillerato"
+];
+
+export interface MissionMoment {
+    id: string;
+    title: string;
+    time_minutes: number;
+    isVisible?: boolean;
+    config: {
+        interaction_type: string;
+        input_mode?: string[];
+        affects_kpi?: boolean;
+        max_attempts?: number | null;
+        auto_feedback?: boolean;
+        [key: string]: any;
+    };
+    teacher?: {
+        intention: string;
+        pedagogy: string[];
+        script: string;
+        observation: string;
+        common_errors: string[];
+        intervention: string;
+        evaluation?: string;
+    };
+    student: {
+        content?: string;
+        context?: string;
+        question?: string;
+        instruction?: string;
+        concept?: string;
+        activity?: string;
+        correct_answer?: string | number | boolean;
+        options?: any[];
+        items?: string[];
+        [key: string]: any;
+    };
+    logic?: any;
+}
+
 export const institutionalCurriculumApi = {
   // --- SECCIONES ---
   async getSections(courseId: number): Promise<SectionInst[]> {

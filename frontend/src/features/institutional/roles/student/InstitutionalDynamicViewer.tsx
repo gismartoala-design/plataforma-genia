@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ForemanAssistant } from '../../components/ForemanAssistant';
+import { MissionCinematicViewer } from './MissionCinematicViewer';
 
 type BlockType = 'NARRATIVE' | 'VIDEO' | 'OPEN_QUESTION' | 'EVALUATION' |
     'TECHNICAL_TABLE' | 'STEP_BY_STEP' | 'CHECKLIST' | 'DELIVERABLE' | 'REWARD';
@@ -211,6 +212,10 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
     const blocks: Block[] = parsed?.blocks || [];
     const meta = parsed?.metadata || {};
     const progress = blocks.length > 0 ? ((currentBlock + 1) / blocks.length) * 100 : 0;
+
+    if (module.tipo === 'mission') {
+        return <MissionCinematicViewer module={module} onClose={onClose} />;
+    }
 
     if (blocks.length === 0) {
         return (

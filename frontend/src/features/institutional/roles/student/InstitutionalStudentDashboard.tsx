@@ -487,112 +487,135 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
           BUILDING INSPECTION PANEL
           ══════════════════════════════════════════════════════════════ */}
       {/* ══════════════════════════════════════════════════════════════
-          BUILDING INSPECTION PANEL (SECTION PROMPT)
+          CINEMATIC MODULE VIEWER (NETFLIX STYLE)
           ══════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {activePanel && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-[#0F172A] z-[300] flex flex-col shadow-2xl border-l border-white/10 overflow-hidden">
+          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+            className="fixed inset-0 z-[400] bg-[#0B132C] flex flex-col overflow-hidden">
+            
+            {/* HERO SECTION */}
+            <div className="relative w-full h-[30vh] min-h-[220px] shrink-0 bg-[#1E293B]">
+               <div className="absolute inset-0 bg-gradient-to-t from-[#0B132C] via-[#0B132C]/60 to-transparent z-10" />
+               <div className="absolute inset-0 academic-grid-pattern opacity-20" />
+               
+               {/* Close Button */}
+               <button onClick={() => setActivePanel(null)} className="absolute top-8 right-8 z-50 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md transition-all border border-white/20 text-white">
+                  <X className="w-6 h-6" />
+               </button>
 
-            {/* Header - Industrial Style */}
-            <div className="bg-[#1E293B] p-10 text-white relative overflow-hidden border-b border-white/5">
-              <div className="absolute inset-0 academic-grid-pattern opacity-10" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-[100px] -translate-y-1/2 translate-x-1/2" />
+               {/* Background big icon */}
+               <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-10 blur-sm pointer-events-none z-0 mix-blend-screen scale-150">
+                  <activePanel.icon className="w-96 h-96 text-blue-500" />
+               </div>
 
-              <button onClick={() => setActivePanel(null)}
-                className="absolute top-6 right-6 w-12 h-12 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-colors border border-white/10">
-                <X className="w-6 h-6" />
-              </button>
-
-              <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 relative z-10",
-                activePanel.repaired ? "bg-emerald-500/10 border border-emerald-500/30" : "bg-blue-500/10 border border-blue-500/30")}>
-                <activePanel.icon className={cn("w-10 h-10", activePanel.repaired ? "text-emerald-400" : "text-blue-400")} />
-              </div>
-
-              <div className="relative z-10 space-y-2">
-                <div className="flex items-center gap-3">
-                  <Badge className={cn("text-[10px] font-black uppercase tracking-[0.2em] border-0 px-3",
-                    activePanel.repaired ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400")}>
-                    {activePanel.repaired ? 'PROYECTO FINALIZADO' : 'INSPEC-MÓDULO'}
-                  </Badge>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">ID-CONSTRUCT-{activePanel.id}</span>
-                </div>
-                <h2 className="text-4xl font-black tracking-tighter leading-none text-white italic">{activePanel.name}</h2>
-              </div>
-
-              <div className="mt-8 flex items-center gap-4 relative z-10">
-                <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
-                  <div className="h-full bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.3)]" style={{ width: `${activePanel.progress}%` }} />
-                </div>
-                <span className="text-xl font-black text-white italic tabular-nums">{activePanel.progress}%</span>
-              </div>
-            </div>
-
-            {/* Body — levels/modules list */}
-            <div className="flex-1 overflow-y-auto p-10 space-y-8 bg-[#0F172A]">
-              {/* Description */}
-              <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden group">
-                <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Construction className="w-12 h-12 text-blue-400" />
-                </div>
-                <p className="text-[10px] font-black uppercase text-blue-400 tracking-[0.3em] mb-3">Expediente Técnico</p>
-                <p className="text-slate-300 text-lg font-medium leading-relaxed italic">"{activePanel.description}"</p>
-              </div>
-
-              {/* Levels (instructions) */}
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em]">Niveles de Construcción ({activePanel.levelCount})</p>
-                  <div className="h-px flex-1 bg-white/5 mx-4" />
-                </div>
-
-                <div className="space-y-4">
-                  {activePanel.levels.length > 0 ? activePanel.levels.map((level: any, idx: number) => (
-                    <button
-                      key={level.id}
-                      onClick={() => {
-                        setActiveModularModule(level);
-                        setActivePanel(null);
-                      }}
-                      className="w-full flex items-center gap-6 p-6 rounded-[2rem] border-2 border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all bg-white/5 group text-left relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-lg text-slate-400 group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-400 transition-all shrink-0 italic">
-                        {idx + 1}
-                      </div>
-
-                      <div className="flex-1 min-w-0 z-10">
-                        <p className="font-black text-white text-xl tracking-tight group-hover:text-blue-400 transition-colors uppercase italic">{level.titulo}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className="bg-white/5 text-slate-500 border-0 text-[8px] font-bold tracking-widest px-2">NIVEL-{level.tipo.toUpperCase()}</Badge>
-                          <span className="text-[10px] font-bold text-slate-600 uppercase">Listo para despliegue</span>
+               {/* Hero Content */}
+               <div className="absolute bottom-6 left-8 right-8 z-20">
+                  <div className="max-w-4xl">
+                     <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 font-black text-[9px] tracking-widest uppercase hover:bg-blue-600/30">
+                           SECTOR DE OBRA
+                        </Badge>
+                        <span className="text-slate-400 text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5">
+                           <Construction className="w-3 h-3" /> ID-CONSTRUCT-{activePanel.id}
+                        </span>
+                     </div>
+                     <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase leading-[0.9] mb-2 drop-shadow-2xl">
+                        {activePanel.name}
+                     </h2>
+                     <p className="text-slate-300 text-xs md:text-sm font-medium max-w-2xl leading-relaxed italic border-l-2 border-blue-500 pl-3 bg-slate-900/30 py-1.5">
+                        "{activePanel.description}"
+                     </p>
+                     
+                     <div className="mt-4 flex items-center gap-4">
+                        <Button 
+                           onClick={() => {
+                              const firstAvailable = activePanel.levels.find((l: any) => !l.bloqueado);
+                              if(firstAvailable) {
+                                 setActiveModularModule(firstAvailable);
+                              }
+                           }}
+                           disabled={!activePanel.levels.find((l: any) => !l.bloqueado)}
+                           className="bg-white text-black hover:bg-slate-200 h-10 px-6 rounded-[2rem] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-white/10 transition-all hover:scale-105"
+                        >
+                           <Play className="w-4 h-4 mr-2 fill-black" /> REANUDAR OBRA
+                        </Button>
+                        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AVANCE</span>
+                           <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${activePanel.progress}%` }} />
+                           </div>
+                           <span className="text-xs font-black text-white tabular-nums">{activePanel.progress}%</span>
                         </div>
-                      </div>
-
-                      <div className="w-12 h-12 rounded-full border-2 border-white/10 flex items-center justify-center text-slate-600 group-hover:text-blue-400 group-hover:border-blue-500 transition-all shrink-0">
-                        <ArrowRightIcon className="w-6 h-6" />
-                      </div>
-                    </button>
-                  )) : (
-                    <div className="p-12 rounded-[3rem] bg-white/5 border-2 border-dashed border-white/5 text-center">
-                      <Construction className="w-12 h-12 text-slate-700 mx-auto mb-4 opacity-50" />
-                      <p className="text-slate-500 text-lg font-black uppercase tracking-widest italic">Edificio sin Niveles</p>
-                      <p className="text-slate-600 text-sm mt-2">La ingeniería técnica de este módulo aún no ha sido aprobada.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+                     </div>
+                  </div>
+               </div>
             </div>
 
-            {/* CTA */}
-            <div className="p-8 border-t border-white/5 bg-[#0F172A]">
-              <Button
-                variant="ghost"
-                onClick={() => setActivePanel(null)}
-                className="w-full h-16 rounded-3xl font-black uppercase tracking-[0.3em] text-xs text-slate-500 hover:text-white transition-colors">
-                Regresar al Mapa Ciudad
-              </Button>
+            {/* LEVELS CAROUSEL */}
+            <div className="flex-1 relative z-20 pb-6 pt-2">
+               <div className="px-8 mb-3">
+                  <h3 className="text-lg font-black text-white uppercase tracking-tighter">Niveles de Construcción</h3>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Selecciona el sector listo para operar</p>
+               </div>
+               
+               <div className="px-8 flex gap-4 overflow-x-auto pb-6 pt-4 snap-x snap-mandatory custom-scrollbar">
+                  {activePanel.levels.length > 0 ? activePanel.levels.map((level: any, idx: number) => {
+                     const isLocked = level.bloqueado;
+                     return (
+                     <div key={level.id} className="snap-start shrink-0">
+                        <button
+                           onClick={() => {
+                              if (!isLocked) setActiveModularModule(level);
+                           }}
+                           className={cn(
+                              "relative w-56 md:w-64 h-32 rounded-2xl border-2 mx-auto overflow-hidden flex flex-col items-start justify-between p-4 transition-all duration-300 group text-left",
+                              isLocked 
+                                 ? "bg-slate-900/50 border-slate-800 cursor-not-allowed opacity-80" 
+                                 : "bg-gradient-to-br from-[#1E293B] to-[#0F172A] border-white/10 hover:from-white hover:to-white hover:border-white hover:shadow-[0_15px_30px_rgba(255,255,255,0.2)] hover:-translate-y-2 hover:scale-[1.02]"
+                           )}
+                        >
+                           {/* Background element */}
+                           {!isLocked && <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/5 transition-all duration-500 pointer-events-none" />}
+                           
+                           {isLocked && (
+                              <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center gap-1 transition-all">
+                                 <div className="w-8 h-8 rounded-xl bg-black/60 border border-slate-700 flex items-center justify-center shadow-2xl">
+                                    <Lock className="w-4 h-4 text-slate-400" />
+                                 </div>
+                                 <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-3 py-1 bg-black/80 rounded-full border border-white/5">Restringido</span>
+                              </div>
+                           )}
+
+                           <div className="relative z-20 flex justify-between w-full">
+                              <span className={cn("text-3xl font-black italic tracking-tighter opacity-20 transition-all duration-300", isLocked ? "text-slate-600" : "text-blue-200 group-hover:text-slate-200 group-hover:opacity-100")}>
+                                 {String(idx + 1).padStart(2, '0')}
+                              </span>
+                              {!isLocked && (
+                                 <div className="w-8 h-8 rounded-full border border-white/20 bg-white/5 group-hover:bg-black group-hover:border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-4 group-hover:translate-x-0 shadow-xl">
+                                    <Play className="w-3 h-3 text-white fill-white ml-0.5" />
+                                 </div>
+                              )}
+                           </div>
+                           
+                           <div className="relative z-20 w-full mt-auto">
+                              <Badge className={cn("border-0 text-[8px] font-black uppercase tracking-widest px-1.5 mb-1 hover:bg-transparent transition-all duration-300", isLocked ? "bg-slate-800 text-slate-500" : "bg-blue-500/20 text-blue-300 group-hover:bg-blue-600 group-hover:text-white")}>
+                                 {level.tipo ? `NIVEL-${level.tipo.toUpperCase()}` : 'NIVEL-TEÓRICO'}
+                              </Badge>
+                              <h4 className={cn("font-black text-sm italic uppercase tracking-tighter leading-tight line-clamp-2 transition-colors duration-300", isLocked ? "text-slate-500" : "text-white group-hover:text-slate-900")}>
+                                 {level.titulo}
+                              </h4>
+                           </div>
+                        </button>
+                     </div>
+                  )}) : (
+                     <div className="w-full h-48 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center bg-white/5 text-center px-10">
+                         <Construction className="w-10 h-10 text-slate-600 mb-3" />
+                         <p className="text-slate-400 font-black uppercase tracking-widest italic text-lg">Área sin construir</p>
+                         <p className="text-slate-500 text-xs mt-1">El arquitecto aún no ha publicado los planos de este sector.</p>
+                     </div>
+                  )}
+               </div>
             </div>
           </motion.div>
         )}
@@ -769,6 +792,21 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
         .academic-grid-pattern {
           background-image: linear-gradient(rgba(26, 86, 219, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(26, 86, 219, 0.04) 1px, transparent 1px);
           background-size: 100px 100px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
       `}</style>
 

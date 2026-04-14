@@ -24,6 +24,7 @@ import { institutionalCurriculumApi, SectionInst, ModuloInst } from '../../servi
 import { toast } from '@/hooks/use-toast';
 import AuthenticClassCreator from './components/AuthenticClassCreator';
 import TutorGradebook from './components/TutorGradebook';
+import { InstitutionalTutorUserList } from './components/InstitutionalTutorUserList';
 import '../../styles/ConstructionTheme.css';
 
 const getLevelName = (id: number | string) => {
@@ -44,7 +45,7 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
   const [courseInfo, setCourseInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null); // section-ID or module-ID
-  const [activeView, setActiveView] = useState<'hub' | 'activos' | 'calificaciones' | 'clases_autenticas'>('hub');
+  const [activeView, setActiveView] = useState<'hub' | 'activos' | 'calificaciones' | 'clases_autenticas' | 'usuarios'>('hub');
 
   useEffect(() => {
     if (user?.id) {
@@ -162,11 +163,12 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
             <div className="space-y-2 flex-1">
                 <p className="technical-label mb-3">Vistas de Control</p>
                 {[
-                  { id: 'hub', icon: Layers, label: 'Panel Principal', color: 'var(--inst-blue)' },
-                  { id: 'activos', icon: Eye, label: 'Control de Activos', color: 'var(--inst-cyan)' },
-                  { id: 'calificaciones', icon: ClipboardList, label: 'Calificaciones', color: 'var(--inst-emerald)' },
-                  { id: 'clases_autenticas', icon: Zap, label: 'Clases Auténticas', color: 'var(--inst-purple)' },
-                ].map(({ id, icon: Icon, label, color }) => (
+                   { id: 'hub', icon: Layers, label: 'Panel Principal', color: 'var(--inst-blue)' },
+                   { id: 'activos', icon: Eye, label: 'Control de Activos', color: 'var(--inst-cyan)' },
+                   { id: 'calificaciones', icon: ClipboardList, label: 'Calificaciones', color: 'var(--inst-emerald)' },
+                   { id: 'usuarios', icon: Users, label: 'Usuarios y Claves', color: 'var(--inst-blue)' },
+                   { id: 'clases_autenticas', icon: Zap, label: 'Clases Auténticas', color: 'var(--inst-purple)' },
+                 ].map(({ id, icon: Icon, label, color }) => (
                   <button 
                       key={id} 
                       onClick={() => setActiveView(id as any)}
@@ -361,6 +363,12 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
                                     ) : (
                                         <p>Seleccione un curso primero para crear la clase</p>
                                     )}
+                                </motion.section>
+                            )}
+
+                            {activeView === 'usuarios' && (
+                                <motion.section key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                                    <InstitutionalTutorUserList institutionId={user.institucionId || 1} />
                                 </motion.section>
                             )}
                         </AnimatePresence>

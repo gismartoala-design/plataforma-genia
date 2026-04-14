@@ -14,7 +14,8 @@ import {
     Package,
     HardHat,
     Terminal,
-    Plus
+    Plus,
+    Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -47,6 +48,7 @@ const ACTIVITIES: ActivityType[] = [
     { id: 'python_lab', label: 'Aventuras Python', icon: Terminal, color: 'text-yellow-400', description: 'Juego de plataformas programable', category: 'machinery' },
     { id: 'arduino_lab', label: 'Arduino Lab', icon: Wrench, color: 'text-indigo-400', description: 'Simulador de circuitos', category: 'machinery' },
     { id: 'clasificacion', label: 'Clasificador', icon: Workflow, color: 'text-pink-400', description: 'Ordenar y clasificar componentes', category: 'machinery' },
+    { id: 'mission', label: 'Misión Avanzada', icon: Target, color: 'text-rose-500', description: 'Misión estructurada de 4to EGB a 3ro BGU', category: 'machinery' },
 
     // EVALUACIÓN (Validación)
     { id: 'quiz', label: 'Cuestionario', icon: CheckSquare, color: 'text-amber-400', description: 'Opción múltiple con feedback', category: 'eval' },

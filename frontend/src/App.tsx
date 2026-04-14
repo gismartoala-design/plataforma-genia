@@ -16,7 +16,7 @@ import { Login, KidsLogin, InstitutionalLogin } from "@/features/auth";
 import { KidsDashboard, KidsActivityViewer, KidsModuleViewer } from "@/features/kids";
 import { KidsProfessorDashboard, KidsCourseEditor, KidsModuleEditor } from "@/features/kids-professor";
 import { Button } from "@/components/ui/button";
-import { CityDashboard, InstitutionalDashboard, InstitutionalTeacherDashboard, InstitutionalTutorDashboard, InstitutionalModuleEditor, InstitutionalSidebar, TechToolViewer, WebBuilderLab, MinecraftCodeLab, ChatbotBuilderLab, ActionPlatformerLab, ArduinoWokwiLab } from "@/features/institutional";
+import { CityDashboard, InstitutionalDashboard, InstitutionalTeacherDashboard, InstitutionalTutorDashboard, InstitutionalModuleEditor, InstitutionalSidebar, InstitutionalGradesView, TechToolViewer, WebBuilderLab, MinecraftCodeLab, ChatbotBuilderLab, ActionPlatformerLab, ArduinoWokwiLab } from "@/features/institutional";
 import { LatamLogin, LatamStudentDashboard, LatamTeacherDashboard, LatamSessionViewer } from "@/features/latam";
 import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
@@ -29,6 +29,7 @@ import AsistenteWeb from "@/pages/AsistenteWeb";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, PhoneCall } from "lucide-react";
 import { UserRole } from "@/types/common.types";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 function App() {
   const [user, setUser] = useState<{
@@ -49,6 +50,7 @@ function App() {
   });
   const [location, setLocation] = useLocation();
   const [isSuspended, setIsSuspended] = useState(false);
+  const [forceHideNav, setForceHideNav] = useState(false);
 
   const clearSession = () => {
     const isInstitutional = user?.role === "institutional_admin" || user?.role === "institutional_professor" || !!user?.institucionId;
@@ -85,12 +87,18 @@ function App() {
       clearSession();
     };
 
+    const handleForceHideNav = (e: CustomEvent) => {
+      setForceHideNav(!!e.detail);
+    };
+
     window.addEventListener('account:suspended', handleSuspension);
     window.addEventListener('auth:expired', handleAuthExpired);
+    window.addEventListener('nav:force-hide', handleForceHideNav as EventListener);
 
     return () => {
       window.removeEventListener('account:suspended', handleSuspension);
       window.removeEventListener('auth:expired', handleAuthExpired);
+      window.removeEventListener('nav:force-hide', handleForceHideNav as EventListener);
     };
   }, [user]);
 
@@ -130,7 +138,7 @@ function App() {
   const isManagementRoute = location.startsWith("/admin") || location.startsWith("/superadmin");
   const isLevelRoute = location.startsWith("/level");
   
-  const showNav = user && location !== "/login" && location !== "/login-kids" && !location.startsWith("/kids-dashboard") && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute && !isLevelRoute && !location.startsWith("/latam") && !location.startsWith("/institucional-editor");
+  const showNav = !forceHideNav && user && location !== "/login" && location !== "/login-kids" && !location.startsWith("/kids-dashboard") && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute && !isLevelRoute && !location.startsWith("/latam") && !location.startsWith("/institucional-editor");
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">
@@ -210,19 +218,29 @@ function App() {
           </Route>
 
           <Route path="/kids-dashboard">
-            <KidsDashboard user={user} />
+            <ProtectedRoute user={user} allowedRoles={["kids"]}>
+              <KidsDashboard user={user} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/kids-teach">
-            <KidsProfessorDashboard user={user!} />
+            <ProtectedRoute user={user} allowedRoles={["kids_professor"]} allowedRoleIds={[7]}>
+              <KidsProfessorDashboard user={user!} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/kids/play/:id">
-            {(params: any) => params ? <KidsModuleViewer user={user!} moduleId={Number(params.id)} /> : null}
+            {(params: any) => params ? (
+              <ProtectedRoute user={user} allowedRoles={["kids"]}>
+                <KidsModuleViewer user={user!} moduleId={Number(params.id)} />
+              </ProtectedRoute>
+            ) : null}
           </Route>
 
           <Route path="/kids-teach/editor">
-            <KidsCourseEditor user={user!} />
+            <ProtectedRoute user={user} allowedRoles={["kids_professor"]} allowedRoleIds={[7]}>
+              <KidsCourseEditor user={user!} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/profile">
@@ -239,46 +257,84 @@ function App() {
             <StudentDashboard3D user={user!} />
           </Route>
           <Route path="/admin/:tab?">
-            <AdminDashboard user={user!} onLogout={handleLogout} />
+            <ProtectedRoute user={user} allowedRoles={["superadmin", "admin"]}>
+              <AdminDashboard user={user!} onLogout={handleLogout} />
+            </ProtectedRoute>
           </Route>
           <Route path="/superadmin/:tab?">
-            <AdminDashboard user={user!} onLogout={handleLogout} />
+            <ProtectedRoute user={user} allowedRoles={["superadmin"]}>
+              <AdminDashboard user={user!} onLogout={handleLogout} />
+            </ProtectedRoute>
           </Route>
           <Route path="/teach">
-            <ProfessorDashboard user={user!} />
+            <ProtectedRoute user={user} allowedRoles={["professor"]}>
+              <ProfessorDashboard user={user!} />
+            </ProtectedRoute>
           </Route>
-          <Route path="/teach/grading" component={GradingDashboard} />
-          <Route path="/teach/module/:id" component={CourseEditor} />
+          <Route path="/teach/grading">
+            <ProtectedRoute user={user} allowedRoles={["professor"]}>
+              <GradingDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/teach/module/:id">
+            {(params: any) => params ? (
+              <ProtectedRoute user={user} allowedRoles={["professor"]}>
+                <CourseEditor />
+              </ProtectedRoute>
+            ) : null}
+          </Route>
           <Route path="/files">
             <FileSystem user={user!} />
           </Route>
 
           <Route path="/institucional-dashboard">
-            <InstitutionalDashboard user={user!} />
+            <ProtectedRoute user={user} allowedRoles={["institutional_admin"]}>
+              <InstitutionalDashboard user={user!} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/institucional-teach">
-            <InstitutionalTeacherDashboard user={user!} />
+            <ProtectedRoute user={user} allowedRoles={["institutional_professor"]} allowedRoleIds={[9]}>
+              <InstitutionalTeacherDashboard user={user!} />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/institucional-notas">
+            <ProtectedRoute user={user} allowedRoles={["institutional_admin", "institutional_professor"]} allowedRoleIds={[9, 13]}>
+              <InstitutionalGradesView />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/institucional-tutor">
-            <InstitutionalTutorDashboard user={user!} />
+            <ProtectedRoute user={user} allowedRoleIds={[13]}>
+              <InstitutionalTutorDashboard user={user!} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/institucional-editor/:moduleId">
-            <InstitutionalModuleEditor />
+            <ProtectedRoute user={user} allowedRoles={["institutional_admin", "institutional_professor"]} allowedRoleIds={[9]}>
+              <InstitutionalModuleEditor />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/latam-dashboard">
-            <LatamStudentDashboard user={user!} onLogout={handleLogout} />
+            <ProtectedRoute user={user} allowedRoles={["estudiante_latam"]}>
+              <LatamStudentDashboard user={user!} onLogout={handleLogout} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/latam-teach">
-            <LatamTeacherDashboard user={user!} onLogout={handleLogout} />
+            <ProtectedRoute user={user} allowedRoles={["profesor_latam"]}>
+              <LatamTeacherDashboard user={user!} onLogout={handleLogout} />
+            </ProtectedRoute>
           </Route>
 
           <Route path="/latam/session/:id">
-            {(params: any) => params ? <LatamSessionViewer sessionId={params.id} onClose={() => setLocation('/latam-dashboard')} /> : null}
+            {(params: any) => params ? (
+              <ProtectedRoute user={user} allowedRoles={["estudiante_latam", "profesor_latam"]}>
+                <LatamSessionViewer sessionId={params.id} onClose={() => setLocation('/latam-dashboard')} />
+              </ProtectedRoute>
+            ) : null}
           </Route>
 
           <Route path="/city-dashboard">

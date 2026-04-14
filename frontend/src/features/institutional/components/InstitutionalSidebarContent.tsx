@@ -1,5 +1,4 @@
-
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import {
@@ -15,9 +14,11 @@ import {
     Globe,
     Gamepad2,
     Rocket,
-    BrainCircuit
+    BrainCircuit,
+    ClipboardList
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { institutionApi } from "@/services/institution.api";
 
 interface InstitutionalSidebarContentProps {
     currentRole: "institutional_admin" | "institutional_professor" | "profesor_vista" | any;
@@ -27,12 +28,32 @@ interface InstitutionalSidebarContentProps {
 
 export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: InstitutionalSidebarContentProps) {
     const [location] = useLocation();
+    const [instLogo, setInstLogo] = useState<string | null>(null);
+    const [instName, setInstName] = useState<string | null>(null);
+
+    useEffect(() => {
+        const userStr = localStorage.getItem("edu_user");
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.institucionId) {
+                // Fetch institution info for branding
+                institutionApi.getAllInstitutions().then((insts: any) => {
+                    const myInst = insts.find((i: any) => i.id === user.institucionId);
+                    if (myInst) {
+                        setInstLogo(myInst.logoUrl);
+                        setInstName(myInst.nombre);
+                    }
+                });
+            }
+        }
+    }, []);
 
     const adminLinks = [
         { href: "/institucional-dashboard", icon: LayoutDashboard, label: "Vista General" },
         { href: "/institucional-dashboard?tab=courses", icon: Book, label: "Planos (Cursos)" },
         { href: "/institucional-dashboard?tab=students", icon: Users, label: "Usuarios" },
         { href: "/lab", icon: Code, label: "Labs de Innovación" },
+        { href: "/institucional-notas", icon: ClipboardList, label: "Notas" },
         { href: "/profile", icon: Settings, label: "Configuración" },
     ];
 
@@ -40,6 +61,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
         { href: "/institucional-teach", icon: GraduationCap, label: "Mis Sectores" },
         { href: "/lab", icon: Code, label: "Laboratorios" },
         { href: "/files", icon: FileText, label: "Archivos" },
+        { href: "/institucional-notas", icon: ClipboardList, label: "Notas" },
         { href: "/profile", icon: Settings, label: "Perfil" },
     ];
 
@@ -58,12 +80,18 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
             {/* Elegant Header */}
             <div className="relative h-28 flex items-center px-8 shrink-0 border-b border-white/5 bg-white/5">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--inst-blue)] to-[var(--inst-cyan)] flex items-center justify-center shadow-lg border border-white/20">
-                        <GraduationCap className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-white/20 overflow-hidden">
+                        {instLogo ? (
+                            <img src={instLogo} alt="Logo" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-[var(--inst-blue)] to-[var(--inst-cyan)] flex items-center justify-center">
+                                <GraduationCap className="h-6 w-6 text-white" />
+                            </div>
+                        )}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">
-                            Genia<span className="text-[var(--inst-cyan)]">.</span>
+                        <h1 className="text-xl font-black italic uppercase tracking-tighter text-white leading-none truncate max-w-[140px]">
+                            {instName || "Genia."}
                         </h1>
                         <div className="flex items-center gap-2 mt-1.5 opacity-80">
                             <div className="w-1.5 h-1.5 rounded-full bg-[var(--inst-emerald)] animate-pulse shadow-[0_0_8px_var(--inst-emerald)]" />

@@ -99,11 +99,17 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
 
   useEffect(() => {
     if (selectedCourseId) {
+      window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: true }));
       fetchSections(selectedCourseId);
     } else {
+      window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: false }));
       setSections([]);
       setSelectedSectionId(null);
     }
+
+    return () => {
+      window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: false }));
+    };
   }, [selectedCourseId]);
 
   useEffect(() => {
