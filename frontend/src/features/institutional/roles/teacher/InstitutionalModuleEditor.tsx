@@ -190,6 +190,10 @@ export const InstitutionalModuleEditor = () => {
     const [creationType, setCreationType] = useState<'modular_class' | 'mission' | 'quiz' | 'tarea' | null>(null);
     const [selectedGrade, setSelectedGrade] = useState<string>("6to EGB");
 
+    // Rename state
+    const [renamingModuleId, setRenamingModuleId] = useState<number | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+
     const MISSION_GRADES = [
         "4to EGB", "5to EGB", "6to EGB", "7mo EGB", "8vo EGB", "9no EGB", "10mo EGB",
         "1ro Bachillerato", "2do Bachillerato", "3ro Bachillerato"
@@ -327,6 +331,21 @@ export const InstitutionalModuleEditor = () => {
         }
     };
 
+    const handleRenameModule = async (moduleId: number) => {
+        if (!renameValue.trim() || isReadOnly) { setRenamingModuleId(null); return; }
+        try {
+            await institutionalCurriculumApi.updateModule(moduleId, { titulo: renameValue.trim() });
+            setAllModules(prev => prev.map(m => m.id === moduleId ? { ...m, titulo: renameValue.trim() } : m));
+            setModules(prev => prev.map(m => m.id === moduleId ? { ...m, titulo: renameValue.trim() } : m));
+            toast.success("Nombre actualizado");
+        } catch {
+            toast.error("Error al renombrar");
+        } finally {
+            setRenamingModuleId(null);
+            setRenameValue('');
+        }
+    };
+
     const handleInlineCreateConfirm = async () => {
         if (!inlineLevelName.trim() || isReadOnly) {
             setIsInlineCreating(false);
@@ -380,15 +399,15 @@ export const InstitutionalModuleEditor = () => {
         <div className="flex h-screen font-sans overflow-hidden relative" style={{ background: '#F8FAFC' }}>
             <div className="absolute inset-0 construction-grid pointer-events-none opacity-40" />
 
-            {/* Sidebar Explorer */}
+            {/* Sidebar Explorer - only visible when no level is selected */}
             {!selectedLevel && (
             <aside className="w-80 border-r bg-[#0F172A] flex flex-col z-30 relative shrink-0 shadow-2xl text-white">
                 <div className="p-8 border-b border-white/10 shrink-0">
                     <button 
-                        onClick={() => setLocation(user?.roleId === 13 ? '/institucional-tutor' : '/institucional-teach')}
+                        onClick={() => setLocation('/institucional-teach')}
                         className="flex items-center gap-3 text-white/50 hover:text-white transition-colors mb-6 group text-[10px] font-black uppercase tracking-widest"
                     >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Hub
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Dashboard
                     </button>
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -422,108 +441,166 @@ export const InstitutionalModuleEditor = () => {
                     </div>
 
                     <nav className="px-3 space-y-1 pb-20">
-                        {sections.map((sec, sIdx) => {
-                            const isExpanded = expandedSections[sec.id];
-                            const sectionModules = allModules.filter(m => m.seccionId === sec.id);
-                            
-                            return (
-                                <div key={sec.id} className="space-y-1">
-                                    <button
-                                        onClick={() => setExpandedSections(prev => ({ ...prev, [sec.id]: !prev[sec.id] }))}
-                                        className={cn(
-                                            "w-full flex items-center gap-3 p-4 rounded-2xl transition-all group border border-transparent",
-                                            selectedSection?.id === sec.id && !selectedLevel ? "bg-white/10 border-white/5" : "hover:bg-white/5"
-                                        )}
-                                    >
-                                        <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                                            <span className="text-[10px] font-black text-white/40">{sIdx + 1}</span>
-                                        </div>
-                                        <span className={cn("text-xs font-bold truncate flex-1 text-left uppercase tracking-tight", selectedSection?.id === sec.id ? "text-white" : "text-white/60 group-hover:text-white")}>
-                                            {sec.nombre}
-                                        </span>
-                                        <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-                                            <ChevronDown className="w-3.5 h-3.5 text-white/20" />
-                                        </motion.div>
-                                    </button>
+                        {selectedSection ? (
+                            /* ─── Focused view: only the active section ─── */
+                            <div className="space-y-1">
+                                {/* Mini back button to return to all sections */}
+                                <button
+                                    onClick={() => setSelectedSection(null)}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-white/30 hover:text-white/70 transition-colors text-[9px] font-black uppercase tracking-widest mb-2"
+                                >
+                                    <ArrowLeft className="w-3 h-3" /> Todas las Unidades
+                                </button>
 
-                                    <AnimatePresence>
-                                        {isExpanded && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="overflow-hidden pl-10 pr-2 space-y-1"
+                                {/* Active section header */}
+                                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/10 border border-white/5 mb-2">
+                                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                                        <span className="text-[10px] font-black text-white/60">
+                                            {(sections.findIndex(s => s.id === selectedSection.id) + 1)}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs font-black truncate flex-1 text-left uppercase tracking-tight text-white">
+                                        {selectedSection.nombre}
+                                    </span>
+                                </div>
+
+                                {/* Only this section's modules */}
+                                <div className="pl-4 pr-2 space-y-1">
+                                    {allModules.filter(m => m.seccionId === selectedSection.id).map((mod) => {
+                                        const config = TYPE_CONFIG[mod.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
+                                        const Icon = config.icon;
+                                        const isActive = selectedLevel?.id === mod.id;
+
+                                        return (
+                                            <button
+                                                key={mod.id}
+                                                onClick={() => handleEditActivity(mod)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-3 p-3 rounded-xl transition-all group relative",
+                                                    isActive ? "bg-blue-600 text-white shadow-lg" : "text-white/40 hover:text-white hover:bg-white/5"
+                                                )}
                                             >
-                                                {sectionModules.map((mod) => {
-                                                    const config = TYPE_CONFIG[mod.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
-                                                    const Icon = config.icon;
-                                                    const isActive = selectedLevel?.id === mod.id;
-                                                    
-                                                    return (
-                                                        <button
-                                                            key={mod.id}
-                                                            onClick={() => handleEditActivity(mod)}
-                                                            className={cn(
-                                                                "w-full flex items-center gap-3 p-3 rounded-xl transition-all group relative",
-                                                                isActive ? "bg-blue-600 text-white shadow-lg" : "text-white/40 hover:text-white hover:bg-white/5"
-                                                            )}
-                                                        >
-                                                            <div className={cn("w-6 h-6 rounded-md flex items-center justify-center shrink-0", isActive ? "bg-white/20" : config.bg)}>
-                                                                <Icon className={cn("w-3.5 h-3.5", isActive ? "text-white" : config.color)} />
-                                                            </div>
-                                                            <span className="text-[11px] font-bold truncate tracking-tight uppercase">{mod.titulo}</span>
-                                                            {!isReadOnly && (
-                                                                <button 
-                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
-                                                                    className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500"
-                                                                >
-                                                                    <Trash2 className="w-3 h-3" />
-                                                                </button>
-                                                            )}
-                                                        </button>
-                                                    )
-                                                })}
+                                                <div className={cn("w-6 h-6 rounded-md flex items-center justify-center shrink-0", isActive ? "bg-white/20" : config.bg)}>
+                                                    <Icon className={cn("w-3.5 h-3.5", isActive ? "text-white" : config.color)} />
+                                                </div>
+                                                <span className="text-[11px] font-bold truncate tracking-tight uppercase flex-1 text-left">{mod.titulo}</span>
                                                 {!isReadOnly && (
-                                                    <button 
-                                                        onClick={() => { setSelectedSection(sec); setIsToolboxOpen(true); }}
-                                                        className="w-full flex items-center gap-3 p-3 rounded-xl text-cyan-400 group"
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
+                                                        className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500"
                                                     >
-                                                        <Plus className="w-3.5 h-3.5" />
-                                                        <span className="text-[9px] font-black uppercase tracking-widest">Añadir Lección</span>
+                                                        <Trash2 className="w-3 h-3" />
                                                     </button>
                                                 )}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                            </button>
+                                        );
+                                    })}
+                                    {!isReadOnly && (
+                                        <button
+                                            onClick={() => { setIsToolboxOpen(true); }}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl text-cyan-400 hover:bg-white/5 transition-all"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest">Añadir Misión</span>
+                                        </button>
+                                    )}
                                 </div>
-                            )
-                        })}
+                            </div>
+                        ) : (
+                            /* ─── Overview: all sections ─── */
+                            sections.map((sec, sIdx) => {
+                                const isExpanded = expandedSections[sec.id];
+                                const sectionModules = allModules.filter(m => m.seccionId === sec.id);
+
+                                return (
+                                    <div key={sec.id} className="space-y-1">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedSection(sec);
+                                                setExpandedSections(prev => ({ ...prev, [sec.id]: true }));
+                                            }}
+                                            className={cn(
+                                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-all group border border-transparent hover:bg-white/5"
+                                            )}
+                                        >
+                                            <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                                                <span className="text-[10px] font-black text-white/40">{sIdx + 1}</span>
+                                            </div>
+                                            <span className="text-xs font-bold truncate flex-1 text-left uppercase tracking-tight text-white/60 group-hover:text-white">
+                                                {sec.nombre}
+                                            </span>
+                                            <span className="text-[9px] text-white/20 shrink-0">{sectionModules.length}</span>
+                                            <ChevronRight className="w-3.5 h-3.5 text-white/20 shrink-0" />
+                                        </button>
+                                    </div>
+                                );
+                            })
+                        )}
                     </nav>
+
                 </div>
             </aside>
             )}
 
             {/* Main Workspace */}
             <main className="flex-1 flex flex-col relative overflow-hidden bg-[#F8FAFC]">
-                {!selectedLevel && (
+                {/* When editing a level: show a minimal breadcrumb bar instead of the full header */}
+                {selectedLevel ? (
+                <header className="px-6 py-4 border-b flex items-center gap-4 bg-white/95 backdrop-blur-xl sticky top-0 z-20 shrink-0 shadow-sm">
+                    <button
+                        onClick={() => setSelectedLevel(null)}
+                        className="flex items-center gap-2 text-slate-400 hover:text-slate-700 transition-colors group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Volver</span>
+                    </button>
+
+                    <div className="h-5 w-px bg-slate-200" />
+
+                    {selectedSection && (
+                        <>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-[140px]">{selectedSection.nombre}</span>
+                            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+                        </>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                        {(() => {
+                            const config = TYPE_CONFIG[selectedLevel.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
+                            const Icon = config.icon;
+                            return (
+                                <div className={cn("w-6 h-6 rounded-md flex items-center justify-center shrink-0", config.bg)}>
+                                    <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                                </div>
+                            );
+                        })()}
+                        <span className="text-sm font-black text-slate-800 uppercase tracking-tight truncate max-w-[240px]">{selectedLevel.titulo}</span>
+                    </div>
+
+                    {isReadOnly && (
+                        <Badge variant="outline" className="ml-auto border-blue-500 text-blue-600 font-black px-3 py-1 rounded-xl bg-blue-50 shrink-0">
+                            <Eye className="w-3 h-3 mr-1.5" /> VISTA PREVIA
+                        </Badge>
+                    )}
+                </header>
+                ) : (
                 <header className="px-10 py-6 border-b flex items-center justify-between bg-white/80 backdrop-blur-xl sticky top-0 z-20 shrink-0">
                     <div className="flex items-center gap-5">
                         <div className={cn(
                             "w-12 h-12 rounded-[1.25rem] flex items-center justify-center border shadow-inner transition-opacity",
-                            selectedLevel ? "bg-blue-50 border-blue-100" : selectedSection ? "bg-orange-50 border-orange-100" : "bg-slate-50 border-slate-100"
+                            selectedSection ? "bg-orange-50 border-orange-100" : "bg-slate-50 border-slate-100"
                         )}>
-                            {selectedLevel ? <BookOpen className="w-6 h-6 text-blue-600" /> : selectedSection ? <Construction className="w-6 h-6 text-orange-600" /> : <LayoutDashboard className="w-6 h-6 text-slate-400" />}
+                            {selectedSection ? <Construction className="w-6 h-6 text-orange-600" /> : <LayoutDashboard className="w-6 h-6 text-slate-400" />}
                         </div>
                         <div>
                             <h1 className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">
-                                {selectedLevel ? selectedLevel.titulo : selectedSection ? selectedSection.nombre : 'Mapa de Ingeniería Curricular'}
+                                {selectedSection ? selectedSection.nombre : 'Mapa de Ingeniería Curricular'}
                             </h1>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-2">
-                                {selectedLevel ? 'Nivel Activo' : selectedSection ? 'Unidad Seleccionada' : 'Estructura General'} · Genios Architecture
+                                {selectedSection ? 'Unidad Seleccionada' : 'Estructura General'} · Genios Architecture
                             </p>
                         </div>
                     </div>
-
                     <div className="flex items-center gap-3">
                         {isReadOnly && (
                             <Badge variant="outline" className="border-blue-500 text-blue-600 font-black px-4 py-2 rounded-xl bg-blue-50">
@@ -555,54 +632,61 @@ export const InstitutionalModuleEditor = () => {
                             )}
                         </motion.div>
                     ) : selectedSection ? (
-                        <div className="max-w-6xl mx-auto space-y-12 pb-20">
-                            <div className="flex items-center justify-between mb-8">
-                                <div className="space-y-1">
-                                    <h2 className="text-4xl font-black text-slate-800 tracking-tighter">
-                                        Niveles de la <span className="text-blue-600">{selectedSection.nombre}</span>
-                                    </h2>
-                                    <p className="text-slate-500 font-medium">Gestión estructural y secuenciación de actividades.</p>
+                        <div className="max-w-6xl mx-auto pb-20">
+                            {/* Section header */}
+                            <div className="mb-10">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-[0.3em] mb-4">
+                                    <Layers className="w-3 h-3" /> Unidad Activa
                                 </div>
-                                <Button variant="outline" onClick={() => setSelectedSection(null)} className="rounded-2xl font-black uppercase tracking-widest text-[10px]">
-                                    <ArrowLeft className="w-4 h-4 mr-2" /> Volver a Unidades
-                                </Button>
+                                <h2 className="text-5xl font-black text-slate-800 tracking-tighter leading-none">
+                                    {selectedSection.nombre}
+                                </h2>
+                                <p className="text-slate-400 font-medium mt-3">Niveles y lecciones disponibles en esta unidad.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {allModules.filter(m => m.seccionId === selectedSection.id).map((mod, mIdx) => {
                                     const config = TYPE_CONFIG[mod.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
                                     const Icon = config.icon;
                                     return (
                                         <motion.div
                                             key={mod.id}
-                                            initial={{ opacity: 0, y: 30 }}
+                                            initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: mIdx * 0.1 }}
-                                            className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 flex flex-col justify-between overflow-hidden cursor-pointer"
+                                            transition={{ delay: mIdx * 0.06 }}
+                                            className="group relative bg-[#0F172A] rounded-[2rem] overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-black/30 transition-all duration-500 hover:-translate-y-1"
                                             onClick={() => handleEditActivity(mod)}
                                         >
-                                            <div className="p-8 pb-0 relative">
-                                                <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-500 transform translate-x-4 group-hover:translate-x-0">
-                                                    <Icon className={cn("w-32 h-32", config.color)} />
-                                                </div>
+                                            {/* Watermark icon */}
+                                            <div className="absolute bottom-0 right-0 p-6 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-700 pointer-events-none">
+                                                <Icon className="w-28 h-28 text-white" />
+                                            </div>
 
-                                                <div className="flex items-center justify-between mb-8 relative z-10">
-                                                    <div className={cn("px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20 shadow-sm", config.bg, config.color)}>
-                                                        {config.label}
+                                            {/* Gradient accent top bar */}
+                                            <div className={cn("h-1 w-full", 
+                                                mod.tipo === 'mission' ? 'bg-gradient-to-r from-rose-500 to-pink-400' :
+                                                mod.tipo === 'modular_class' ? 'bg-gradient-to-r from-indigo-500 to-violet-400' :
+                                                mod.tipo === 'quiz' ? 'bg-gradient-to-r from-amber-500 to-yellow-400' :
+                                                'bg-gradient-to-r from-slate-600 to-slate-500'
+                                            )} />
+
+                                            <div className="p-7 relative z-10">
+                                                {/* Top row: type badge + actions */}
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest", config.bg)}>
+                                                        <Icon className={cn("w-3 h-3", config.color)} />
+                                                        <span className={config.color}>{config.label}</span>
                                                     </div>
-                                                    
-                                                    <div className="flex items-center gap-2 z-20">
-                                                        <div onClick={(e) => e.stopPropagation()}>
-                                                            <AssignmentDialog
-                                                                module={mod}
-                                                                institutionId={user?.institucionId}
-                                                                onUpdate={() => selectedSection && fetchModules(selectedSection.id)}
-                                                            />
-                                                        </div>
+                                                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                        <AssignmentDialog
+                                                            module={mod}
+                                                            institutionId={user?.institucionId}
+                                                            onUpdate={() => selectedSection && fetchModules(selectedSection.id)}
+                                                        />
                                                         {!isReadOnly && (
-                                                            <button 
+                                                            <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
-                                                                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+                                                                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/20 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
                                                             >
                                                                 <Trash2 className="w-3.5 h-3.5" />
                                                             </button>
@@ -610,23 +694,53 @@ export const InstitutionalModuleEditor = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-4 relative z-10">
-                                                    <div className="flex gap-4">
-                                                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 transition-transform group-hover:scale-110 duration-500", config.bg)}>
-                                                            <Icon className={cn("w-5 h-5", config.color)} />
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">{mod.titulo}</h3>
-                                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Nivel de Aprendizaje</p>
-                                                        </div>
-                                                    </div>
+                                                {/* Number + title / inline rename */}
+                                                <div className="flex items-start gap-4 mb-6">
+                                                    <span className="text-[11px] font-black text-white/20 mt-2 shrink-0 tabular-nums">{String(mIdx + 1).padStart(2, '0')}</span>
+                                                    {renamingModuleId === mod.id ? (
+                                                        <input
+                                                            autoFocus
+                                                            value={renameValue}
+                                                            onChange={e => setRenameValue(e.target.value)}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter') handleRenameModule(mod.id);
+                                                                if (e.key === 'Escape') { setRenamingModuleId(null); setRenameValue(''); }
+                                                            }}
+                                                            onBlur={() => handleRenameModule(mod.id)}
+                                                            onClick={e => e.stopPropagation()}
+                                                            className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm font-black text-white uppercase tracking-tight outline-none focus:border-blue-400"
+                                                        />
+                                                    ) : (
+                                                        <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight line-clamp-3 group-hover:text-blue-300 transition-colors duration-300 flex-1 text-left">
+                                                            {mod.titulo}
+                                                        </h3>
+                                                    )}
                                                 </div>
-                                            </div>
 
-                                            <div className="p-8 pt-10">
-                                                <div className="h-14 w-full rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center gap-3 text-slate-500 font-black uppercase text-[10px] tracking-widest group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-blue-500/30">
-                                                    <span>Entrar al Editor</span>
-                                                    <ArrowRight className="w-4 h-4 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
+                                                {/* Action buttons row */}
+                                                {!isReadOnly && (
+                                                    <div className="flex items-center gap-2 mb-6" onClick={e => e.stopPropagation()}>
+                                                        <button 
+                                                            onClick={() => { setRenamingModuleId(mod.id); setRenameValue(mod.titulo); }}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-white/30 hover:bg-white/10 hover:text-white/70 transition-all text-[9px] font-black uppercase tracking-widest"
+                                                        >
+                                                            <Edit2 className="w-3 h-3" /> Renombrar
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteModule(mod.id)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-white/30 hover:bg-rose-500/20 hover:text-rose-400 transition-all text-[9px] font-black uppercase tracking-widest"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" /> Eliminar
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {/* Enter indicator */}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 text-white/20 group-hover:text-blue-400 transition-colors duration-300">
+                                                        <span className="text-[9px] font-black uppercase tracking-[0.3em]">Entrar al Editor</span>
+                                                        <ArrowRight className="w-3.5 h-3.5 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -634,14 +748,16 @@ export const InstitutionalModuleEditor = () => {
                                 })}
 
                                 {!isReadOnly && (
-                                    <button 
+                                    <button
                                         onClick={() => setIsToolboxOpen(true)}
-                                        className="rounded-[3rem] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center p-12 hover:border-blue-200 hover:bg-blue-50/30 transition-all group min-h-[350px]"
+                                        className="rounded-[2.5rem] border-4 border-dashed border-slate-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 flex flex-col items-center justify-center p-10 transition-all group min-h-[220px] shadow-sm hover:shadow-xl"
                                     >
-                                        <div className="w-20 h-20 rounded-[2.5rem] bg-white shadow-xl flex items-center justify-center text-slate-200 group-hover:text-blue-500 group-hover:scale-110 transition-all mb-6">
-                                            <Plus className="w-10 h-10" />
+                                        <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-blue-500 group-hover:scale-110 transition-all mb-4">
+                                            <Plus className="w-7 h-7" />
                                         </div>
-                                        <span className="text-xs font-black text-slate-300 uppercase tracking-[0.3em] group-hover:text-blue-400 text-center">Incorporar Nivel <br/> a la Unidad</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] group-hover:text-blue-500 text-center transition-colors">
+                                            Añadir Misión
+                                        </span>
                                     </button>
                                 )}
                             </div>

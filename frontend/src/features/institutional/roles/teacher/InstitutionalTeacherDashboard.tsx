@@ -19,7 +19,8 @@ import {
   Zap,
   Layers,
   ArrowLeft,
-  X
+  X,
+  Edit2
 } from 'lucide-react';
 import {
   AreaChart,
@@ -89,6 +90,8 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
   const [dialogType, setDialogType] = useState<'section' | 'module'>('section');
   const [newModule, setNewModule] = useState({ nombre: '', duracion: 30 });
   const [creating, setCreating] = useState(false);
+  const [renamingSectionId, setRenamingSectionId] = useState<number | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -192,6 +195,33 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
       toast({ title: "Error", description: "No se pudo realizar la creación", variant: "destructive" });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('¿Eliminar este módulo/unidad y todas sus lecciones?')) return;
+    try {
+      await institutionalCurriculumApi.deleteSection(sectionId);
+      setSections(sections.filter(s => s.id !== sectionId));
+      toast({ title: "Éxito", description: "Módulo eliminado" });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo eliminar el módulo", variant: "destructive" });
+    }
+  };
+
+  const handleRenameSection = async (sectionId: number, e?: React.FocusEvent | React.KeyboardEvent) => {
+    if (e) e.stopPropagation();
+    if (!renameValue.trim()) { setRenamingSectionId(null); return; }
+    try {
+      await institutionalCurriculumApi.updateSection(sectionId, { nombre: renameValue.trim() });
+      setSections(sections.map(s => s.id === sectionId ? { ...s, nombre: renameValue.trim() } : s));
+      toast({ title: "Éxito", description: "Nombre actualizado" });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo renombrar el módulo", variant: "destructive" });
+    } finally {
+      setRenamingSectionId(null);
+      setRenameValue('');
     }
   };
 
@@ -401,23 +431,63 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {sections.map((sec, i) => (
-                        <motion.button
+                        <div
                           key={sec.id}
-                          whileHover={{ y: -5, scale: 1.02 }}
                           onClick={() => setLocation(`/institucional-editor/${selectedCourseId}?sec=${sec.id}`)}
-                          className="blueprint-card accent-hover p-8 group border-none shadow-sm hover:shadow-xl rounded-[3rem] text-left w-full h-48 flex flex-col justify-between relative overflow-hidden"
+                          className="blueprint-card accent-hover p-8 group border-none shadow-sm hover:shadow-xl rounded-[3rem] text-left w-full min-h-[12rem] flex flex-col justify-between relative overflow-hidden bg-white cursor-pointer transition-all hover:-translate-y-1"
                         >
                           <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:opacity-[0.08]" />
-                          <div className="space-y-4 relative z-10">
-                            <span className="construction-level-2 text-[10px] font-black px-4 py-1.5 rounded-full shadow-sm">ID UNIDAD #{sec.id}</span>
-                            <h4 className="text-2xl font-black uppercase tracking-tight mt-4 leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors">
-                              {sec.nombre}
-                            </h4>
+                          
+                          <div className="space-y-4 relative z-10 w-full mb-4">
+                            <div className="flex justify-between items-start">
+                              <span className="construction-level-2 text-[10px] font-black px-4 py-1.5 rounded-full shadow-sm text-[var(--inst-blue)] bg-[var(--inst-blue-lt)] border border-blue-100/50">
+                                ID UNIDAD #{sec.id}
+                              </span>
+                              
+                              <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRenamingSectionId(sec.id);
+                                    setRenameValue(sec.nombre);
+                                  }}
+                                  className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-[var(--inst-blue)] hover:bg-[var(--inst-blue-lt)] transition-all z-20 hover:scale-105"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteSection(sec.id, e)}
+                                  className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all z-20 hover:scale-105"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {renamingSectionId === sec.id ? (
+                                <input
+                                    autoFocus
+                                    value={renameValue}
+                                    onClick={e => e.stopPropagation()}
+                                    onChange={e => setRenameValue(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') handleRenameSection(sec.id, e);
+                                        if (e.key === 'Escape') { setRenamingSectionId(null); setRenameValue(''); }
+                                    }}
+                                    onBlur={(e) => handleRenameSection(sec.id, e)}
+                                    className="w-full bg-slate-50 border border-[var(--inst-blue)] rounded-xl px-4 py-3 mt-4 text-xl font-black uppercase tracking-tighter leading-none outline-none text-[var(--inst-deep)] shadow-inner focus:ring-4 focus:ring-blue-500/10"
+                                />
+                            ) : (
+                                <h4 className="text-2xl font-black uppercase tracking-tight mt-4 leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors w-full break-words">
+                                    {sec.nombre}
+                                </h4>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)] relative z-10 transition-all transform group-hover:translate-x-2">
+
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)] relative z-10 transition-all transform group-hover:translate-x-2 mt-auto">
                              Explorar Ingeniería <ChevronRight className="w-4 h-4" />
                           </div>
-                        </motion.button>
+                        </div>
                       ))}
                     </div>
                   </motion.section>
