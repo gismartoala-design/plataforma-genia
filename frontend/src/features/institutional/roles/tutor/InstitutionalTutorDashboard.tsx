@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -46,6 +47,7 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null); // section-ID or module-ID
   const [activeView, setActiveView] = useState<'hub' | 'activos' | 'calificaciones' | 'clases_autenticas' | 'usuarios'>('hub');
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (user?.id) {
@@ -318,13 +320,25 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
                                                                 {updating === `module-${mod.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : mod.activo ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                                                             </Button>
                                                         </div>
-                                                        <div className="flex items-center justify-between">
-                                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Nivel Interno</p>
-                                                          {mod.activo ? (
-                                                            <span className="text-[8px] font-black text-emerald-500">ACTIVO</span>
-                                                          ) : (
-                                                            <span className="text-[8px] font-black text-slate-300">INACTIVO</span>
-                                                          )}
+                                                        <div className="flex items-center justify-between gap-4">
+                                                          <div className="flex-1">
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Estado</p>
+                                                            {mod.activo ? (
+                                                              <span className="text-[8px] font-black text-emerald-500">ACTIVO</span>
+                                                            ) : (
+                                                              <span className="text-[8px] font-black text-slate-300">INACTIVO</span>
+                                                            )}
+                                                          </div>
+                                                          <Button
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setLocation(`/institucional-editor/${selectedCourseId}`);
+                                                            }}
+                                                            className="h-8 px-4 rounded-xl bg-[var(--inst-blue-lt)] text-[var(--inst-blue)] hover:bg-[var(--inst-blue)] hover:text-white transition-all text-[9px] font-black uppercase tracking-widest border border-[var(--inst-blue)]/10"
+                                                          >
+                                                            <BookOpen className="w-3 h-3 mr-2" /> Ver Contenidos
+                                                          </Button>
                                                         </div>
                                                     </div>
                                                   );

@@ -37,10 +37,10 @@ const BLOCK_TYPES_CONFIG: Record<BlockType, { label: string, icon: any, color: s
     DELIVERABLE: { label: 'Entrega de Obra', icon: UploadCloud, color: 'bg-pink-500', category: 'control', defaultData: { titulo: '', descripcion: '', tipo: 'ARCHIVO' } },
 
     // Bloques EdTech Kids "Secuencias y Orden"
-    KIDS_WELCOME: { label: 'Bloque 1: Bienvenida', icon: Star, color: 'bg-sky-500', category: 'edTechKids', defaultData: { globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { allowSkip: false, bgMusic: true } } },
-    KIDS_WARMUP: { label: 'Bloque 2: Simón Dice', icon: Activity, color: 'bg-orange-500', category: 'edTechKids', defaultData: { globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { enableCamera: false, manualTime: true } } },
-    KIDS_THEORY: { label: 'Bloque 3: Teoría Visual', icon: Eye, color: 'bg-purple-500', category: 'edTechKids', defaultData: { globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { forceAudio: true } } },
-    KIDS_ERROR_LAB: { label: 'Bloque 4: Lab Error', icon: FlaskConical, color: 'bg-red-500', category: 'edTechKids', defaultData: { globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { soundFeedback: true, showRetry: true } } },
+    KIDS_WELCOME: { label: 'Bloque 1: Bienvenida', icon: Star, color: 'bg-sky-500', category: 'edTechKids', defaultData: { titulo: 'Bienvenida GenIA', texto: '¡Hola! Soy Lógico, tu guía en esta aventura.', globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { allowSkip: false, bgMusic: true } } },
+    KIDS_WARMUP: { label: 'Bloque 2: Simón Dice', icon: Activity, color: 'bg-orange-500', category: 'edTechKids', defaultData: { titulo: 'Simón Dice: Secuencias', texto: 'Sigue las instrucciones físicas para activar tu mente.', globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { enableCamera: false, manualTime: true } } },
+    KIDS_THEORY: { label: 'Bloque 3: Teoría Visual', icon: Eye, color: 'bg-purple-500', category: 'edTechKids', defaultData: { titulo: '¿Qué es una Secuencia?', texto: 'Aprendamos el orden correcto de las cosas.', globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { forceAudio: true } } },
+    KIDS_ERROR_LAB: { label: 'Bloque 4: Lab Error', icon: FlaskConical, color: 'bg-red-500', category: 'edTechKids', defaultData: { titulo: 'Detectando la Ilógica', texto: 'Encuentra el error en esta secuencia de pasos.', globalPerms: { visible: true, interactive: true, autoplay: true, trackProgress: true }, blockPerms: { soundFeedback: true, showRetry: true } } },
 };
 
 interface InstitutionalClassBuilderProps {
@@ -108,6 +108,7 @@ export const InstitutionalClassBuilder = ({
         const { data } = block;
 
         const renderKidsGlobalChecklist = () => {
+            if (isReadOnly) return null; // Hide configuration for tutors
             const perms = data.globalPerms || { visible: true, interactive: true, autoplay: true, trackProgress: true };
             const toggle = (key: string) => updateBlock(block.id, { ...data, globalPerms: { ...perms, [key]: !perms[key] } });
             return (
@@ -129,6 +130,25 @@ export const InstitutionalClassBuilder = ({
                 </div>
             );
         };
+
+        const renderBlockHeader = (color: string) => (
+            <div className="mb-4 space-y-3">
+                <Input 
+                    readOnly={isReadOnly} 
+                    value={data.titulo || ''} 
+                    onChange={e => updateBlock(block.id, { ...data, titulo: e.target.value })} 
+                    placeholder="Título del bloque..." 
+                    className={cn("font-bold text-lg border-none bg-white p-0 h-auto focus-visible:ring-0", color.replace('bg-', 'text-'))} 
+                />
+                <Textarea 
+                    readOnly={isReadOnly} 
+                    value={data.texto || ''} 
+                    onChange={e => updateBlock(block.id, { ...data, texto: e.target.value })} 
+                    placeholder="Contenido descriptivo o instrucciones narradas..." 
+                    className="min-h-[60px] border-none bg-slate-50/50 rounded-xl p-4 text-sm font-medium resize-none focus-visible:ring-0" 
+                />
+            </div>
+        );
 
         switch (block.type) {
             case 'NARRATIVE':
@@ -272,24 +292,27 @@ export const InstitutionalClassBuilder = ({
                 return (
                     <div className="space-y-4">
                         {renderKidsGlobalChecklist()}
+                        {renderBlockHeader('text-sky-600')}
                         <div className="bg-sky-50 p-6 rounded-3xl border border-sky-100 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-200/50 rounded-full blur-3xl" />
-                            <h4 className="text-xs font-black uppercase tracking-widest text-sky-800 mb-5 flex items-center gap-2 relative z-10"><Star className="w-5 h-5 text-sky-500" /> Fase 1: Identidad y Bienvenida</h4>
-                            <div className="space-y-4 mb-6 relative z-10">
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm transition-all hover:border-sky-300 cursor-pointer">
-                                    <input type="checkbox" checked={data.blockPerms?.allowSkip} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, allowSkip: !data.blockPerms?.allowSkip } })} disabled={isReadOnly} className="rounded-md border-sky-300 text-sky-600 focus:ring-sky-500 w-5 h-5" /> Permitir salto de intro
-                                </label>
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm transition-all hover:border-sky-300 cursor-pointer">
-                                    <input type="checkbox" checked={data.blockPerms?.bgMusic} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, bgMusic: !data.blockPerms?.bgMusic } })} disabled={isReadOnly} className="rounded-md border-sky-300 text-sky-600 focus:ring-sky-500 w-5 h-5" /> Habilitar música de fondo (v-low)
-                                </label>
-                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-sky-800 mb-5 flex items-center gap-2 relative z-10"><Star className="w-5 h-5 text-sky-500" /> Configuración: Fase de Identidad</h4>
+                            {!isReadOnly && (
+                                <div className="space-y-4 mb-6 relative z-10">
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm transition-all hover:border-sky-300 cursor-pointer">
+                                        <input type="checkbox" checked={data.blockPerms?.allowSkip} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, allowSkip: !data.blockPerms?.allowSkip } })} disabled={isReadOnly} className="rounded-md border-sky-300 text-sky-600 focus:ring-sky-500 w-5 h-5" /> Permitir salto de intro
+                                    </label>
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm transition-all hover:border-sky-300 cursor-pointer">
+                                        <input type="checkbox" checked={data.blockPerms?.bgMusic} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, bgMusic: !data.blockPerms?.bgMusic } })} disabled={isReadOnly} className="rounded-md border-sky-300 text-sky-600 focus:ring-sky-500 w-5 h-5" /> Habilitar música de fondo (v-low)
+                                    </label>
+                                </div>
+                            )}
                             <div className="p-5 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-sky-200 flex flex-col sm:flex-row items-center gap-5 relative z-10">
                                 <div className="w-16 h-16 bg-gradient-to-br from-[#3498db] via-[#f1c40f] to-[#e74c3c] rounded-2xl shadow-inner shrink-0 flex items-center justify-center">
                                     <Star className="w-8 h-8 text-white drop-shadow-md" />
                                 </div>
                                 <div className="flex-1 space-y-1.5">
                                     <p className="text-sm font-black text-slate-800 tracking-tight">Componente Interactivo Dinámico</p>
-                                    <p className="text-xs text-slate-500 font-medium leading-relaxed">Banner con diseño Primario (#3498db, #f1c40f, #e74c3c).<br/>Estudiante verá Animación Estrellas + Robot "LÓGICO" y botón grande (Radius 30px) reproduciendo <code>trigger_ding.mp3</code>.</p>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed">Animación Estrellas + Robot "LÓGICO" y botón grande (Radius 30px) reproduciendo <code>trigger_ding.mp3</code>.</p>
                                 </div>
                             </div>
                         </div>
@@ -299,30 +322,30 @@ export const InstitutionalClassBuilder = ({
                 return (
                     <div className="space-y-4">
                         {renderKidsGlobalChecklist()}
+                        {renderBlockHeader('text-orange-600')}
                         <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/50 rounded-full blur-3xl" />
-                            <h4 className="text-xs font-black uppercase tracking-widest text-orange-800 mb-5 flex items-center gap-2 relative z-10"><Activity className="w-5 h-5 text-orange-500" /> Fase 2: Calentamiento "Simón Dice"</h4>
-                            <div className="space-y-4 mb-6 relative z-10">
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-orange-100 shadow-sm transition-all hover:border-orange-300 cursor-pointer">
-                                    <input type="checkbox" checked={data.blockPerms?.enableCamera} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, enableCamera: !data.blockPerms?.enableCamera } })} disabled={isReadOnly} className="rounded-md border-orange-300 text-orange-600 focus:ring-orange-500 w-5 h-5" /> Habilitar cámara del estudiante (opcional)
-                                </label>
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-orange-100 shadow-sm transition-all hover:border-orange-300 cursor-pointer">
-                                    <input type="checkbox" checked={data.blockPerms?.manualTime} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, manualTime: !data.blockPerms?.manualTime } })} disabled={isReadOnly} className="rounded-md border-orange-300 text-orange-600 focus:ring-orange-500 w-5 h-5" /> Control de tiempo manual por el docente
-                                </label>
-                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-orange-800 mb-5 flex items-center gap-2 relative z-10"><Activity className="w-5 h-5 text-orange-500" /> Configuración: Fase Simón Dice</h4>
+                            {!isReadOnly && (
+                                <div className="space-y-4 mb-6 relative z-10">
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-orange-100 shadow-sm transition-all hover:border-orange-300 cursor-pointer">
+                                        <input type="checkbox" checked={data.blockPerms?.enableCamera} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, enableCamera: !data.blockPerms?.enableCamera } })} disabled={isReadOnly} className="rounded-md border-orange-300 text-orange-600 focus:ring-orange-500 w-5 h-5" /> Habilitar cámara del estudiante
+                                    </label>
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-orange-100 shadow-sm transition-all hover:border-orange-300 cursor-pointer">
+                                        <input type="checkbox" checked={data.blockPerms?.manualTime} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, manualTime: !data.blockPerms?.manualTime } })} disabled={isReadOnly} className="rounded-md border-orange-300 text-orange-600 focus:ring-orange-500 w-5 h-5" /> Control de tiempo manual
+                                    </label>
+                                </div>
+                            )}
                             <div className="grid grid-cols-3 gap-4 relative z-10">
-                                <div className="bg-white p-4 rounded-2xl border-2 border-orange-100/50 text-center shadow-lg shadow-orange-500/5 hover:-translate-y-1 transition-transform">
-                                    <span className="text-4xl block mb-2 drop-shadow-sm">🙋</span><span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">LEVÁNTATE</span><div className="text-[9px] text-slate-400 mt-1 font-bold">Timer: 2s</div>
+                                <div className="bg-white p-4 rounded-2xl border-2 border-orange-100/50 text-center shadow-lg shadow-orange-500/5 transition-transform">
+                                    <span className="text-4xl block mb-2 drop-shadow-sm">🙋</span><span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">LEVÁNTATE</span>
                                 </div>
-                                <div className="bg-white p-4 rounded-2xl border-2 border-orange-100/50 text-center shadow-lg shadow-orange-500/5 hover:-translate-y-1 transition-transform">
-                                    <span className="text-4xl block mb-2 drop-shadow-sm">🦘</span><span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">SALTA</span><div className="text-[9px] text-slate-400 mt-1 font-bold">Timer: 2s</div>
+                                <div className="bg-white p-4 rounded-2xl border-2 border-orange-100/50 text-center shadow-lg shadow-orange-500/5 transition-transform">
+                                    <span className="text-4xl block mb-2 drop-shadow-sm">🦘</span><span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">SALTA</span>
                                 </div>
-                                <div className="bg-white p-4 rounded-2xl border-2 border-orange-100/50 text-center shadow-lg shadow-orange-500/5 hover:-translate-y-1 transition-transform">
-                                    <span className="text-4xl block mb-2 drop-shadow-sm">🪑</span><span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">SIÉNTATE</span><div className="text-[9px] text-slate-400 mt-1 font-bold">Timer: 2s</div>
+                                <div className="bg-white p-4 rounded-2xl border-2 border-orange-100/50 text-center shadow-lg shadow-orange-500/5 transition-transform">
+                                    <span className="text-4xl block mb-2 drop-shadow-sm">🪑</span><span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">SIÉNTATE</span>
                                 </div>
-                            </div>
-                            <div className="bg-emerald-50 text-emerald-700 p-3 mt-4 rounded-xl border border-emerald-200 text-xs font-bold text-center flex justify-center items-center gap-2">
-                                ✅ Docente presiona "Check" ➡️ Lanza Confeti Virtual Automático
                             </div>
                         </div>
                     </div>
@@ -331,14 +354,17 @@ export const InstitutionalClassBuilder = ({
                 return (
                     <div className="space-y-4">
                         {renderKidsGlobalChecklist()}
+                        {renderBlockHeader('text-purple-600')}
                         <div className="bg-purple-50 p-6 rounded-3xl border border-purple-100 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-200/50 rounded-full blur-3xl" />
-                            <h4 className="text-xs font-black uppercase tracking-widest text-purple-800 mb-5 flex items-center gap-2 relative z-10"><Eye className="w-5 h-5 text-purple-500" /> Fase 3.1: Teoría Visual - El Concepto</h4>
-                            <div className="space-y-4 mb-6 relative z-10">
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-purple-100 shadow-sm transition-all hover:border-purple-300 cursor-pointer">
-                                    <input type="checkbox" checked={data.blockPerms?.forceAudio} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, forceAudio: !data.blockPerms?.forceAudio } })} disabled={isReadOnly} className="rounded-md border-purple-300 text-purple-600 focus:ring-purple-500 w-5 h-5" /> Forzar escucha de audio completa antes de avanzar
-                                </label>
-                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-purple-800 mb-5 flex items-center gap-2 relative z-10"><Eye className="w-5 h-5 text-purple-500" /> Configuración: Fase de Concepto</h4>
+                            {!isReadOnly && (
+                                <div className="space-y-4 mb-6 relative z-10">
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-purple-100 shadow-sm transition-all hover:border-purple-300 cursor-pointer">
+                                        <input type="checkbox" checked={data.blockPerms?.forceAudio} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, forceAudio: !data.blockPerms?.forceAudio } })} disabled={isReadOnly} className="rounded-md border-purple-300 text-purple-600 focus:ring-purple-500 w-5 h-5" /> Forzar escucha de audio completa
+                                    </label>
+                                </div>
+                            )}
                             <div className="p-6 bg-white rounded-2xl shadow-sm border border-purple-100 relative z-10 text-center">
                                 <div className="flex justify-center items-center gap-4 mb-4">
                                     <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200 py-1.5 px-4 text-xs font-black tracking-widest">PRIMERO</Badge>
@@ -358,29 +384,28 @@ export const InstitutionalClassBuilder = ({
                 return (
                     <div className="space-y-4">
                         {renderKidsGlobalChecklist()}
+                        {renderBlockHeader('text-red-600')}
                         <div className="bg-red-50 p-6 rounded-3xl border border-red-100 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-red-200/50 rounded-full blur-3xl" />
-                            <h4 className="text-xs font-black uppercase tracking-widest text-red-800 mb-5 flex items-center gap-2 relative z-10"><FlaskConical className="w-5 h-5 text-red-500" /> Fase 3.2: Laboratorio de Error (El Desayuno)</h4>
-                            <div className="space-y-4 mb-6 relative z-10 grid grid-cols-2 gap-4">
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-red-100 shadow-sm transition-all hover:border-red-300 cursor-pointer col-span-2 sm:col-span-1 border-b-2">
-                                    <input type="checkbox" checked={data.blockPerms?.soundFeedback} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, soundFeedback: !data.blockPerms?.soundFeedback } })} disabled={isReadOnly} className="rounded-md border-red-300 text-red-600 focus:ring-red-500 w-5 h-5 flex-shrink-0" /> <span className="leading-tight">Habilitar feedback sonoro (error/acierto)</span>
-                                </label>
-                                <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-red-100 shadow-sm transition-all hover:border-red-300 cursor-pointer col-span-2 sm:col-span-1 border-b-2">
-                                    <input type="checkbox" checked={data.blockPerms?.showRetry} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, showRetry: !data.blockPerms?.showRetry } })} disabled={isReadOnly} className="rounded-md border-red-300 text-red-600 focus:ring-red-500 w-5 h-5 flex-shrink-0" /> <span className="leading-tight">Mostrar botón de "Repetir Comparación"</span>
-                                </label>
-                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-red-800 mb-5 flex items-center gap-2 relative z-10"><FlaskConical className="w-5 h-5 text-red-500" /> Configuración: Laboratorio de Error</h4>
+                            {!isReadOnly && (
+                                <div className="space-y-4 mb-6 relative z-10 grid grid-cols-2 gap-4">
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-red-100 shadow-sm transition-all hover:border-red-300 cursor-pointer col-span-2 sm:col-span-1 border-b-2">
+                                        <input type="checkbox" checked={data.blockPerms?.soundFeedback} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, soundFeedback: !data.blockPerms?.soundFeedback } })} disabled={isReadOnly} className="rounded-md border-red-300 text-red-600 focus:ring-red-500 w-5 h-5 flex-shrink-0" /> <span className="leading-tight">Feedback sonoro activo</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 text-sm font-bold text-slate-700 bg-white p-3 rounded-2xl border border-red-100 shadow-sm transition-all hover:border-red-300 cursor-pointer col-span-2 sm:col-span-1 border-b-2">
+                                        <input type="checkbox" checked={data.blockPerms?.showRetry} onChange={() => !isReadOnly && updateBlock(block.id, { ...data, blockPerms: { ...data.blockPerms, showRetry: !data.blockPerms?.showRetry } })} disabled={isReadOnly} className="rounded-md border-red-300 text-red-600 focus:ring-red-500 w-5 h-5 flex-shrink-0" /> <span className="leading-tight">Botón de Repetir Activo</span>
+                                    </label>
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-5 relative z-10">
                                 <div className="bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-200 shadow-sm text-center relative overflow-hidden group">
-                                    <div className="absolute top-2 right-2 w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center border border-emerald-200 opacity-50"><CheckCircle2 className="w-3 h-3 text-emerald-500" /></div>
-                                    <p className="text-emerald-700 font-black text-[10px] uppercase tracking-widest mb-3">Lado A (Verde)</p>
-                                    <p className="text-emerald-900 font-bold text-sm mb-1">Secuencia Lógica</p>
-                                    <p className="text-emerald-600 text-xs font-medium leading-relaxed bg-white/60 p-2 rounded-xl">Plato ➔ Cereal ➔ Leche ➔ Cuchara</p>
+                                    <p className="text-emerald-700 font-black text-[10px] uppercase tracking-widest mb-3">Secuencia Lógica</p>
+                                    <p className="text-emerald-600 text-xs font-medium leading-relaxed bg-white/60 p-2 rounded-xl">Correcto ➔ Acertado</p>
                                 </div>
                                 <div className="bg-rose-50 p-5 rounded-2xl border-2 border-rose-200 shadow-sm text-center relative overflow-hidden group">
-                                    <div className="absolute top-2 right-2 w-6 h-6 bg-rose-100 rounded-full flex items-center justify-center border border-rose-200 opacity-50"><X className="w-3 h-3 text-rose-500" /></div>
-                                    <p className="text-rose-700 font-black text-[10px] uppercase tracking-widest mb-3">Lado B (Rojo)</p>
-                                    <p className="text-rose-900 font-bold text-sm mb-1">Secuencia Ilógica</p>
-                                    <p className="text-rose-600 text-xs font-medium leading-relaxed bg-white/60 p-2 rounded-xl">Cuchara ➔ Aire ➔ Desorden</p>
+                                    <p className="text-rose-700 font-black text-[10px] uppercase tracking-widest mb-3">Secuencia Ilógica</p>
+                                    <p className="text-rose-600 text-xs font-medium leading-relaxed bg-white/60 p-2 rounded-xl">Error ➔ Fallido</p>
                                 </div>
                             </div>
                         </div>

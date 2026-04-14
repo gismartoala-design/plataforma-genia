@@ -139,24 +139,26 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                 <div className="absolute inset-0 construction-grid opacity-10" />
                 
                 {/* Neural Particles */}
-                {[...Array(15)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        animate={{ 
-                            scale: [1, 1.2, 1],
-                            opacity: [0.1, 0.3, 0.1],
-                            x: [0, Math.random() * 50 - 25, 0],
-                            y: [0, Math.random() * 50 - 25, 0]
-                        }}
-                        transition={{ duration: 5 + Math.random() * 5, repeat: Infinity }}
-                        className="absolute w-[400px] h-[400px] rounded-full blur-[100px]"
-                        style={{ 
-                            left: `${Math.random() * 100}%`, 
-                            top: `${Math.random() * 100}%`,
-                            background: i % 2 === 0 ? 'rgba(37,99,235,0.08)' : 'rgba(147,51,234,0.05)'
-                        }}
-                    />
-                ))}
+                <div className="absolute inset-0">
+                    {[...Array(15)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            animate={{ 
+                                scale: [1, 1.2, 1],
+                                opacity: [0.1, 0.3, 0.1],
+                                x: [0, Math.random() * 50 - 25, 0],
+                                y: [0, Math.random() * 50 - 25, 0]
+                            }}
+                            transition={{ duration: 5 + Math.random() * 5, repeat: Infinity }}
+                            className="absolute w-[400px] h-[400px] rounded-full blur-[100px]"
+                            style={{ 
+                                left: `${Math.random() * 100}%`, 
+                                top: `${Math.random() * 100}%`,
+                                background: i % 2 === 0 ? 'rgba(37,99,235,0.08)' : 'rgba(147,51,234,0.05)'
+                            }}
+                        />
+                    ))}
+                </div>
             </div>
             
             {/* --- PREMIUM HUD HEADER --- */}
@@ -283,13 +285,13 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                             <p className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-500 mb-2 italic">Análisis de Datos</p>
                                             <h4 className="text-xl sm:text-2xl font-black italic uppercase text-white">Selecciona tu Respuesta</h4>
                                         </div>
-                                        <div className="grid grid-cols-1 gap-4">
+                                        <div className="grid grid-cols-1 gap-4 text-left">
                                             {currentMoment?.student?.options?.map((opt: any, i: number) => (
                                                 <button 
                                                     key={i} disabled={isReadOnly}
                                                     onClick={() => !isReadOnly && setSelectedOpt(i)}
                                                     className={cn(
-                                                        "w-full p-5 sm:p-7 rounded-[1.5rem] border-2 text-left transition-all flex items-center gap-5 group",
+                                                        "w-full p-5 sm:p-7 rounded-[1.5rem] border-2 text-left transition-all flex items-center gap-5 group border-transparent",
                                                         selectedOpt === i ? "bg-blue-600 border-blue-500 text-white shadow-2xl shadow-blue-600/20" : "bg-white/5 border-white/5 hover:border-blue-500/50 text-slate-300",
                                                         isReadOnly && "cursor-default"
                                                     )}
@@ -315,7 +317,7 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                             <button 
                                                 onClick={() => !isReadOnly && setSelectedOpt(true)} disabled={isReadOnly}
                                                 className={cn(
-                                                    "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group",
+                                                    "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group border-transparent",
                                                     selectedOpt === true ? "bg-blue-600 border-blue-400 text-white shadow-2xl shadow-blue-600/40" : "bg-white/5 border-white/10 hover:border-blue-500 text-slate-400"
                                                 )}
                                             >
@@ -325,7 +327,7 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                             <button 
                                                 onClick={() => !isReadOnly && setSelectedOpt(false)} disabled={isReadOnly}
                                                 className={cn(
-                                                    "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group",
+                                                    "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group border-transparent",
                                                     selectedOpt === false ? "bg-rose-600 border-rose-400 text-white shadow-2xl shadow-rose-600/40" : "bg-white/5 border-white/10 hover:border-rose-500 text-slate-400"
                                                 )}
                                             >
@@ -361,7 +363,7 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                 <div className="hidden sm:flex items-center gap-6">
                     <div className="flex items-center gap-4">
                         <Activity className="w-6 h-6 text-blue-500 animate-pulse" />
-                        <div>
+                        <div className="text-left">
                             <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-500 mb-0.5">Integridad de Misión</p>
                             <div className="h-1.5 w-32 bg-white/5 rounded-full overflow-hidden">
                                 <motion.div animate={{ width: `${progress}%` }} className="h-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]" />
@@ -371,12 +373,12 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                 </div>
 
                 <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <Button variant="ghost" onClick={handlePrev} disabled={currentMomentIdx === 0} className="flex-1 sm:flex-none h-14 px-8 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:text-white font-black uppercase tracking-[0.3em] text-[10px]">
+                    <Button variant="ghost" onClick={handlePrev} disabled={currentMomentIdx === 0} className="flex-1 sm:flex-none h-14 px-8 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:text-white font-black uppercase tracking-[0.3em] text-[10px] border-transparent">
                         <ChevronLeft className="w-5 h-5 mr-3" /> REGRESAR
                     </Button>
                     <Button 
                         onClick={handleNext}
-                        className="flex-[2] sm:flex-none h-16 px-12 sm:px-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.5rem] sm:rounded-[2rem] font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs gap-4 shadow-2xl shadow-blue-600/40 relative active:scale-95 transition-all group"
+                        className="flex-[2] sm:flex-none h-16 px-12 sm:px-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs gap-4 shadow-2xl shadow-blue-600/40 relative active:scale-95 transition-all group border-transparent"
                     >
                         {currentMomentIdx === moments.length - 1 ? (isReadOnly ? "SALIR VISTA PREVIA" : "FINALIZAR MISIÓN") : "SIGUIENTE FASE"} 
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />

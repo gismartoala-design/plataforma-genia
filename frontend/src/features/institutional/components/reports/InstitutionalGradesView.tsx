@@ -92,7 +92,7 @@ export const InstitutionalGradesView = () => {
         try {
             if (user.role === 'institutional_admin') {
                 const data = await institutionApi.getCourses(user.institucionId);
-                setCourses(data || []);
+                setCourses((data as any[]) || []);
             } else {
                 const data = await professorApi.getProfessorCourses(user.id);
                 setCourses(data || []);
