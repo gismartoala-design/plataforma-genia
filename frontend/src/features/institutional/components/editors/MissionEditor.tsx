@@ -1,37 +1,421 @@
 import React, { useState } from 'react';
 import { 
-  Rocket, 
-  Target, 
-  Clock, 
-  Layers, 
-  Settings, 
-  Eye, 
-  Cpu, 
-  Trophy, 
-  Save,
-  Plus,
-  Trash2,
-  ArrowLeft,
-  Wand2,
-  Download,
-  Upload,
-  CheckCircle2,
-  FileCode,
-  FileUp,
-  HelpCircle,
-  Loader2,
-  ChevronUp,
-  ChevronDown,
-  X
+  Rocket, Target, Clock, Layers, Settings, Eye, EyeOff, Trophy, Save,
+  Plus, Trash2, ArrowLeft, Wand2, Download, Upload, CheckCircle2, 
+  FileUp, Loader2, ChevronUp, ChevronDown, X, FileText, BookOpen,
+  Lightbulb, AlertTriangle, List, ToggleLeft, ArrowUpDown, MessageSquare,
+  GripVertical, ChevronRight, Cpu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { MISSION_GRADES, MissionMoment } from '../../services/curriculum.api';
 import { Switch } from '@/components/ui/switch';
+import { MISSION_GRADES } from '../../services/curriculum.api';
 
+// ─── Block type definitions ───────────────────────────────────────────────────
+interface Block {
+  id: string;
+  type: string;
+  visibleToStudent: boolean;
+  content: any;
+}
+
+interface MomentData {
+  id: string;
+  title: string;
+  time_minutes: number;
+  blocks: Block[];
+}
+
+const BLOCK_CATALOG = [
+  {
+    group: '👨‍🏫 Guía del Docente',
+    items: [
+      { type: 'teacher_intent',    label: 'Intención Didáctica',  icon: Target,        color: 'blue',   defaultVisible: false, description: 'Por qué este momento importa pedagógicamente' },
+      { type: 'teacher_script',    label: 'Guión Docente',        icon: FileText,      color: 'indigo', defaultVisible: false, description: 'Qué decir textualmente al grupo' },
+      { type: 'teacher_observe',   label: 'Qué Observar',         icon: Eye,           color: 'violet', defaultVisible: false, description: 'Indicadores de comprensión a monitorear' },
+      { type: 'teacher_errors',    label: 'Errores Esperados',    icon: AlertTriangle, color: 'orange', defaultVisible: false, description: 'Confusiones comunes a anticipar' },
+      { type: 'teacher_intervene', label: 'Intervención',         icon: MessageSquare, color: 'rose',   defaultVisible: false, description: 'Cómo actuar si hay error' },
+      { type: 'teacher_pedagogy',  label: 'Fundamento Pedagógico',icon: BookOpen,      color: 'cyan',   defaultVisible: false, description: 'Corrientes y teorías que sustentan' },
+    ],
+  },
+  {
+    group: '🚀 Contenido del Estudiante',
+    items: [
+      { type: 'student_context',   label: 'Narrativa / Contexto', icon: BookOpen,      color: 'emerald', defaultVisible: true, description: 'Situación, story o lectura introductoria' },
+      { type: 'student_concept',   label: 'Concepto Académico',   icon: Lightbulb,     color: 'teal',    defaultVisible: true, description: 'Explicación teórica para el estudiante' },
+      { type: 'student_activity',  label: 'Actividad / Reto',     icon: Rocket,        color: 'rose',    defaultVisible: true, description: 'Instrucción de la tarea a realizar' },
+    ],
+  },
+  {
+    group: '⚡ Interacciones',
+    items: [
+      { type: 'interaction_choice',    label: 'Opción Múltiple',     icon: List,         color: 'amber',  defaultVisible: true, description: 'Pregunta con opciones A, B, C, D' },
+      { type: 'interaction_truefalse', label: 'Verdadero / Falso',   icon: ToggleLeft,   color: 'lime',   defaultVisible: true, description: 'Afirmación para validar' },
+      { type: 'interaction_sequence',  label: 'Orden de Secuencia',  icon: ArrowUpDown,  color: 'purple', defaultVisible: true, description: 'Pasos a ordenar correctamente' },
+      { type: 'interaction_upload',    label: 'Evidencia / Archivo', icon: FileUp,       color: 'pink',   defaultVisible: true, description: 'Estudiante sube evidencia' },
+      { type: 'interaction_open',      label: 'Respuesta Abierta',   icon: MessageSquare,color: 'slate',  defaultVisible: true, description: 'Campo de texto libre' },
+    ],
+  },
+  {
+    group: '📊 Evaluación',
+    items: [
+      { type: 'kpi_feedback', label: 'Retroalimentación + KPI', icon: Trophy, color: 'yellow', defaultVisible: false, description: 'Mensajes de acierto/error y peso en el KPI' },
+    ],
+  },
+];
+
+const BLOCK_META: Record<string, { label: string; icon: any; colorClass: string; borderClass: string; bgClass: string; textClass: string }> = {
+  teacher_intent:      { label: 'Intención Didáctica',   icon: Target,         colorClass: 'text-blue-600',   borderClass: 'border-blue-200',   bgClass: 'bg-blue-50',    textClass: 'text-blue-700' },
+  teacher_script:      { label: 'Guión Docente',          icon: FileText,       colorClass: 'text-indigo-600', borderClass: 'border-indigo-200', bgClass: 'bg-indigo-50',  textClass: 'text-indigo-700' },
+  teacher_observe:     { label: 'Qué Observar',           icon: Eye,            colorClass: 'text-violet-600', borderClass: 'border-violet-200', bgClass: 'bg-violet-50',  textClass: 'text-violet-700' },
+  teacher_errors:      { label: 'Errores Esperados',      icon: AlertTriangle,  colorClass: 'text-orange-600', borderClass: 'border-orange-200', bgClass: 'bg-orange-50',  textClass: 'text-orange-700' },
+  teacher_intervene:   { label: 'Intervención',           icon: MessageSquare,  colorClass: 'text-rose-600',   borderClass: 'border-rose-200',   bgClass: 'bg-rose-50',    textClass: 'text-rose-700' },
+  teacher_pedagogy:    { label: 'Fundamento Pedagógico',  icon: BookOpen,       colorClass: 'text-cyan-600',   borderClass: 'border-cyan-200',   bgClass: 'bg-cyan-50',    textClass: 'text-cyan-700' },
+  student_context:     { label: 'Narrativa / Contexto',   icon: BookOpen,       colorClass: 'text-emerald-600',borderClass: 'border-emerald-200',bgClass: 'bg-emerald-50', textClass: 'text-emerald-700' },
+  student_concept:     { label: 'Concepto Académico',     icon: Lightbulb,      colorClass: 'text-teal-600',   borderClass: 'border-teal-200',   bgClass: 'bg-teal-50',    textClass: 'text-teal-700' },
+  student_activity:    { label: 'Actividad / Reto',       icon: Rocket,         colorClass: 'text-rose-600',   borderClass: 'border-rose-200',   bgClass: 'bg-rose-50',    textClass: 'text-rose-700' },
+  interaction_choice:  { label: 'Opción Múltiple',        icon: List,           colorClass: 'text-amber-600',  borderClass: 'border-amber-200',  bgClass: 'bg-amber-50',   textClass: 'text-amber-700' },
+  interaction_truefalse:{ label: 'Verdadero / Falso',     icon: ToggleLeft,     colorClass: 'text-lime-600',   borderClass: 'border-lime-200',   bgClass: 'bg-lime-50',    textClass: 'text-lime-700' },
+  interaction_sequence:{ label: 'Orden de Secuencia',     icon: ArrowUpDown,    colorClass: 'text-purple-600', borderClass: 'border-purple-200', bgClass: 'bg-purple-50',  textClass: 'text-purple-700' },
+  interaction_upload:  { label: 'Evidencia / Archivo',    icon: FileUp,         colorClass: 'text-pink-600',   borderClass: 'border-pink-200',   bgClass: 'bg-pink-50',    textClass: 'text-pink-700' },
+  interaction_open:    { label: 'Respuesta Abierta',       icon: MessageSquare, colorClass: 'text-slate-600',  borderClass: 'border-slate-200',  bgClass: 'bg-slate-50',   textClass: 'text-slate-700' },
+  kpi_feedback:        { label: 'Retroalimentación + KPI', icon: Trophy,        colorClass: 'text-yellow-600', borderClass: 'border-yellow-200', bgClass: 'bg-yellow-50',  textClass: 'text-yellow-700' },
+};
+
+// ─── Block Content Renderer ───────────────────────────────────────────────────
+function BlockContent({ block, onUpdate, isReadOnly }: { block: Block; onUpdate: (content: any) => void; isReadOnly?: boolean }) {
+  const c = block.content || {};
+
+  const field = (key: string, label: string, multiline = false, placeholder = '') => (
+    <div className="space-y-1.5">
+      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</label>
+      {multiline ? (
+        <Textarea
+          readOnly={isReadOnly}
+          value={c[key] || ''}
+          onChange={e => onUpdate({ ...c, [key]: e.target.value })}
+          onInput={(e) => {
+            const el = e.currentTarget;
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+          }}
+          placeholder={placeholder}
+          className="bg-white border-slate-100 focus:border-current rounded-2xl text-xs font-bold min-h-[80px] resize-none overflow-hidden transition-all"
+          style={{ height: 'auto' }}
+        />
+      ) : (
+        <Input
+          readOnly={isReadOnly}
+          value={c[key] || ''}
+          onChange={e => onUpdate({ ...c, [key]: e.target.value })}
+          placeholder={placeholder}
+          className="bg-white border-slate-100 focus:border-current rounded-xl text-xs font-bold h-10"
+        />
+      )}
+    </div>
+  );
+
+  switch (block.type) {
+    case 'teacher_intent':
+      return field('text', 'Intencionalidad Didáctica', true, 'Por qué este momento pedagógicamente...');
+    case 'teacher_script':
+      return field('text', 'Guión Textual', true, '"Ahora, quiero que imaginen..."');
+    case 'teacher_observe':
+      return field('text', 'Indicadores a Observar', true, 'Que el estudiante logre...');
+    case 'teacher_errors':
+      return field('text', 'Errores Comunes Esperados', true, 'Confundir X con Y...');
+    case 'teacher_intervene':
+      return field('text', 'Intervención Sugerida', true, 'Si hay error, preguntar...');
+    case 'teacher_pedagogy':
+      return field('text', 'Corrientes / Teorías', false, 'Constructivismo, Aprendizaje Significativo...');
+    case 'student_context':
+    case 'student_concept':
+    case 'student_activity':
+      return field('text', block.type === 'student_activity' ? 'Instrucción / Reto' : 'Contenido', true, 'Escribe el texto aquí...');
+    
+    case 'interaction_choice': {
+      const opts: { text: string }[] = c.options || [{ text: '' }, { text: '' }];
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Pregunta</label>
+            <Input readOnly={isReadOnly} value={c.question || ''} onChange={e => onUpdate({ ...c, question: e.target.value })} className="bg-white border-slate-100 rounded-xl text-xs font-bold h-10" placeholder="¿Cuál es la secuencia correcta?" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Opciones</label>
+            {opts.map((opt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <button disabled={isReadOnly} onClick={() => onUpdate({ ...c, correct_answer: i })}
+                  className={cn('w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
+                    c.correct_answer === i ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-slate-200 text-slate-300')}>
+                  {c.correct_answer === i ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-[10px] font-black">{String.fromCharCode(65 + i)}</span>}
+                </button>
+                <Input readOnly={isReadOnly} value={opt.text} placeholder={`Opción ${i + 1}`}
+                  onChange={e => { const o = [...opts]; o[i] = { text: e.target.value }; onUpdate({ ...c, options: o }); }}
+                  className="flex-1 h-9 bg-white border-slate-100 rounded-xl text-xs font-bold" />
+                {!isReadOnly && opts.length > 2 && (
+                  <button onClick={() => onUpdate({ ...c, options: opts.filter((_, j) => j !== i) })} className="text-slate-200 hover:text-rose-500 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {!isReadOnly && (
+              <Button variant="ghost" onClick={() => onUpdate({ ...c, options: [...opts, { text: '' }] })}
+                className="h-8 px-3 text-amber-600 hover:bg-amber-50 rounded-xl text-[9px] font-black uppercase tracking-wider gap-1.5">
+                <Plus className="w-3 h-3" /> Añadir Opción
+              </Button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    case 'interaction_truefalse':
+      return (
+        <div className="space-y-3">
+          {field('statement', 'Afirmación', false, 'El semáforo en verde significa...')}
+          <div>
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-2">Respuesta Correcta</label>
+            <div className="flex gap-3">
+              {[true, false].map(val => (
+                <Button key={String(val)} disabled={isReadOnly} variant="ghost"
+                  onClick={() => onUpdate({ ...c, correct_answer: val })}
+                  className={cn('flex-1 h-11 rounded-2xl font-black uppercase text-sm transition-all',
+                    c.correct_answer === val
+                      ? (val ? 'bg-emerald-500 text-white shadow-md' : 'bg-rose-500 text-white shadow-md')
+                      : 'bg-white border border-slate-200 text-slate-400 hover:border-slate-300')}>
+                  {val ? 'Verdadero ✓' : 'Falso ✗'}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'interaction_sequence': {
+      const items: { text: string }[] = c.items || [{ text: '' }, { text: '' }];
+      return (
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold text-slate-400 bg-purple-50 border border-purple-100 rounded-xl px-3 py-2">
+            El orden aquí es el orden <span className="text-purple-600 font-black">CORRECTO</span>. El sistema lo mezclará para el estudiante.
+          </p>
+          <div className="space-y-2">
+            {items.map((item, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[10px] font-black text-purple-400">{i + 1}</span>
+                </div>
+                <Input readOnly={isReadOnly} value={item.text} placeholder={`Paso ${i + 1}`}
+                  onChange={e => { const it = [...items]; it[i] = { text: e.target.value }; onUpdate({ ...c, items: it }); }}
+                  className="flex-1 h-9 bg-white border-slate-100 rounded-xl text-xs font-bold" />
+                {!isReadOnly && items.length > 2 && (
+                  <button onClick={() => onUpdate({ ...c, items: items.filter((_, j) => j !== i) })} className="text-slate-200 hover:text-rose-500 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {!isReadOnly && (
+            <Button variant="ghost" onClick={() => onUpdate({ ...c, items: [...items, { text: '' }] })}
+              className="h-8 px-3 text-purple-600 hover:bg-purple-50 rounded-xl text-[9px] font-black uppercase tracking-wider gap-1.5">
+              <Plus className="w-3 h-3" /> Añadir Paso
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    case 'interaction_upload':
+      return (
+        <div className="space-y-3">
+          {field('instruction', 'Instrucción', true, 'Toma una foto de tu trabajo y súbela aquí...')}
+          {field('format_hint', 'Formato aceptado', false, 'JPG, PDF, PNG...')}
+        </div>
+      );
+
+    case 'interaction_open':
+      return (
+        <div className="space-y-3">
+          {field('question', 'Pregunta / Consigna', true, '¿Qué aprendiste hoy sobre...?')}
+          {field('placeholder_hint', 'Pista para el estudiante', false, 'Escribe al menos 3 oraciones...')}
+        </div>
+      );
+
+    case 'kpi_feedback':
+      return (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3 p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <label className="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Al Acertar</label>
+            <Input readOnly={isReadOnly} value={c.feedback_correct || ''} onChange={e => onUpdate({ ...c, feedback_correct: e.target.value })} placeholder="¡Excelente! Continúa..." className="h-9 bg-white border-emerald-100 text-xs font-bold rounded-xl" />
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-black text-slate-400 uppercase">KPI +</span>
+              <Input type="number" readOnly={isReadOnly} value={c.kpi_correct ?? 10} onChange={e => onUpdate({ ...c, kpi_correct: parseInt(e.target.value) })} className="w-16 h-8 text-center font-black text-sm bg-white border-emerald-100 rounded-lg" />
+              <span className="text-[9px] font-black text-slate-400">%</span>
+            </div>
+          </div>
+          <div className="space-y-3 p-3 bg-rose-50 rounded-2xl border border-rose-100">
+            <label className="text-[9px] font-black uppercase tracking-widest text-rose-600 flex items-center gap-1"><X className="w-3 h-3" /> Al Fallar</label>
+            <Input readOnly={isReadOnly} value={c.feedback_incorrect || ''} onChange={e => onUpdate({ ...c, feedback_incorrect: e.target.value })} placeholder="Inténtalo de nuevo..." className="h-9 bg-white border-rose-100 text-xs font-bold rounded-xl" />
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-black text-slate-400 uppercase">KPI -</span>
+              <Input type="number" readOnly={isReadOnly} value={c.kpi_incorrect ?? 0} onChange={e => onUpdate({ ...c, kpi_incorrect: parseInt(e.target.value) })} className="w-16 h-8 text-center font-black text-sm bg-white border-rose-100 rounded-lg" />
+              <span className="text-[9px] font-black text-slate-400">%</span>
+            </div>
+          </div>
+        </div>
+      );
+
+    default:
+      return <p className="text-xs text-slate-400 italic">Tipo de bloque desconocido: {block.type}</p>;
+  }
+}
+
+// ─── Block Card ───────────────────────────────────────────────────────────────
+function BlockCard({ block, onUpdate, onDelete, isReadOnly }: {
+  block: Block; onUpdate: (b: Block) => void; onDelete: () => void; isReadOnly?: boolean;
+}) {
+  const meta = BLOCK_META[block.type];
+  if (!meta) return null;
+  const Icon = meta.icon;
+
+  return (
+    <div className={cn('rounded-3xl border-2 overflow-hidden transition-all group', meta.borderClass, meta.bgClass + '/40')}>
+      {/* Block Header */}
+      <div className={cn('flex items-center justify-between px-5 py-3 border-b', meta.borderClass, meta.bgClass)}>
+        <div className="flex items-center gap-2.5">
+          {!isReadOnly && <GripVertical className="w-4 h-4 text-slate-300 cursor-grab" />}
+          <Icon className={cn('w-4 h-4', meta.colorClass)} />
+          <span className={cn('text-[10px] font-black uppercase tracking-[0.15em]', meta.colorClass)}>
+            {meta.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Visible to student toggle */}
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
+              {block.visibleToStudent ? 'Estudiante ve' : 'Solo docente'}
+            </span>
+            {block.visibleToStudent
+              ? <Eye className="w-3.5 h-3.5 text-emerald-500" />
+              : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
+            {!isReadOnly && (
+              <Switch
+                checked={block.visibleToStudent}
+                onCheckedChange={val => onUpdate({ ...block, visibleToStudent: val })}
+                className="scale-75 origin-right"
+              />
+            )}
+          </div>
+          {/* Delete */}
+          {!isReadOnly && (
+            <button onClick={onDelete}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+      {/* Block Content */}
+      <div className="px-5 py-4">
+        <BlockContent
+          block={block}
+          onUpdate={content => onUpdate({ ...block, content })}
+          isReadOnly={isReadOnly}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Toolbox Modal ────────────────────────────────────────────────────────────
+function BlockToolbox({ onAdd, onClose }: { onAdd: (type: string) => void; onClose: () => void }) {
+  return (
+    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-3xl rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+          <div>
+            <h3 className="text-xl font-black uppercase tracking-tighter text-slate-800">Añadir Bloque</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Elige el tipo de contenido</p>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all">
+            <X className="w-5 h-5 text-slate-500" />
+          </button>
+        </div>
+        {/* Content */}
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {BLOCK_CATALOG.map(group => (
+            <div key={group.group}>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">{group.group}</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {group.items.map(item => {
+                  const Icon = item.icon;
+                  const meta = BLOCK_META[item.type];
+                  return (
+                    <button key={item.type}
+                      onClick={() => { onAdd(item.type); onClose(); }}
+                      className={cn(
+                        'flex flex-col items-start gap-2 p-4 rounded-2xl border-2 text-left transition-all hover:shadow-md active:scale-95',
+                        meta.borderClass, meta.bgClass + '/30', 'hover:' + meta.bgClass
+                      )}>
+                      <Icon className={cn('w-5 h-5', meta.colorClass)} />
+                      <div>
+                        <p className={cn('text-[11px] font-black uppercase tracking-tight', meta.colorClass)}>{item.label}</p>
+                        <p className="text-[9px] text-slate-400 font-bold mt-0.5 leading-snug">{item.description}</p>
+                      </div>
+                      {!item.defaultVisible && (
+                        <span className="text-[8px] font-black uppercase bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Solo docente</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Migrate legacy moment data to blocks ────────────────────────────────────
+function migrateMomentToBlocks(moment: any): MomentData {
+  if (moment.blocks && Array.isArray(moment.blocks)) {
+    return moment as MomentData;
+  }
+  // Legacy: convert teacher/student/config to blocks
+  const blocks: Block[] = [];
+  const makeId = (suffix: string) => `migrated_${suffix}_${Date.now()}`;
+  if (moment.teacher?.intention) blocks.push({ id: makeId('intent'), type: 'teacher_intent', visibleToStudent: false, content: { text: moment.teacher.intention } });
+  if (moment.teacher?.pedagogy?.length) blocks.push({ id: makeId('pedagogy'), type: 'teacher_pedagogy', visibleToStudent: false, content: { text: (moment.teacher.pedagogy || []).join(', ') } });
+  if (moment.teacher?.script) blocks.push({ id: makeId('script'), type: 'teacher_script', visibleToStudent: false, content: { text: moment.teacher.script } });
+  if (moment.teacher?.observation) blocks.push({ id: makeId('observe'), type: 'teacher_observe', visibleToStudent: false, content: { text: moment.teacher.observation } });
+  if (moment.teacher?.common_errors?.length) blocks.push({ id: makeId('errors'), type: 'teacher_errors', visibleToStudent: false, content: { text: (moment.teacher.common_errors || []).join(', ') } });
+  if (moment.teacher?.intervention) blocks.push({ id: makeId('intervene'), type: 'teacher_intervene', visibleToStudent: false, content: { text: moment.teacher.intervention } });
+  if (moment.student?.context) blocks.push({ id: makeId('ctx'), type: 'student_context', visibleToStudent: true, content: { text: moment.student.context } });
+  if (moment.student?.concept) blocks.push({ id: makeId('concept'), type: 'student_concept', visibleToStudent: true, content: { text: moment.student.concept } });
+  const actText = moment.student?.content || moment.student?.question || moment.student?.instruction;
+  if (actText) blocks.push({ id: makeId('activity'), type: 'student_activity', visibleToStudent: true, content: { text: actText } });
+  const interactionType = moment.config?.interaction_type;
+  if (interactionType === 'multiple_choice' && moment.student?.options) {
+    blocks.push({ id: makeId('choice'), type: 'interaction_choice', visibleToStudent: true, content: { options: moment.student.options, correct_answer: moment.student.correct_answer } });
+  }
+  if (interactionType === 'true_false') {
+    blocks.push({ id: makeId('tf'), type: 'interaction_truefalse', visibleToStudent: true, content: { statement: '',  correct_answer: moment.student?.correct_answer } });
+  }
+  if (interactionType === 'sequence_order' && moment.student?.items) {
+    const items = (moment.student.items || []).map((it: any) => typeof it === 'string' ? { text: it } : it);
+    blocks.push({ id: makeId('seq'), type: 'interaction_sequence', visibleToStudent: true, content: { items } });
+  }
+  return { id: moment.id, title: moment.title, time_minutes: moment.time_minutes ?? 5, blocks };
+}
+
+// ─── Main MissionEditor ───────────────────────────────────────────────────────
 interface MissionEditorProps {
   data: any;
   onSave: (data: any) => void;
@@ -40,533 +424,264 @@ interface MissionEditorProps {
 }
 
 export const MissionEditor = ({ data, onSave, onClose, isReadOnly }: MissionEditorProps) => {
-  const [missionData, setMissionData] = useState(data);
+  const [missionData, setMissionData] = useState(() => ({
+    ...data,
+    moments: (data.moments || []).map(migrateMomentToBlocks),
+  }));
   const [activeMomentIdx, setActiveMomentIdx] = useState<number | null>(0);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [aiJsonInput, setAiJsonInput] = useState('');
+  const [showToolbox, setShowToolbox] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const handleUpdateBase = (field: string, value: any) => {
-    setMissionData((prev: any) => ({
-      ...prev,
-      mission: { ...prev.mission, [field]: value }
-    }));
-  };
+  const moments: MomentData[] = missionData.moments || [];
+  const activeMoment = activeMomentIdx !== null ? moments[activeMomentIdx] : null;
 
-  const handleUpdateMoment = (idx: number, field: string, subField: string, value: any) => {
-    const newMoments = [...missionData.moments];
-    if (subField) {
-      newMoments[idx] = {
-        ...newMoments[idx],
-        [field]: { ...newMoments[idx][field], [subField]: value }
-      };
-    } else {
-      newMoments[idx] = { ...newMoments[idx], [field]: value };
-    }
+  const updateMoments = (newMoments: MomentData[]) =>
     setMissionData((prev: any) => ({ ...prev, moments: newMoments }));
+
+  const updateMoment = (idx: number, updated: MomentData) => {
+    const newMoments = [...moments];
+    newMoments[idx] = updated;
+    updateMoments(newMoments);
   };
 
   const addMoment = () => {
-    const newMoment: MissionMoment = {
+    const newMoment: MomentData = {
       id: `moment_${Date.now()}`,
-      title: "Nuevo Momento",
-      time_minutes: 5,
-      isVisible: true,
-      config: { interaction_type: "content_only" },
-      teacher: { 
-          intention: "", 
-          pedagogy: [], 
-          script: "", 
-          observation: "", 
-          common_errors: [], 
-          intervention: "" 
-      },
-      student: { content: "Contenido para el estudiante..." }
+      title: 'Nuevo Momento',
+      time_minutes: 8,
+      blocks: [],
     };
-    setMissionData((prev: any) => ({
-      ...prev,
-      moments: [...prev.moments, newMoment]
-    }));
-    setActiveMomentIdx(missionData.moments.length);
+    const newMoments = [...moments, newMoment];
+    updateMoments(newMoments);
+    setActiveMomentIdx(newMoments.length - 1);
   };
 
   const removeMoment = (idx: number) => {
-    const newMoments = missionData.moments.filter((_: any, i: number) => i !== idx);
-    setMissionData((prev: any) => ({ ...prev, moments: newMoments }));
+    updateMoments(moments.filter((_, i) => i !== idx));
     if (activeMomentIdx === idx) setActiveMomentIdx(null);
     else if (activeMomentIdx !== null && activeMomentIdx > idx) setActiveMomentIdx(activeMomentIdx - 1);
   };
 
-  const handleDownloadAIPrompt = () => {
-    const prompt = `Actúa como un Diseñador Instruccional Senior y Desarrollador de Contenido Curricular. 
-Tu tarea es generar el JSON para una MISIÓN GENIA siguiendo estas reglas:
-1. NIVEL: ${missionData.mission.level}
-2. TEMA: ${missionData.mission.title}
-3. ESTRUCTURA: 8 Momentos Pedagógicos.
-4. FORMATO: Debe ser un objeto JSON válido con este esquema:
-{
-  "mission": { "title": "...", "duration_minutes": 60, "level": "..." },
-  "moments": [
-    {
-      "id": "m1", "title": "...", "time_minutes": 5, "isVisible": true,
-      "config": { "interaction_type": "content_only" },
-      "teacher": { "intention": "...", "script": "..." },
-      "student": { "concept": "...", "content": "..." }
-    },
-    ... (hasta momento 8)
-  ]
-}
-
-Tipos de interacción disponibles: "content_only", "multiple_choice", "true_false", "file_upload", "interactive_lab".
-Genera una misión emocionante e interactiva.`;
-    
-    const blob = new Blob([prompt], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `PROMPT_IA_MISION_${missionData.mission.title.replace(/\s+/g, '_')}.txt`;
-    a.click();
+  const addBlock = (type: string) => {
+    if (activeMomentIdx === null) return;
+    const allCatalogItems = BLOCK_CATALOG.flatMap(g => g.items);
+    const catalogItem = allCatalogItems.find(i => i.type === type);
+    const newBlock: Block = {
+      id: `block_${Date.now()}`,
+      type,
+      visibleToStudent: catalogItem?.defaultVisible ?? true,
+      content: {},
+    };
+    const moment = moments[activeMomentIdx];
+    updateMoment(activeMomentIdx, { ...moment, blocks: [...moment.blocks, newBlock] });
   };
 
-  const handleImportAIJson = async () => {
+  const updateBlock = (blockIdx: number, updated: Block) => {
+    if (activeMomentIdx === null) return;
+    const moment = moments[activeMomentIdx];
+    const newBlocks = [...moment.blocks];
+    newBlocks[blockIdx] = updated;
+    updateMoment(activeMomentIdx, { ...moment, blocks: newBlocks });
+  };
+
+  const deleteBlock = (blockIdx: number) => {
+    if (activeMomentIdx === null) return;
+    const moment = moments[activeMomentIdx];
+    updateMoment(activeMomentIdx, { ...moment, blocks: moment.blocks.filter((_, i) => i !== blockIdx) });
+  };
+
+  const handleSave = () => {
     setSaving(true);
-    try {
-      const parsed = JSON.parse(aiJsonInput);
-      if (parsed.moments && Array.isArray(parsed.moments)) {
-        setMissionData(prev => ({
-          ...prev,
-          mission: parsed.mission || prev.mission,
-          moments: parsed.moments
-        }));
-        // Small delay for visual feedback of "processing"
-        setTimeout(() => {
-          setIsImportModalOpen(false);
-          setAiJsonInput('');
-          setSaving(false);
-        }, 800);
-      } else {
-        setSaving(false);
-      }
-    } catch (e) {
-      alert("JSON no válido. Por favor, revisa el formato.");
-      setSaving(false);
-    }
+    onSave(missionData);
+    setTimeout(() => setSaving(false), 1000);
   };
 
   return (
     <div className="relative w-full min-h-[700px] flex rounded-[3rem] overflow-hidden border border-slate-100 shadow-xl bg-white animate-in fade-in duration-500">
-      
-      {/* Sidebar - Metadata */}
-      <div className="bg-white border-r border-slate-100 flex flex-col p-8 shrink-0 relative z-20 w-80 shadow-2xl">
-          <div className="flex items-center gap-4 mb-10">
-              <Button
-                  variant="ghost" size="icon"
-                  onClick={onClose}
-                  className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-100 shrink-0 text-blue-600"
-              >
-                  <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="min-w-0">
-                  <h3 className="text-lg font-black text-slate-800 tracking-tighter leading-none truncate">{isReadOnly ? 'Ficha de Misión' : 'Diseño de Misión'}</h3>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Configuración Base</span>
-              </div>
+
+      {/* === SIDEBAR === */}
+      <div className="bg-white border-r border-slate-100 flex flex-col p-6 shrink-0 relative z-20 w-72 shadow-lg">
+        {/* Back + Title */}
+        <div className="flex items-center gap-3 mb-8">
+          <Button variant="ghost" size="icon" onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-100 text-blue-600 shrink-0">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div className="min-w-0">
+            <h3 className="text-base font-black text-slate-800 tracking-tighter truncate">
+              {isReadOnly ? 'Ficha de Misión' : 'Diseño de Misión'}
+            </h3>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Momentos pedagógicos</span>
           </div>
+        </div>
 
-          <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-              <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Título de Misión</label>
-                  <Input readOnly={isReadOnly} value={missionData.mission.title} onChange={e => handleUpdateBase('title', e.target.value)} className="bg-slate-50 border-2 border-slate-100 hover:border-blue-100 focus:border-blue-500 font-black text-slate-700 h-14 rounded-2xl transition-all" />
-              </div>
-              <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Grado / Nivel</label>
-                  <select disabled={isReadOnly} value={missionData.mission.level} onChange={e => handleUpdateBase('level', e.target.value)} className="w-full h-14 px-4 bg-slate-50 rounded-2xl border-2 border-slate-100 hover:border-blue-100 focus:border-blue-500 font-bold text-sm text-slate-700">
-                      {MISSION_GRADES.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-              </div>
-              <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Duración (Minutos)</label>
-                  <Input type="number" readOnly={isReadOnly} value={missionData.mission.duration_minutes} onChange={e => handleUpdateBase('duration_minutes', parseInt(e.target.value))} className="bg-slate-50 border-2 border-slate-100 hover:border-blue-100 focus:border-blue-500 font-black text-slate-700 h-14 rounded-2xl transition-all" />
-              </div>
+        {/* Mission Meta */}
+        <div className="space-y-3 mb-6 pb-6 border-b border-slate-100">
+          <div>
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Título de Misión</label>
+            <Input readOnly={isReadOnly} value={missionData.mission?.title || ''} onChange={e => setMissionData((p: any) => ({ ...p, mission: { ...p.mission, title: e.target.value } }))}
+              className="bg-slate-50 border-slate-100 font-black text-slate-700 h-10 rounded-2xl text-sm" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Nivel</label>
+              <select disabled={isReadOnly} value={missionData.mission?.level || ''} onChange={e => setMissionData((p: any) => ({ ...p, mission: { ...p.mission, level: e.target.value } }))}
+                className="w-full h-9 px-3 bg-slate-50 rounded-xl border border-slate-100 font-bold text-xs text-slate-700">
+                {MISSION_GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Minutos</label>
+              <Input type="number" readOnly={isReadOnly} value={missionData.mission?.duration_minutes || 55} onChange={e => setMissionData((p: any) => ({ ...p, mission: { ...p.mission, duration_minutes: parseInt(e.target.value) } }))}
+                className="bg-slate-50 border-slate-100 font-black text-slate-700 h-9 rounded-xl text-sm" />
+            </div>
+          </div>
+        </div>
 
+        {/* Moments List */}
+        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
+          {moments.map((m, idx) => (
+            <div key={m.id}
+              onClick={() => setActiveMomentIdx(activeMomentIdx === idx ? null : idx)}
+              className={cn(
+                'group flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all border-2',
+                activeMomentIdx === idx
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/20'
+                  : 'bg-slate-50 border-transparent hover:border-blue-100 hover:bg-blue-50/50 text-slate-700'
+              )}>
+              <div className={cn('w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0',
+                activeMomentIdx === idx ? 'bg-white/20 text-white' : 'bg-white text-slate-400 border border-slate-200')}>
+                {idx + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-[11px] uppercase tracking-tight truncate">{m.title}</p>
+                <p className={cn('text-[9px] font-bold', activeMomentIdx === idx ? 'text-blue-200' : 'text-slate-400')}>
+                  {m.time_minutes} min · {m.blocks.length} bloques
+                </p>
+              </div>
               {!isReadOnly && (
-                  <div className="mt-8 pt-8 border-t border-slate-100 space-y-4">
-                      <Button 
-                          onClick={() => setIsImportModalOpen(true)} 
-                          className="w-full h-12 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-sm transition-all"
-                      >
-                          <Wand2 className="w-4 h-4 mr-2" /> Arquitecto IA
-                      </Button>
-                  </div>
+                <button onClick={e => { e.stopPropagation(); removeMoment(idx); }}
+                  className={cn('w-6 h-6 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100',
+                    activeMomentIdx === idx ? 'text-white/60 hover:text-white hover:bg-white/20' : 'text-slate-300 hover:text-rose-500 hover:bg-rose-50')}>
+                  <Trash2 className="w-3 h-3" />
+                </button>
               )}
-          </div>
-
+            </div>
+          ))}
           {!isReadOnly && (
-              <div className="pt-6 border-t border-slate-100 mt-6">
-                  <Button
-                      onClick={() => onSave(missionData)}
-                      disabled={saving}
-                      className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] gap-3 font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-blue-600/30 transition-all active:scale-95"
-                  >
-                      {saving ? 'GUARDANDO...' : <><Save className="w-5 h-5" /> CONSOLIDAR MISIÓN</>}
-                  </Button>
-                  <p className="text-[9px] text-center text-slate-400 font-bold mt-4 uppercase tracking-widest">Cambios aplicados de inmediato</p>
-              </div>
+            <button onClick={addMoment}
+              className="w-full flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 text-slate-400 hover:text-blue-600 transition-all">
+              <Plus className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-wider">Añadir Momento</span>
+            </button>
           )}
+        </div>
+
+        {/* Save button */}
+        {!isReadOnly && (
+          <div className="pt-4 border-t border-slate-100 mt-4">
+            <Button onClick={handleSave} disabled={saving}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-600/20 transition-all active:scale-95">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4" /> Guardar Misión</>}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Main Canvas */}
-      <div className="flex-1 relative bg-[#F8FAFC] h-full overflow-y-auto w-full custom-scrollbar">
-          <div className="absolute inset-0 construction-grid opacity-30 pointer-events-none" />
+      {/* === MAIN CANVAS === */}
+      <div className="flex-1 relative bg-[#F8FAFC] overflow-y-auto custom-scrollbar">
+        <div className="absolute inset-0 construction-grid opacity-20 pointer-events-none" />
 
-          {/* Import Modal */}
-          {isImportModalOpen && (
-              <div className="absolute inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-                  <div className="bg-white w-full max-w-5xl rounded-[3.5rem] p-16 space-y-10 shadow-2xl relative overflow-hidden text-left">
-                      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-cyan-400" />
-                      <button onClick={() => setIsImportModalOpen(false)} className="absolute top-10 right-10 text-slate-300 hover:text-slate-600 transition-colors">
-                          <X className="w-8 h-8" />
-                      </button>
+        {activeMoment && activeMomentIdx !== null ? (
+          <div className="relative z-10 max-w-2xl mx-auto py-12 px-8 space-y-4 pb-32">
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                          {/* Phase 1: Export Prompt */}
-                          <div className="space-y-8 border-r border-slate-100 pr-16 text-left">
-                              <div className="space-y-4">
-                                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-6">
-                                      <Download className="w-7 h-7 text-blue-600" />
-                                  </div>
-                                  <h3 className="text-3xl font-black italic uppercase text-slate-800 tracking-tighter">1. Descargar Formato</h3>
-                                  <p className="text-sm font-bold text-slate-400 leading-relaxed uppercase tracking-tight">Utiliza este prompt maestro para que tu IA favorita genere el contenido siguiendo la arquitectura pedagógica GenIA.</p>
-                              </div>
-                              
-                              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-loose">
-                                      El sistema generará un archivo .txt con las instrucciones técnicas para el nivel ({missionData.mission.level}).
-                                  </p>
-                                  <Button 
-                                      onClick={handleDownloadAIPrompt} 
-                                      className="w-full h-14 bg-white border-2 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-sm"
-                                  >
-                                      Descargar Prompt para IA
-                                  </Button>
-                              </div>
-                          </div>
-
-                          {/* Phase 2: Import JSON */}
-                          <div className="space-y-8 text-left">
-                              <div className="space-y-4">
-                                  <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center mb-6">
-                                      <Upload className="w-7 h-7 text-white" />
-                                  </div>
-                                  <h3 className="text-3xl font-black italic uppercase text-slate-800 tracking-tighter">2. Pegar JSON Generado</h3>
-                                  <p className="text-sm font-bold text-slate-400 leading-relaxed uppercase tracking-tight">Pega el código JSON que te entregó la IA para poblar automáticamente los 8 momentos.</p>
-                              </div>
-
-                              <div className="space-y-4">
-                                  <Textarea 
-                                      value={aiJsonInput}
-                                      onChange={(e) => setAiJsonInput(e.target.value)}
-                                      placeholder='Pega aquí el JSON...'
-                                      className="bg-slate-50 border-none rounded-3xl min-h-[250px] font-mono text-[11px] p-8"
-                                  />
-                                  <Button 
-                                      onClick={handleImportAIJson}
-                                      disabled={!aiJsonInput.trim() || saving}
-                                      className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl active:scale-95 transition-all"
-                                  >
-                                      {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Importar y Procesar Misión"}
-                                  </Button>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
+            {/* Moment Header */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm px-6 py-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-600/20">
+                  {activeMomentIdx + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {isReadOnly
+                    ? <h2 className="text-lg font-black text-slate-800">{activeMoment.title}</h2>
+                    : <Input value={activeMoment.title} onChange={e => updateMoment(activeMomentIdx, { ...activeMoment, title: e.target.value })}
+                        className="font-black text-lg border-transparent bg-transparent h-auto p-0 focus:border-b-2 focus:border-blue-500 rounded-none focus-visible:ring-0 text-slate-800" />
+                  }
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  {isReadOnly
+                    ? <span className="font-black text-sm text-slate-600">{activeMoment.time_minutes} min</span>
+                    : <Input type="number" value={activeMoment.time_minutes} onChange={e => updateMoment(activeMomentIdx, { ...activeMoment, time_minutes: parseInt(e.target.value) })}
+                        className="w-16 h-8 text-center font-black text-sm bg-slate-50 border-slate-100 rounded-xl" />
+                  }
+                </div>
               </div>
-          )}
+              {!isReadOnly && (
+                <div className="flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  <Layers className="w-3 h-3" />
+                  {activeMoment.blocks.length} bloques · haz clic en un bloque para editarlo
+                </div>
+              )}
+            </div>
 
-          <div className="max-w-4xl mx-auto py-16 px-10 relative z-10 space-y-12 pb-32">
-              <div className="flex items-center gap-4 mb-6 px-4">
-                  <div className="w-16 h-16 rounded-3xl bg-white border border-slate-100 flex items-center justify-center text-blue-600 shadow-xl">
-                      <Layers className="w-8 h-8" />
-                  </div>
-                  <div>
-                      <h2 className="text-4xl font-black italic uppercase tracking-tighter text-slate-800">Estación de <span className="text-blue-600">Ingeniería</span></h2>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">Secuencia Pedagógica ({missionData.moments?.length || 0})</p>
-                  </div>
-                  
-                  {isReadOnly ? (
-                      <Badge variant="outline" className="ml-auto text-[10px] font-black uppercase tracking-[0.2em] bg-blue-50 text-blue-600 border-blue-100 px-4 py-1.5 rounded-full">Lectura</Badge>
-                  ) : (
-                      <Badge variant="outline" className="ml-auto text-[10px] font-black uppercase tracking-[0.2em] bg-rose-50 text-rose-600 border-rose-100 px-4 py-1.5 rounded-full">Engineering Mode</Badge>
-                  )}
+            {/* Blocks - stacked */}
+            {activeMoment.blocks.length === 0 && !isReadOnly && (
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                <div className="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center">
+                  <Layers className="w-8 h-8 text-slate-300" />
+                </div>
+                <p className="text-sm font-black text-slate-400 uppercase tracking-tight">Momento vacío</p>
+                <p className="text-xs text-slate-300 font-bold">Usa el botón de abajo para añadir bloques</p>
               </div>
+            )}
 
-              {/* Moments List */}
-              <div className="space-y-4">
-                  {missionData.moments?.map((moment: MissionMoment, idx: number) => (
-                      <div key={moment.id} className="group">
-                          <div 
-                              className={cn(
-                                  "p-5 rounded-3xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between",
-                                  activeMomentIdx === idx ? "bg-white border-rose-500 shadow-xl shadow-rose-500/10" : "bg-white/50 border-transparent hover:border-slate-200 hover:bg-white"
-                              )}
-                              onClick={() => setActiveMomentIdx(activeMomentIdx === idx ? null : idx)}
-                          >
-                              <div className="flex items-center gap-4">
-                                  <div className={cn(
-                                      "w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-all",
-                                      activeMomentIdx === idx ? "bg-rose-600 text-white shadow-md shadow-rose-500/30" : "bg-slate-100 text-slate-400"
-                                  )}>
-                                      {idx + 1}
-                                  </div>
-                                  <div>
-                                      <h4 className="text-sm font-black uppercase tracking-tight text-slate-800">{moment.title}</h4>
-                                      <div className="flex items-center gap-2 mt-1">
-                                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{moment.time_minutes} min • {moment.config.interaction_type}</span>
-                                          {!moment.isVisible && <Badge className="bg-slate-100 text-slate-400 border-none px-2 h-4 text-[7px] font-black uppercase tracking-tighter">Oculto</Badge>}
-                                      </div>
-                                  </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                  {!isReadOnly && (
-                                      <Button 
-                                          onClick={(e) => { e.stopPropagation(); removeMoment(idx); }}
-                                          variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      >
-                                          <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                  )}
-                                  {activeMomentIdx === idx ? <ChevronUp className="w-5 h-5 text-rose-500" /> : <ChevronDown className="w-5 h-5 text-slate-300" />}
-                              </div>
-                          </div>
+            {activeMoment.blocks.map((block, blockIdx) => (
+              <BlockCard
+                key={block.id}
+                block={block}
+                onUpdate={updated => updateBlock(blockIdx, updated)}
+                onDelete={() => deleteBlock(blockIdx)}
+                isReadOnly={isReadOnly}
+              />
+            ))}
 
-                          {activeMomentIdx === idx && (
-                              <div className="mt-3 p-8 bg-white rounded-3xl border border-slate-100 shadow-inner grid grid-cols-1 xl:grid-cols-2 gap-10 animate-in slide-in-from-top-2 duration-300">
-                                  {/* --- Teacher View --- */}
-                                  <div className="space-y-6">
-                                      <div className="flex items-center gap-3 pb-4 border-b border-slate-50">
-                                          <Settings className="w-4 h-4 text-blue-500" />
-                                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Guía del Docente</span>
-                                      </div>
-                                      
-                                      <div className="space-y-4">
-                                          <div className="space-y-2">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Intencionalidad Pedagógica</label>
-                                              <Textarea 
-                                                  readOnly={isReadOnly}
-                                                  value={moment.teacher?.intention} 
-                                                  onChange={(e) => handleUpdateMoment(idx, 'teacher', 'intention', e.target.value)}
-                                                  className="bg-slate-50 border-transparent focus:border-blue-500 rounded-2xl text-xs font-bold min-h-[80px]"
-                                              />
-                                          </div>
-                                          <div className="space-y-2">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Script de Intervención</label>
-                                              <Textarea 
-                                                  readOnly={isReadOnly}
-                                                  value={moment.teacher?.script} 
-                                                  onChange={(e) => handleUpdateMoment(idx, 'teacher', 'script', e.target.value)}
-                                                  className="bg-blue-50/50 border-transparent focus:border-blue-500 rounded-2xl text-xs font-bold text-blue-800 italic min-h-[100px]"
-                                              />
-                                          </div>
-                                      </div>
-                                  </div>
-
-                                  {/* --- Student View --- */}
-                                  <div className="space-y-6">
-                                      <div className="flex items-center gap-3 pb-4 border-b border-slate-50">
-                                          <Rocket className="w-4 h-4 text-rose-500" />
-                                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600">Misión del Estudiante</span>
-                                      </div>
-
-                                      <div className="space-y-4">
-                                          <div className="grid grid-cols-2 gap-4">
-                                              <div className="space-y-2">
-                                                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Título del Momento</label>
-                                                  <Input 
-                                                      readOnly={isReadOnly}
-                                                      value={moment.title} 
-                                                      onChange={(e) => handleUpdateMoment(idx, 'title', '', e.target.value)}
-                                                      className="bg-slate-50 border-transparent focus:border-rose-500 rounded-2xl font-bold"
-                                                  />
-                                              </div>
-                                              <div className="grid grid-cols-2 gap-3">
-                                                  <div className="space-y-2">
-                                                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Minutos</label>
-                                                      <Input 
-                                                          readOnly={isReadOnly}
-                                                          type="number"
-                                                          value={moment.time_minutes} 
-                                                          onChange={(e) => handleUpdateMoment(idx, 'time_minutes', '', parseInt(e.target.value))}
-                                                          className="bg-slate-50 border-transparent focus:border-rose-500 rounded-2xl font-bold"
-                                                      />
-                                                  </div>
-                                                  <div className="space-y-2 flex flex-col justify-center">
-                                                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Visible Alumno</label>
-                                                      <div className="flex items-center gap-2">
-                                                          <Switch 
-                                                              disabled={isReadOnly}
-                                                              checked={moment.isVisible ?? true}
-                                                              onCheckedChange={(val) => handleUpdateMoment(idx, 'isVisible', '', val)}
-                                                          />
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                          </div>
-
-                                          <div className="space-y-2">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tipo de Interacción</label>
-                                              <select 
-                                                  disabled={isReadOnly}
-                                                  value={moment.config.interaction_type}
-                                                  onChange={(e) => handleUpdateMoment(idx, 'config', 'interaction_type', e.target.value)}
-                                                  className="w-full h-10 px-4 bg-slate-50 border-transparent focus:border-rose-500 rounded-2xl font-bold text-xs"
-                                              >
-                                                  <option value="content_only">Solo Narrativa</option>
-                                                  <option value="multiple_choice">Opción Múltiple</option>
-                                                  <option value="true_false">Verdadero o Falso</option>
-                                                  <option value="sequence_order">Orden de Secuencia</option>
-                                                  <option value="file_upload">Evidencia (Archivo)</option>
-                                                  <option value="interactive_lab">Laboratorio</option>
-                                                  <option value="open_response">Respuesta Abierta</option>
-                                              </select>
-                                          </div>
-
-                                          <div className="space-y-2">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Contenido Académico</label>
-                                              <Textarea 
-                                                  readOnly={isReadOnly}
-                                                  value={moment.student?.concept || ""} 
-                                                  onChange={(e) => handleUpdateMoment(idx, 'student', 'concept', e.target.value)}
-                                                  placeholder="Conceptos teóricos..."
-                                                  className="bg-slate-50 border-transparent focus:border-rose-500 rounded-2xl text-xs font-bold min-h-[60px]"
-                                              />
-                                          </div>
-
-                                          <div className="space-y-2">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Actividad / Consigna</label>
-                                              <Textarea 
-                                                  readOnly={isReadOnly}
-                                                  value={moment.student?.content || moment.student?.question || moment.student?.instruction || ""} 
-                                                  onChange={(e) => handleUpdateMoment(idx, 'student', 'content', e.target.value)}
-                                                  placeholder="Acción a realizar..."
-                                                  className="bg-rose-50/30 border-transparent focus:border-rose-500 rounded-2xl text-sm font-bold placeholder:text-slate-300 min-h-[140px]"
-                                              />
-                                          </div>
-                                      </div>
-
-                                      {/* Modular Fields */}
-                                      {moment.config.interaction_type === 'multiple_choice' && (
-                                          <div className="p-5 rounded-3xl bg-slate-50/80 border border-slate-100 space-y-4">
-                                              <div className="flex items-center justify-between">
-                                                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Opciones de Respuesta</label>
-                                                  { !isReadOnly && (
-                                                      <Button 
-                                                          onClick={() => {
-                                                              const opts = moment.student?.options || [];
-                                                              handleUpdateMoment(idx, 'student', 'options', [...opts, { text: "" }]);
-                                                          }}
-                                                          variant="ghost" 
-                                                          className="h-7 px-3 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-lg font-black uppercase text-[8px] animate-in fade-in transition-all gap-1.5 shadow-sm border border-slate-100"
-                                                      >
-                                                          <Plus className="w-3 h-3" /> Añadir Opción
-                                                      </Button>
-                                                  )}
-                                              </div>
-                                              <div className="space-y-3">
-                                                  {(moment.student?.options || [{text: ""}, {text: ""}]).map((opt: any, i: number) => (
-                                                      <div key={i} className="flex items-center gap-3 group animate-in slide-in-from-left-2 duration-300">
-                                                          <button 
-                                                              disabled={isReadOnly}
-                                                              onClick={() => handleUpdateMoment(idx, 'student', 'correct_answer', i)}
-                                                              className={cn(
-                                                                  "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
-                                                                  moment.student?.correct_answer === i ? "bg-rose-500 border-rose-500 text-white" : "bg-white border-slate-200"
-                                                              )}
-                                                          >
-                                                              {moment.student?.correct_answer === i ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-[10px] font-black text-slate-300">{String.fromCharCode(65 + i)}</span>}
-                                                          </button>
-                                                          <Input 
-                                                              readOnly={isReadOnly}
-                                                              placeholder={`Opción ${i+1}`}
-                                                              className="bg-white border-transparent focus:border-rose-500 focus:ring-1 focus:ring-rose-200 shadow-sm rounded-xl text-xs flex-1 font-bold h-11"
-                                                              value={opt.text || ""}
-                                                              onChange={(e) => {
-                                                                  const newOpts = [...(moment.student?.options || [])];
-                                                                  newOpts[i] = { ...newOpts[i], text: e.target.value };
-                                                                  handleUpdateMoment(idx, 'student', 'options', newOpts);
-                                                              }}
-                                                          />
-                                                          { !isReadOnly && (moment.student?.options?.length > 2) && (
-                                                              <Button 
-                                                                  variant="ghost" size="icon" 
-                                                                  onClick={() => {
-                                                                      const opts = moment.student?.options || [];
-                                                                      handleUpdateMoment(idx, 'student', 'options', opts.filter((_: any, index: number) => index !== i));
-                                                                      const correct = moment.student?.correct_answer;
-                                                                      if (correct === i) handleUpdateMoment(idx, 'student', 'correct_answer', null);
-                                                                      else if ((correct as number) > i) handleUpdateMoment(idx, 'student', 'correct_answer', (correct as number) - 1);
-                                                                  }}
-                                                                  className="w-8 h-8 rounded-lg text-slate-200 hover:text-rose-500 hover:bg-rose-50 transition-all"
-                                                              >
-                                                                  <Trash2 className="w-4 h-4" />
-                                                              </Button>
-                                                          )}
-                                                      </div>
-                                                  ))}
-                                              </div>
-                                          </div>
-                                      )}
-
-                                      {moment.config.interaction_type === 'true_false' && (
-                                          <div className="p-5 rounded-3xl bg-slate-50/80 border border-slate-100 space-y-4">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Respuesta Correcta</label>
-                                              <div className="flex gap-4">
-                                                  <Button 
-                                                      disabled={isReadOnly}
-                                                      onClick={() => handleUpdateMoment(idx, 'student', 'correct_answer', true)}
-                                                      className={cn("flex-1 rounded-2xl font-black h-12 uppercase", moment.student?.correct_answer === true ? "bg-emerald-500 text-white" : "bg-white text-slate-400 border border-slate-100")}
-                                                  >
-                                                      Verdadero
-                                                  </Button>
-                                                  <Button 
-                                                      disabled={isReadOnly}
-                                                      onClick={() => handleUpdateMoment(idx, 'student', 'correct_answer', false)}
-                                                      className={cn("flex-1 rounded-2xl font-black h-12 uppercase", moment.student?.correct_answer === false ? "bg-rose-500 text-white" : "bg-white text-slate-400 border border-slate-100")}
-                                                  >
-                                                      Falso
-                                                  </Button>
-                                              </div>
-                                          </div>
-                                      )}
-
-                                      {moment.config.interaction_type === 'sequence_order' && (
-                                          <div className="p-5 rounded-3xl bg-slate-50/80 border border-slate-100 space-y-4">
-                                              <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Secuencia (1 paso por línea)</label>
-                                              <Textarea 
-                                                  readOnly={isReadOnly}
-                                                  placeholder="..."
-                                                  className="bg-white border-transparent shadow-sm rounded-xl text-xs min-h-[100px]"
-                                                  value={moment.student?.items?.join('\n') || ""}
-                                                  onChange={(e) => handleUpdateMoment(idx, 'student', 'items', e.target.value.split('\n').filter(l => l.trim()))}
-                                              />
-                                          </div>
-                                      )}
-                                  </div>
-                              </div>
-                          )}
-                      </div>
-                  ))}
-
-                  {!isReadOnly && (
-                      <Button 
-                          onClick={addMoment} 
-                          className="w-full h-14 mt-6 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-3xl font-black uppercase text-[10px] tracking-widest gap-2 border border-slate-200 border-dashed transition-all"
-                      >
-                          <Plus className="w-4 h-4" /> Añadir Momento Pedagógico
-                      </Button>
-                  )}
-              </div>
+            {/* Add Block Button */}
+            {!isReadOnly && (
+              <button onClick={() => setShowToolbox(true)}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-3xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-400 hover:text-blue-600 transition-all group">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-all">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Añadir Bloque</span>
+              </button>
+            )}
           </div>
+        ) : (
+          // No moment selected
+          <div className="flex flex-col items-center justify-center h-full min-h-[500px] text-center p-8 space-y-4 relative z-10">
+            <div className="w-20 h-20 rounded-[2rem] bg-white border border-slate-100 flex items-center justify-center shadow-xl text-blue-600">
+              <Cpu className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800">
+              Estación de <span className="text-blue-600">Ingeniería</span>
+            </h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Selecciona un momento del panel izquierdo para editarlo
+            </p>
+            {!isReadOnly && (
+              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 border-rose-100 px-4 py-1.5 rounded-full">
+                Engineering Mode
+              </Badge>
+            )}
+          </div>
+        )}
+
+        {/* Toolbox */}
+        {showToolbox && (
+          <BlockToolbox onAdd={addBlock} onClose={() => setShowToolbox(false)} />
+        )}
       </div>
     </div>
   );
 };
-

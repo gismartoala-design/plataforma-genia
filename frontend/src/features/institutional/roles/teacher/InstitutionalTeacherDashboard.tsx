@@ -362,9 +362,8 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:bg-[var(--inst-blue)] group-hover:opacity-[0.07]" />
 
                             <div className="space-y-4 relative z-10">
-                              <div className="flex justify-between items-start">
-                                <span className={cn('construction-level-' + ((idx % 5) + 1), 'text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-sm')}>COD {course.id}</span>
-                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[var(--inst-blue-lt)] group-hover:text-[var(--inst-blue)] transition-all">
+                              <div className="flex justify-end items-start w-full">
+                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[var(--inst-blue-lt)] group-hover:text-[var(--inst-blue)] transition-all shadow-sm">
                                   <ChevronRight className="w-5 h-5" />
                                 </div>
                               </div>
@@ -439,11 +438,7 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
                           <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:opacity-[0.08]" />
                           
                           <div className="space-y-4 relative z-10 w-full mb-4">
-                            <div className="flex justify-between items-start">
-                              <span className="construction-level-2 text-[10px] font-black px-4 py-1.5 rounded-full shadow-sm text-[var(--inst-blue)] bg-[var(--inst-blue-lt)] border border-blue-100/50">
-                                ID UNIDAD #{sec.id}
-                              </span>
-                              
+                            <div className="flex justify-end items-start w-full">
                               <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                                 <button
                                   onClick={(e) => {

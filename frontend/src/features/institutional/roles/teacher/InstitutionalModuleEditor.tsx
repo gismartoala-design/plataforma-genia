@@ -404,10 +404,10 @@ export const InstitutionalModuleEditor = () => {
             <aside className="w-80 border-r bg-[#0F172A] flex flex-col z-30 relative shrink-0 shadow-2xl text-white">
                 <div className="p-8 border-b border-white/10 shrink-0">
                     <button 
-                        onClick={() => setLocation('/institucional-teach')}
+                        onClick={() => selectedSection ? setSelectedSection(null) : setLocation('/institucional-teach')}
                         className="flex items-center gap-3 text-white/50 hover:text-white transition-colors mb-6 group text-[10px] font-black uppercase tracking-widest"
                     >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Dashboard
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {selectedSection ? 'Volver a Unidades' : 'Volver al Dashboard'}
                     </button>
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
