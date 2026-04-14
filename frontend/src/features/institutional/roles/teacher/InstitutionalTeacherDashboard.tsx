@@ -104,7 +104,6 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
     } else {
       window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: false }));
       setSections([]);
-      setSelectedSectionId(null);
     }
 
     return () => {
@@ -112,13 +111,7 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
     };
   }, [selectedCourseId]);
 
-  useEffect(() => {
-    if (selectedSectionId) {
-      fetchSectionModules(selectedSectionId);
-    } else {
-      setModules([]);
-    }
-  }, [selectedSectionId]);
+
 
   const initDashboard = async () => {
     if (!user?.id) return;
@@ -168,24 +161,7 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
     }
   };
 
-  const fetchSectionModules = async (sectionId: number) => {
-    setLoading(true);
-    try {
-      const mData = await institutionApi.getSectionModules(sectionId);
-      setModules(Array.isArray(mData) ? mData.map(m => ({
-        ...m,
-        nombreModulo: m.titulo,
-        studentsCount: 0
-      })) : []);
 
-      const currentSection = sections.find(s => String(s.id) === String(sectionId));
-      if (currentSection) setSectionInfo(currentSection);
-    } catch (error) {
-      console.error('Error fetching section modules:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateModule = async () => {
     if (!newModule.nombre) {
@@ -205,18 +181,8 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
         toast({ title: "Éxito", description: "Módulo creado correctamente" });
         fetchSections(selectedCourseId);
       } else {
-        if (!selectedSectionId || !selectedCourseId) return;
-        await institutionalCurriculumApi.createModule({
-          seccionId: Number(selectedSectionId),
-          cursoId: Number(selectedCourseId),
-          titulo: newModule.nombre,
-          tipo: 'modular_class',
-          contenido: { metadata: { title: newModule.nombre }, blocks: [] },
-          profesorId: Number(user.id),
-          orden: modules.length + 1
-        });
-        toast({ title: "Éxito", description: "Nivel creado correctamente" });
-        fetchSectionModules(selectedSectionId);
+        // Nivel creation handled in Editor now
+        return;
       }
 
       setIsDialogOpen(false);
@@ -291,8 +257,7 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
                 {(selectedCourseId || selectedSectionId) && (
                   <button
                     onClick={() => {
-                      if (selectedSectionId) setSelectedSectionId(null);
-                      else setSelectedCourseId(null);
+                      setSelectedCourseId(null);
                     }}
                     className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
                   >
@@ -401,7 +366,7 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
                       )}
                     </div>
                   </motion.section>
-                ) : !selectedSectionId ? (
+                ) : (
                   <motion.section
                     key="section-list"
                     initial={{ opacity: 0, x: 20 }}
@@ -438,90 +403,21 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
                       {sections.map((sec, i) => (
                         <motion.button
                           key={sec.id}
-                          whileHover={{ y: -5 }}
-                          onClick={() => setSelectedSectionId(sec.id)}
-                          className="blueprint-card accent-hover p-8 group border-none shadow-sm hover:shadow-xl rounded-[3rem] text-left w-full h-48 flex flex-col justify-between"
+                          whileHover={{ y: -5, scale: 1.02 }}
+                          onClick={() => setLocation(`/institucional-editor/${selectedCourseId}?sec=${sec.id}`)}
+                          className="blueprint-card accent-hover p-8 group border-none shadow-sm hover:shadow-xl rounded-[3rem] text-left w-full h-48 flex flex-col justify-between relative overflow-hidden"
                         >
-                          <div className="space-y-2">
-                            <span className="construction-level-2 text-[10px] font-black px-4 py-1.5 rounded-full shadow-sm">ID MODULO #{sec.id}</span>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:opacity-[0.08]" />
+                          <div className="space-y-4 relative z-10">
+                            <span className="construction-level-2 text-[10px] font-black px-4 py-1.5 rounded-full shadow-sm">ID UNIDAD #{sec.id}</span>
                             <h4 className="text-2xl font-black uppercase tracking-tight mt-4 leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors">
                               {sec.nombre}
                             </h4>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)]">
-                            Ver Niveles <ChevronRight className="w-4 h-4" />
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)] relative z-10 transition-all transform group-hover:translate-x-2">
+                             Explorar Ingeniería <ChevronRight className="w-4 h-4" />
                           </div>
                         </motion.button>
-                      ))}
-                    </div>
-                  </motion.section>
-                ) : (
-                  <motion.section
-                    key="module-list"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
-                  >
-                    <div className="flex items-center justify-between p-8 rounded-[3rem] bg-white border border-blue-50 shadow-sm relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 opacity-30 rounded-full blur-3xl -mr-32 -mt-32" />
-
-                      <div className="relative z-10 space-y-2">
-                        <button
-                          onClick={() => setSelectedSectionId(null)}
-                          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)] hover:gap-3 transition-all mb-4"
-                        >
-                          <ArrowLeft className="w-4 h-4" /> Volver a los Módulos
-                        </button>
-                        <h3 className="text-3xl font-black uppercase tracking-tight" style={{ color: 'var(--inst-deep)' }}>Niveles / Lecciones</h3>
-                        <p className="technical-label italic">Unidades de aprendizaje en {sectionInfo?.nombre}</p>
-                      </div>
-
-                      <div className="flex items-center gap-4 relative z-10">
-                        <Button
-                          onClick={() => { setDialogType('module'); setIsDialogOpen(true); }}
-                          className="font-black uppercase tracking-widest text-xs h-14 px-8 rounded-2xl shadow-xl text-white hover:scale-105 active:scale-95 transition-all"
-                          style={{ background: 'linear-gradient(135deg, var(--inst-blue), var(--inst-purple))' }}
-                        >
-                          <Plus className="w-5 h-5 mr-3" /> Nuevo Nivel
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {modules.map((mod, i) => (
-                        <motion.div
-                          key={mod.id}
-                          initial={{ opacity: 0, y: 16 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                        >
-                          <div className="blueprint-card accent-hover p-8 group border-none shadow-sm hover:shadow-xl rounded-[3rem]">
-                            <div className="flex justify-between items-start mb-8">
-                              <div className="space-y-2">
-                                <span className="construction-level-1 text-[10px] font-black px-4 py-1.5 rounded-full shadow-sm">ID LECCIÓN #{mod.id}</span>
-                                <h4 className="text-2xl font-black uppercase tracking-tight mt-4 leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors">
-                                  {mod.nombreModulo}
-                                </h4>
-                              </div>
-                              <AssignmentDialog
-                                module={mod}
-                                institutionId={user.institucionId}
-                                onUpdate={() => selectedSectionId && fetchSectionModules(selectedSectionId)}
-                              />
-                            </div>
-
-                            <div className="space-y-6">
-                              <Button
-                                onClick={() => setLocation(`/institucional-editor/${selectedCourseId}`)}
-                                className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all border group-hover:bg-[var(--inst-blue)] group-hover:text-white group-hover:border-transparent"
-                                style={{ background: 'var(--inst-blue-lt)', color: 'var(--inst-blue)', borderColor: 'rgba(26,86,219,0.15)' }}
-                              >
-                                <BookOpen className="w-4 h-4 mr-3" /> Añadir Contenido
-                              </Button>
-                            </div>
-                          </div>
-                        </motion.div>
                       ))}
                     </div>
                   </motion.section>

@@ -25,6 +25,8 @@ import {
     Construction,
     Home,
     ArrowLeft,
+    ArrowRight,
+    Users,
     PenTool,
     CheckSquare,
     ClipboardList,
@@ -59,9 +61,13 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogFooter
+    DialogFooter,
+    DialogTrigger
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { institutionalCurriculumApi, SectionInst, ModuloInst } from '@/features/institutional/services/curriculum.api';
+import { institutionApi } from '@/services/institution.api';
+import { professorApi } from '@/features/professor/services/professor.api';
 import { AlgoritmoEditor } from '@/features/institutional/components/editors/AlgoritmoEditor';
 import { PreguntaEditor } from '@/features/institutional/components/editors/PreguntaEditor';
 import { ClasificacionEditor } from '@/features/institutional/components/editors/ClasificacionEditor';
@@ -153,7 +159,7 @@ export const InstitutionalModuleEditor = () => {
     const params = useParams() as { moduleId?: string };
     const courseId = parseInt(params.moduleId || "0");
     const [, setLocation] = useLocation();
-    const [user] = useState<{ id: string; role: UserRole; roleId?: number } | null>(() => {
+    const [user] = useState<{ id: string; role: UserRole; roleId?: number; institucionId?: number } | null>(() => {
         const saved = localStorage.getItem("edu_user");
         return saved ? JSON.parse(saved) : null;
     });
@@ -181,7 +187,7 @@ export const InstitutionalModuleEditor = () => {
     // Inline Creation State
     const [isInlineCreating, setIsInlineCreating] = useState(false);
     const [inlineLevelName, setInlineLevelName] = useState('');
-    const [creationType, setCreationType] = useState<'modular' | 'mission' | null>(null);
+    const [creationType, setCreationType] = useState<'modular_class' | 'mission' | 'quiz' | 'tarea' | null>(null);
     const [selectedGrade, setSelectedGrade] = useState<string>("6to EGB");
 
     const MISSION_GRADES = [
@@ -210,6 +216,27 @@ export const InstitutionalModuleEditor = () => {
             setSections(data);
             const allMods = await institutionalCurriculumApi.getModulesByCourse(courseId);
             setAllModules(allMods);
+
+            // Auto-select based on URL params to provide a cleaner UX from Dashboard
+            const urlParams = new URLSearchParams(window.location.search);
+            const querySecId = urlParams.get('sec');
+            const queryLvlId = urlParams.get('lvl');
+
+            if (querySecId) {
+                const autoSecId = parseInt(querySecId);
+                const targetSec = data.find(s => s.id === autoSecId);
+                if (targetSec) {
+                    setSelectedSection(targetSec);
+                    setExpandedSections(prev => ({ ...prev, [autoSecId]: true }));
+                    
+                    if (queryLvlId) {
+                        const targetLvl = allMods.find(m => m.id === parseInt(queryLvlId));
+                        if (targetLvl) {
+                            setSelectedLevel(targetLvl);
+                        }
+                    }
+                }
+            }
         } catch (error) {
             console.error('Error fetching sections:', error);
             toast.error("Error al cargar la estructura del curso");
@@ -309,7 +336,7 @@ export const InstitutionalModuleEditor = () => {
 
         setSaving(true);
         try {
-            const finalType = creationType === 'mission' ? 'mission' : 'modular_class';
+            const finalType = creationType || 'modular_class';
             const initialContent = finalType === 'mission' ? {
                 ...INITIAL_ACTIVITY_DATA.mission,
                 mission: { ...INITIAL_ACTIVITY_DATA.mission.mission, title: inlineLevelName.trim(), level: selectedGrade }
@@ -317,8 +344,13 @@ export const InstitutionalModuleEditor = () => {
 
             const newMod = await handleAddModule(finalType, inlineLevelName.trim(), initialContent);
             if (newMod) {
-                setSelectedLevel(newMod);
-                toast.success(`${finalType === 'mission' ? 'Misión' : 'Nivel'} "${inlineLevelName}" creado`);
+                if (finalType === 'mission' || finalType === 'modular_class') {
+                    setSelectedLevel(newMod);
+                } else {
+                    setEditingActivity({ id: newMod.id, tipo: newMod.tipo, data: newMod.contenido });
+                }
+                const label = TYPE_CONFIG[finalType as keyof typeof TYPE_CONFIG]?.label || 'Nivel';
+                toast.success(`${label} "${inlineLevelName}" creado`);
             }
             setInlineLevelName('');
             setIsInlineCreating(false);
@@ -349,6 +381,7 @@ export const InstitutionalModuleEditor = () => {
             <div className="absolute inset-0 construction-grid pointer-events-none opacity-40" />
 
             {/* Sidebar Explorer */}
+            {!selectedLevel && (
             <aside className="w-80 border-r bg-[#0F172A] flex flex-col z-30 relative shrink-0 shadow-2xl text-white">
                 <div className="p-8 border-b border-white/10 shrink-0">
                     <button 
@@ -468,9 +501,11 @@ export const InstitutionalModuleEditor = () => {
                     </nav>
                 </div>
             </aside>
+            )}
 
             {/* Main Workspace */}
             <main className="flex-1 flex flex-col relative overflow-hidden bg-[#F8FAFC]">
+                {!selectedLevel && (
                 <header className="px-10 py-6 border-b flex items-center justify-between bg-white/80 backdrop-blur-xl sticky top-0 z-20 shrink-0">
                     <div className="flex items-center gap-5">
                         <div className={cn(
@@ -495,13 +530,9 @@ export const InstitutionalModuleEditor = () => {
                                 <Eye className="w-3.5 h-3.5 mr-2" /> VISTA PREVIA DOCENTE
                             </Badge>
                         )}
-                        {!isReadOnly && selectedLevel && (
-                            <Button onClick={() => window.dispatchEvent(new CustomEvent('save-trigger'))} className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-black text-white font-black uppercase tracking-widest text-[10px] shadow-xl transition-all border-b-4 border-black">
-                                <Save className="w-4 h-4 mr-2" /> Guardar Cambios
-                            </Button>
-                        )}
                     </div>
                 </header>
+                )}
 
                 <div className="flex-1 overflow-y-auto p-12 custom-scrollbar relative">
                     {selectedLevel ? (
@@ -523,19 +554,111 @@ export const InstitutionalModuleEditor = () => {
                                 />
                             )}
                         </motion.div>
-                    ) : (selectedSection || (!selectedSection && sections.length > 0)) ? (
+                    ) : selectedSection ? (
                         <div className="max-w-6xl mx-auto space-y-12 pb-20">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="space-y-1">
                                     <h2 className="text-4xl font-black text-slate-800 tracking-tighter">
-                                        {selectedSection ? 'Niveles de la' : 'Mapa Maestro de'} <span className="text-blue-600">Unidades</span>
+                                        Niveles de la <span className="text-blue-600">{selectedSection.nombre}</span>
+                                    </h2>
+                                    <p className="text-slate-500 font-medium">Gestión estructural y secuenciación de actividades.</p>
+                                </div>
+                                <Button variant="outline" onClick={() => setSelectedSection(null)} className="rounded-2xl font-black uppercase tracking-widest text-[10px]">
+                                    <ArrowLeft className="w-4 h-4 mr-2" /> Volver a Unidades
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {allModules.filter(m => m.seccionId === selectedSection.id).map((mod, mIdx) => {
+                                    const config = TYPE_CONFIG[mod.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
+                                    const Icon = config.icon;
+                                    return (
+                                        <motion.div
+                                            key={mod.id}
+                                            initial={{ opacity: 0, y: 30 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: mIdx * 0.1 }}
+                                            className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 flex flex-col justify-between overflow-hidden cursor-pointer"
+                                            onClick={() => handleEditActivity(mod)}
+                                        >
+                                            <div className="p-8 pb-0 relative">
+                                                <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-500 transform translate-x-4 group-hover:translate-x-0">
+                                                    <Icon className={cn("w-32 h-32", config.color)} />
+                                                </div>
+
+                                                <div className="flex items-center justify-between mb-8 relative z-10">
+                                                    <div className={cn("px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20 shadow-sm", config.bg, config.color)}>
+                                                        {config.label}
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-2 z-20">
+                                                        <div onClick={(e) => e.stopPropagation()}>
+                                                            <AssignmentDialog
+                                                                module={mod}
+                                                                institutionId={user?.institucionId}
+                                                                onUpdate={() => selectedSection && fetchModules(selectedSection.id)}
+                                                            />
+                                                        </div>
+                                                        {!isReadOnly && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
+                                                                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4 relative z-10">
+                                                    <div className="flex gap-4">
+                                                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 transition-transform group-hover:scale-110 duration-500", config.bg)}>
+                                                            <Icon className={cn("w-5 h-5", config.color)} />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">{mod.titulo}</h3>
+                                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Nivel de Aprendizaje</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-8 pt-10">
+                                                <div className="h-14 w-full rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center gap-3 text-slate-500 font-black uppercase text-[10px] tracking-widest group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-blue-500/30">
+                                                    <span>Entrar al Editor</span>
+                                                    <ArrowRight className="w-4 h-4 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+
+                                {!isReadOnly && (
+                                    <button 
+                                        onClick={() => setIsToolboxOpen(true)}
+                                        className="rounded-[3rem] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center p-12 hover:border-blue-200 hover:bg-blue-50/30 transition-all group min-h-[350px]"
+                                    >
+                                        <div className="w-20 h-20 rounded-[2.5rem] bg-white shadow-xl flex items-center justify-center text-slate-200 group-hover:text-blue-500 group-hover:scale-110 transition-all mb-6">
+                                            <Plus className="w-10 h-10" />
+                                        </div>
+                                        <span className="text-xs font-black text-slate-300 uppercase tracking-[0.3em] group-hover:text-blue-400 text-center">Incorporar Nivel <br/> a la Unidad</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : sections.length > 0 ? (
+                        <div className="max-w-6xl mx-auto space-y-12 pb-20">
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="space-y-1">
+                                    <h2 className="text-4xl font-black text-slate-800 tracking-tighter">
+                                        Mapa Maestro de <span className="text-blue-600">Unidades</span>
                                     </h2>
                                     <p className="text-slate-500 font-medium">Gestión estructural y secuenciación de contenidos de aprendizaje para este curso.</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {(selectedSection ? [selectedSection] : sections).map((sec, sIdx) => {
+                                {sections.map((sec, sIdx) => {
                                     const sectionModules = allModules.filter(m => m.seccionId === sec.id);
                                     return (
                                         <motion.div
@@ -565,7 +688,7 @@ export const InstitutionalModuleEditor = () => {
                                                         setSelectedSection(sec);
                                                         setExpandedSections(prev => ({ ...prev, [sec.id]: true }));
                                                     }}
-                                                    className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 hover:border-blue-500 text-slate-500 hover:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
+                                                    className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 hover:border-blue-500 text-slate-500 hover:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all shadow-sm"
                                                 >
                                                     Abrir Unidad
                                                 </Button>
@@ -574,7 +697,7 @@ export const InstitutionalModuleEditor = () => {
                                     );
                                 })}
 
-                                {!isReadOnly && !selectedSection && (
+                                {!isReadOnly && (
                                     <button 
                                         onClick={handleAddSection}
                                         className="rounded-[3rem] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center p-12 hover:border-blue-200 hover:bg-blue-50/30 transition-all group min-h-[350px]"
@@ -607,26 +730,61 @@ export const InstitutionalModuleEditor = () => {
                             <p className="text-slate-500 font-medium">Selecciona el protocolo de creación para esta unidad.</p>
                         </div>
                         
-                        <div className="grid grid-cols-1 gap-4 pt-4">
-                            <Button 
-                                onClick={() => { setCreationType('modular'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
-                                className="h-20 rounded-2xl bg-slate-50 hover:bg-white border hover:border-blue-500 shadow-sm hover:shadow-xl transition-all flex items-center gap-5 px-8 group text-left"
-                            >
-                                <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center group-hover:scale-110 transition-transform"><Workflow className="w-5 h-5 text-indigo-500" /></div>
-                                <div className="flex-1">
-                                    <p className="text-xs font-black uppercase">Sesión Modular</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">Clase Interactiva</p>
-                                </div>
-                            </Button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                             <Button 
                                 onClick={() => { setCreationType('mission'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
-                                className="h-20 rounded-2xl bg-slate-50 hover:bg-white border hover:border-blue-500 shadow-sm hover:shadow-xl transition-all flex items-center gap-5 px-8 group text-left"
+                                className="h-24 rounded-3xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-rose-500 shadow-sm hover:shadow-xl transition-all flex flex-col items-start justify-center px-6 group text-left relative overflow-hidden"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center group-hover:scale-110 transition-transform"><Target className="w-5 h-5 text-rose-500" /></div>
-                                <div className="flex-1">
-                                    <p className="text-xs font-black uppercase">Misión Avanzada</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">Gamificación IA</p>
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Target className="w-16 h-16 text-rose-500" />
                                 </div>
+                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                                    <Target className="w-5 h-5 text-rose-500" />
+                                </div>
+                                <p className="text-sm font-black uppercase tracking-tight text-slate-800">Misión Especial</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Gamificación IA</p>
+                            </Button>
+
+                            <Button 
+                                onClick={() => { setCreationType('modular_class'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
+                                className="h-24 rounded-3xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-500 shadow-sm hover:shadow-xl transition-all flex flex-col items-start justify-center px-6 group text-left relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Workflow className="w-16 h-16 text-indigo-500" />
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                                    <Workflow className="w-5 h-5 text-indigo-500" />
+                                </div>
+                                <p className="text-sm font-black uppercase tracking-tight text-slate-800">Sesión Estándar</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Clase Teórica Modular</p>
+                            </Button>
+
+                            <Button 
+                                onClick={() => { setCreationType('quiz'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
+                                className="h-24 rounded-3xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-amber-500 shadow-sm hover:shadow-xl transition-all flex flex-col items-start justify-center px-6 group text-left relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <CheckSquare className="w-16 h-16 text-amber-500" />
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                                    <CheckSquare className="w-5 h-5 text-amber-500" />
+                                </div>
+                                <p className="text-sm font-black uppercase tracking-tight text-slate-800">Evaluación / Quiz</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Prueba de Conocimientos</p>
+                            </Button>
+
+                            <Button 
+                                onClick={() => { setCreationType('tarea'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
+                                className="h-24 rounded-3xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-orange-500 shadow-sm hover:shadow-xl transition-all flex flex-col items-start justify-center px-6 group text-left relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <ClipboardList className="w-16 h-16 text-orange-500" />
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                                    <ClipboardList className="w-5 h-5 text-orange-500" />
+                                </div>
+                                <p className="text-sm font-black uppercase tracking-tight text-slate-800">Proyecto Real</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Actividad de Entrega</p>
                             </Button>
                         </div>
                     </div>
@@ -636,9 +794,14 @@ export const InstitutionalModuleEditor = () => {
             {isInlineCreating && (
                 <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6">
                     <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-3xl space-y-8 text-slate-800">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">Nuevo Componente</h3>
-                            <Badge className="bg-blue-600 text-white border-none font-black px-2 py-0.5 text-[8px] uppercase">{creationType === 'mission' ? 'Misión' : 'Modular'}</Badge>
+                        <div className="flex items-center justify-between border-b pb-4 border-slate-100">
+                            <div>
+                                <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">Configurar Componente</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Estructural Básica</p>
+                            </div>
+                            <div className={cn("px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest", TYPE_CONFIG[creationType as keyof typeof TYPE_CONFIG]?.bg, TYPE_CONFIG[creationType as keyof typeof TYPE_CONFIG]?.color)}>
+                                {TYPE_CONFIG[creationType as keyof typeof TYPE_CONFIG]?.label || 'Nuevo'}
+                            </div>
                         </div>
                         
                         <div className="space-y-4">
@@ -708,6 +871,210 @@ export const InstitutionalModuleEditor = () => {
                 />
             )}
         </div>
+    );
+};
+
+/**
+ * Diálogo para gestionar asignaciones de estudiantes y vínculos con cursos
+ */
+const AssignmentDialog = ({ module, institutionId, onUpdate }: { module: any; institutionId: any; onUpdate: () => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [students, setStudents] = useState<any[]>([]);
+    const [courses, setCourses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [processingId, setProcessingId] = useState<number | null>(null);
+
+    const fetchAssignmentData = async () => {
+        if (!institutionId) return;
+        setLoading(true);
+        try {
+            const usersRaw = await institutionApi.getInstitutionalUsers(Number(institutionId));
+            const coursesRaw = await institutionApi.getCourses(Number(institutionId));
+
+            const users = (usersRaw as any[]) || [];
+            const allCourses = (coursesRaw as any[]) || [];
+
+            const institutionalStudents = users.filter((u: any) => u.role === 'student' || u.roleId === 6 || u.roleId === 3);
+            setStudents(institutionalStudents);
+            setCourses(allCourses);
+        } catch (error) {
+            console.error('Error fetching assignment data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) fetchAssignmentData();
+    }, [isOpen]);
+
+    const handleToggleStudent = async (studentId: number, isAssigned: boolean) => {
+        setProcessingId(studentId);
+        try {
+            if (isAssigned) {
+                await professorApi.unassignStudentFromModule(module.id, studentId);
+                toast.success("Acceso Revocado");
+            } else {
+                await professorApi.assignStudentToModule(module.id, studentId);
+                toast.success("Acceso Concedido");
+            }
+            onUpdate();
+            fetchAssignmentData();
+        } catch (error) {
+            toast.error("No se pudo cambiar la asignación");
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleLinkToCourse = async (courseId: number) => {
+        setProcessingId(courseId);
+        try {
+            await institutionApi.assignModuleToCourse(module.id, courseId);
+            toast.success("Vínculo Actualizado");
+            onUpdate();
+            setIsOpen(false);
+        } catch (error) {
+            toast.error("No se pudo vincular el curso");
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="h-8 w-8 rounded-full border border-slate-100 bg-white hover:bg-blue-50 text-slate-400 hover:text-blue-500 p-0 shadow-sm transition-all shadow-blue-500/10">
+                    <Users className="w-3.5 h-3.5" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white border rounded-[3rem] max-w-2xl max-h-[85vh] flex flex-col overflow-hidden p-0 shadow-2xl z-[150]" style={{ borderColor: 'rgba(26,86,219,0.1)' }}>
+                <DialogHeader className="p-10 pb-6 bg-blue-50/30 border-b border-blue-50 text-left">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <DialogTitle className="text-4xl font-black tracking-tighter flex items-center gap-3 text-slate-800 leading-none">
+                                Alcance <span className="text-blue-600">Académico</span>
+                            </DialogTitle>
+                            <DialogDescription className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2 text-left">
+                                UNIDAD: {module.titulo || module.nombreModulo}
+                            </DialogDescription>
+                        </div>
+                        <div className="w-16 h-16 rounded-2xl bg-white border border-blue-100 flex items-center justify-center shadow-sm">
+                            <Users className="w-8 h-8 text-blue-600" />
+                        </div>
+                    </div>
+                </DialogHeader>
+
+                <Tabs defaultValue="students" className="flex-1 flex flex-col min-h-0">
+                    <div className="px-8 border-b" style={{ borderColor: 'rgba(26,86,219,0.08)' }}>
+                        <TabsList className="bg-transparent h-12 gap-8 border-none p-0">
+                            <TabsTrigger value="students" className="data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none h-full uppercase font-black text-[10px] tracking-widest px-0">
+                                Estudiantes
+                            </TabsTrigger>
+                            <TabsTrigger value="courses" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-600 data-[state=active]:border-b-2 data-[state=active]:border-emerald-600 rounded-none h-full uppercase font-black text-[10px] tracking-widest px-0">
+                                Sectores
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                        <TabsContent value="students" className="mt-0 outline-none space-y-4">
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                    <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                                    <p className="text-[10px] font-black uppercase text-slate-500">Cargando Personal...</p>
+                                </div>
+                            ) : students.length === 0 ? (
+                                <p className="text-center text-slate-500 py-12 uppercase font-black text-[10px]">No se encontraron estudiantes asociados.</p>
+                            ) : (
+                                <div className="grid gap-3">
+                                    {(module?.cursoId ? students.filter((s: any) => s.cursoId === module.id) : students).map((student: any) => {
+                                        const isAssigned = module?.assignedStudentIds?.includes(student.id);
+                                        const isAssignedByCourse = module?.cursoId !== undefined && student.cursoId === module.cursoId;
+
+                                        return (
+                                            <div key={student.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[2rem] border transition-all hover:border-slate-300">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center font-black text-blue-600 border border-slate-100 uppercase shadow-sm">
+                                                        {(student.nombre || "??").substring(0, 2)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{student.nombre}</p>
+                                                            {isAssignedByCourse && (
+                                                                <Badge className="bg-emerald-50 text-emerald-600 border-none text-[8px] font-black uppercase px-2 h-5">Vínculo Curricular</Badge>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-400 lowercase">{student.email}</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    disabled={processingId === student.id || isAssignedByCourse}
+                                                    onClick={() => handleToggleStudent(student.id, isAssigned)}
+                                                    className={cn(
+                                                        "h-11 px-6 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-sm",
+                                                        isAssigned || isAssignedByCourse
+                                                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                                            : "bg-blue-600 text-white hover:bg-blue-700"
+                                                    )}
+                                                >
+                                                    {processingId === student.id ? <Loader2 className="w-3 h-3 animate-spin" /> : (isAssigned || isAssignedByCourse) ? "Matriculado" : "Matricular"}
+                                                </Button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="courses" className="mt-0 outline-none space-y-4">
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                                    <p className="text-[10px] font-black uppercase text-slate-500">Cargando sectores...</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-3">
+                                    <div className="p-4 rounded-2xl mb-2 bg-blue-50/50">
+                                        <p className="text-[9px] font-semibold flex items-center gap-2 text-blue-600">
+                                            <Activity className="w-4 h-4 flex-shrink-0" /> Al vincular un nivel a un sector, todos sus estudiantes tendrán acceso automático.
+                                        </p>
+                                    </div>
+                                    {courses.map((course: any) => {
+                                        const isLinked = String(module.cursoId) === String(course.id);
+                                        return (
+                                            <div key={course.id} className={cn("flex items-center justify-between p-4 rounded-2xl border transition-all bg-white", isLinked ? "shadow-md border-blue-500" : "hover:shadow-sm border-slate-100")}>
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isLinked ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400")}>
+                                                        <BookOpen className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold uppercase tracking-tight text-slate-800">{course.nombre}</p>
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Nivel: {course.nivel || 'Técnico'}</p>
+                                                    </div>
+                                                </div>
+                                                {isLinked ? (
+                                                    <Badge className="bg-blue-600 text-white border-none">Vinculado</Badge>
+                                                ) : (
+                                                    <Button
+                                                        variant="outline"
+                                                        disabled={processingId === course.id}
+                                                        onClick={() => handleLinkToCourse(course.id)}
+                                                        className="h-9 font-black uppercase text-[9px] rounded-xl border border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                                    >
+                                                        {processingId === course.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Vincular'}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </TabsContent>
+                    </div>
+                </Tabs>
+            </DialogContent>
+        </Dialog>
     );
 };
 
