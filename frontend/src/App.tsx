@@ -312,7 +312,7 @@ function App() {
           </Route>
 
           <Route path="/institucional-editor/:moduleId">
-            <ProtectedRoute user={user} allowedRoles={["institutional_admin", "institutional_professor"]} allowedRoleIds={[9]}>
+            <ProtectedRoute user={user} allowedRoles={["institutional_admin", "institutional_professor"]} allowedRoleIds={[9, 13]}>
               <InstitutionalModuleEditor />
             </ProtectedRoute>
           </Route>

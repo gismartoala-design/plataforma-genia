@@ -484,8 +484,8 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
     try {
       await institutionApi.updateInstitutionLogo(user.institucionId, file);
       toast({ title: '✓ Marca Actualizada', description: 'El logo de la institución ha sido cargado con éxito.' });
-      // We might need to refresh user data or just reload to see the change in sidebar
-      window.location.reload(); 
+      // Notify components like the sidebar to update their branding without a hard page reload
+      window.dispatchEvent(new CustomEvent('institution-updated'));
     } catch {
       toast({ title: 'Error', description: 'No se pudo subir el logo.', variant: 'destructive' });
     } finally {

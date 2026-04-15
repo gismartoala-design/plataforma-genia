@@ -105,10 +105,6 @@ export const institutionApi = {
     updateInstitutionLogo: async (instId: number, file: File) => {
         const formData = new FormData();
         formData.append('file', file);
-        return apiClient.patch(`/api/instituciones/${instId}/logo`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        return apiClient.patch(`/api/instituciones/${instId}/logo`, formData);
     },
 };

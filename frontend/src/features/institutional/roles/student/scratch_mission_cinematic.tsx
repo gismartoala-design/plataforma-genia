@@ -71,8 +71,8 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
         let textToSpeak = currentMoment.title + ". ";
         
         if (currentMoment.blocks && currentMoment.blocks.length > 0) {
-            const studentBlocks = currentMoment.blocks.filter((b: any) => b.visibleToStudent !== false);
-            textToSpeak += studentBlocks.map((b: any) => b.content?.text || b.content?.content || b.content?.question || b.content?.instruction || "").join(". ");
+            const studentBlocks = currentMoment.blocks.filter((b: any) => b.visibleToStudent && (b.type.startsWith('student_') || b.type.startsWith('interaction_')));
+            textToSpeak += studentBlocks.map((b: any) => b.content?.text || b.content?.question || b.content?.instruction || "").join(". ");
         } else {
             const studentData = currentMoment.student || {};
             textToSpeak += studentData.content || studentData.question || studentData.instruction || "";
@@ -296,12 +296,12 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                     <div className="flex-1 w-full space-y-4 sm:space-y-6">
                                         {currentMoment.blocks && currentMoment.blocks.length > 0 ? (
                                             currentMoment.blocks
-                                                .filter((b: any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_'))
+                                                .filter((b: any) => b.visibleToStudent && (b.type.startsWith('student_') || b.type === 'teacher_script'))
                                                 .map((block: any) => (
                                                     <div key={block.id} className={cn("relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md")}>
                                                         <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
                                                         <p className="text-base sm:text-xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
-                                                            {block.content?.text || block.content?.content || "..."}
+                                                            {block.content?.text || block.content?.content || "Cargando protocolo..."}
                                                         </p>
                                                     </div>
                                                 ))
@@ -319,7 +319,7 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                         <Button 
                                             onClick={() => {
                                                 const text = currentMoment.blocks?.length 
-                                                    ? currentMoment.blocks.filter((b:any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_')).map((b:any) => b.content?.text || b.content?.content || "").join(". ")
+                                                    ? currentMoment.blocks.filter((b:any) => b.visibleToStudent).map((b:any) => b.content?.text || "").join(". ")
                                                     : (currentMoment?.student?.content || "");
                                                 speak(text);
                                             }}

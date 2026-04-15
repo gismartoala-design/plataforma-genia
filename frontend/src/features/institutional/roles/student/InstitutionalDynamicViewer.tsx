@@ -213,7 +213,7 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
     const meta = parsed?.metadata || {};
     const progress = blocks.length > 0 ? ((currentBlock + 1) / blocks.length) * 100 : 0;
 
-    if (module.tipo === 'mission') {
+    if (module.tipo === 'mission' || module.tipo === 'maker_lab' || (parsed?.moments && parsed.moments.length > 0)) {
         return <MissionCinematicViewer module={module} onClose={onClose} />;
     }
 

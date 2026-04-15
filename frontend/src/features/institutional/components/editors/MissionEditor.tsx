@@ -93,27 +93,39 @@ function BlockContent({ block, onUpdate, isReadOnly }: { block: Block; onUpdate:
     <div className="space-y-1.5">
       <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</label>
       {multiline ? (
-        <Textarea
-          readOnly={isReadOnly}
-          value={c[key] || ''}
-          onChange={e => onUpdate({ ...c, [key]: e.target.value })}
-          onInput={(e) => {
-            const el = e.currentTarget;
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
-          }}
-          placeholder={placeholder}
-          className="bg-white border-slate-100 focus:border-current rounded-2xl text-xs font-bold min-h-[80px] resize-none overflow-hidden transition-all"
-          style={{ height: 'auto' }}
-        />
+        isReadOnly ? (
+          <div className="bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold p-4 text-slate-700 min-h-[80px] whitespace-pre-wrap shadow-inner leading-relaxed">
+            {c[key] || <span className="text-slate-400 italic">Sin contenido</span>}
+          </div>
+        ) : (
+          <Textarea
+            readOnly={isReadOnly}
+            value={c[key] || ''}
+            onChange={e => onUpdate({ ...c, [key]: e.target.value })}
+            onInput={(e) => {
+              const el = e.currentTarget;
+              el.style.height = 'auto';
+              el.style.height = el.scrollHeight + 'px';
+            }}
+            placeholder={placeholder}
+            className="bg-white border-slate-100 focus:border-current rounded-2xl text-xs font-bold min-h-[80px] resize-none overflow-hidden transition-all"
+            style={{ height: 'auto' }}
+          />
+        )
       ) : (
-        <Input
-          readOnly={isReadOnly}
-          value={c[key] || ''}
-          onChange={e => onUpdate({ ...c, [key]: e.target.value })}
-          placeholder={placeholder}
-          className="bg-white border-slate-100 focus:border-current rounded-xl text-xs font-bold h-10"
-        />
+        isReadOnly ? (
+          <div className="bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold px-4 py-2.5 text-slate-700 min-h-[40px] flex items-center shadow-inner">
+            {c[key] || <span className="text-slate-400 italic">Sin contenido</span>}
+          </div>
+        ) : (
+          <Input
+            readOnly={isReadOnly}
+            value={c[key] || ''}
+            onChange={e => onUpdate({ ...c, [key]: e.target.value })}
+            placeholder={placeholder}
+            className="bg-white border-slate-100 focus:border-current rounded-xl text-xs font-bold h-10"
+          />
+        )
       )}
     </div>
   );
@@ -593,7 +605,7 @@ export const MissionEditor = ({ data, onSave, onClose, isReadOnly }: MissionEdit
         <div className="absolute inset-0 construction-grid opacity-20 pointer-events-none" />
 
         {activeMoment && activeMomentIdx !== null ? (
-          <div className="relative z-10 max-w-2xl mx-auto py-12 px-8 space-y-4 pb-32">
+          <div className="relative z-10 max-w-4xl mx-auto py-12 px-8 space-y-4 pb-32">
 
             {/* Moment Header */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm px-6 py-5 space-y-4">

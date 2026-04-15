@@ -44,8 +44,10 @@ import {
     Wand2,
     Download,
     Eye,
+    EyeOff,
     LayoutDashboard,
-    BookOpen
+    BookOpen,
+    ClipboardCheck
 } from 'lucide-react';
 import { MissionCinematicViewer } from '../student/MissionCinematicViewer';
 import { cn } from '@/lib/utils';
@@ -79,6 +81,7 @@ import { VideoEditor } from '@/features/institutional/components/editors/VideoEd
 import { PdfEditor } from '@/features/institutional/components/editors/PdfEditor';
 import { LinkEditor } from '@/features/institutional/components/editors/LinkEditor';
 import { PythonLabEditor } from '@/features/institutional/components/editors/PythonLabEditor';
+import { AutoEvaluationEditor } from '@/features/institutional/components/editors/AutoEvaluationEditor';
 import { ActivityToolbox } from '@/features/institutional/components/editors/ActivityToolbox';
 import { InstitutionalClassBuilder } from '@/features/institutional/components/editors/InstitutionalClassBuilder';
 import { MissionEditor } from '@/features/institutional/components/editors/MissionEditor';
@@ -136,6 +139,73 @@ const INITIAL_ACTIVITY_DATA: Record<string, any> = {
             { id: "momento_8", title: "8. Evidencia", time_minutes: 2, config: { interaction_type: "file_upload" }, teacher: { intention: "", pedagogy: [], script: "", observation: "", common_errors: [], intervention: "" }, student: { content: "" } }
         ],
         engine: { kpi_dynamic: true, track_attempts: true, auto_hint_system: true, progression_system: true, role_based_views: true }
+    },
+    auto_evaluation: {
+        context: 'Has sido asignado como analista de sistemas de la ciudad. Tu trabajo es revisar distintos sistemas tecnológicos que presentan fallas y tomar decisiones correctas para optimizarlos. Cada situación representa un problema real. Lee con atención antes de responder.',
+        durationMinutes: 25,
+        horizontalFormat: true,
+        questions: [
+            {
+                id: 'q1',
+                text: 'El sistema de iluminación de una calle fue programado para encenderse automáticamente en la noche. Sin embargo, los técnicos detectaron que la luz se enciende y apaga constantemente en pocos segundos, generando inestabilidad y consumo innecesario de energía. ¿Qué orden lógico falta?',
+                options: ["Encender → Mantener encendido → Apagar", "Apagar → Encender → Apagar", "Encender → Reiniciar → Encender"],
+                correctIndex: 0
+            },
+            {
+                id: 'q2',
+                text: 'Un estudiante está diseñando un sistema automatizado para una rutina diaria. Define los siguientes pasos: Ponerse los zapatos, ponerse las medias, salir de casa. ¿Cuál es el error?',
+                options: ["Orden incorrecto en la secuencia", "Falta de automatización", "Exceso de repetición"],
+                correctIndex: 0
+            },
+            {
+                id: 'q3',
+                text: 'El sistema de riego automático de un parque se activa cada mañana a la misma hora. Durante varios días ha estado lloviendo, lo que ha provocado exceso de agua. ¿Cuál es la decisión lógica correcta?',
+                options: ["Activar siempre a la misma hora", "Activar solo si el suelo está seco", "Activar cada 30 minutos"],
+                correctIndex: 1
+            },
+            {
+                id: 'q4',
+                text: 'En un cruce importante, los semáforos cambian a verde automáticamente cada cierto tiempo, sin verificar si hay vehículos esperando. Esto ha generado situaciones peligrosas.',
+                options: ["Falta de lógica de decisión", "Exceso de pasos en la secuencia", "Error de repetition"],
+                correctIndex: 0
+            },
+            {
+                id: 'q5',
+                text: 'Un sistema de monitoreo revisa constantemente si hay vehículos en un cruce. Cada pocos segundos analiza la información y vuelve a ejecutar el mismo proceso. ¿Cómo se llama este proceso?',
+                options: ["Secuencia", "Repetición continua", "Error del sistema"],
+                correctIndex: 1
+            },
+            {
+                id: 'q6',
+                text: 'Un sistema de control de luces requiere que una persona active manualmente el encendido y apagado cada vez que cambia la iluminación. ¿Qué conclusión es correcta?',
+                options: ["Es un sistema automatizado", "No está automatizado", "Es un sistema inteligente"],
+                correctIndex: 1
+            },
+            {
+                id: 'q7',
+                text: 'Un sistema incluye los siguientes pasos: Encender luz, encender luz nuevamente, mantener encendido. El sistema funciona, pero utiliza más acciones de las necesarias.',
+                options: ["Sistema optimizado", "Sistema redundante", "Sistema automatizado"],
+                correctIndex: 1
+            },
+            {
+                id: 'q8',
+                text: 'Un sistema de tráfico funciona de la siguiente manera: SI hay autos → cambiar a verde, SI no hay autos → cambiar a verde. ¿Qué falta aquí?',
+                options: ["La lógica es correcta", "Falta una decisión real", "Es un sistema automático completo"],
+                correctIndex: 1
+            },
+            {
+                id: 'q9',
+                text: 'Un sistema detecta condiciones y ejecuta acciones, pero nunca verifica si el resultado fue correcto o si necesita ajustes posteriores. ¿Cuál es el problema?',
+                options: ["Falta de control y validación", "Secuencia correcta", "Sistema optimizado"],
+                correctIndex: 0
+            },
+            {
+                id: 'q10',
+                text: 'Un sistema de movilidad ejecuta pasos en orden, no toma decisiones según el entorno y funciona siempre igual sin adaptarse. ¿Cómo clasificas este sistema?',
+                options: ["Sistema completamente funcional", "Sistema parcialmente funcional", "Sistema inteligente optimizado"],
+                correctIndex: 1
+            }
+        ]
     }
 };
 
@@ -151,56 +221,56 @@ const MAKER_LAB_TEMPLATE = {
         { 
             id: "maker_1", title: "Fase 1: Selección", time_minutes: 5, 
             config: { interaction_type: "multiple_choice" },
-            teacher: { intention: "Seleccionar un proceso cotidiano.", pedagogy: ["Observación"], script: "Hoy vamos a pensar como ingenieros.", observation: "", common_errors: [], intervention: "" },
-            student: { context: "En la ciudad inteligente, antes de automatizar, debemos entender la vida real.", question: "¿Qué proceso quieres analizar hoy?", options: [{text: "Preparar comida"}, {text: "Organizar mochila"}, {text: "Rutina antes de dormir"}] } 
+            teacher: { intention: "", pedagogy: ["Observación"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "", options: [{text: ""}, {text: ""}, {text: ""}] } 
         },
         { 
             id: "maker_2", title: "Fase 2: Identificación", time_minutes: 10, 
             config: { interaction_type: "sequence_order" },
-            teacher: { intention: "Descomponer el proceso.", pedagogy: ["Descomposición"], script: "", observation: "", common_errors: ["Olvidar pasos"], intervention: "" },
-            student: { context: "Para que un sistema funcione, debemos conocer todos sus pasos.", question: "Define los pasos de tu proceso en orden.", items: [{text: "Paso 1"}, {text: "Paso 2"}, {text: "Paso 3"}] } 
+            teacher: { intention: "", pedagogy: ["Descomposición"], script: "", observation: "", common_errors: [""], intervention: "" },
+            student: { context: "", question: "", items: [{text: ""}, {text: ""}, {text: ""}] } 
         },
         { 
             id: "maker_3", title: "Fase 3: Detección de Errores", time_minutes: 8, 
             config: { interaction_type: "multiple_choice" },
-            teacher: { intention: "Detectar inconsistencias.", pedagogy: ["Pensamiento Crítico"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "Los sistemas fallan por orden incorrecto o pasos faltantes.", question: "¿Cuál de estos es un error lógico?", options: [{text: "Zapatos antes de medias"}, {text: "Cocinar sin ingredientes"}] } 
+            teacher: { intention: "", pedagogy: ["Pensamiento Crítico"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "", options: [{text: ""}, {text: ""}] } 
         },
         { 
             id: "maker_4", title: "Fase 4: Conexión Lógica", time_minutes: 7, 
             config: { interaction_type: "sequence_order" },
-            teacher: { intention: "Vincular acciones.", pedagogy: ["Abstracción"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "Un sistema requiere un orden lógico para avanzar.", question: "Ordena esta secuencia.", items: [{text: "Paso A"}, {text: "Paso B"}, {text: "Paso C"}] } 
+            teacher: { intention: "", pedagogy: ["Abstracción"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "", items: [{text: ""}, {text: ""}, {text: ""}] } 
         },
         { 
             id: "maker_5", title: "Fase 5: Decisiones", time_minutes: 10, 
             config: { interaction_type: "open_response" },
-            teacher: { intention: "Entender condicionales.", pedagogy: ["Lógica"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "Los sistemas inteligentes toman decisiones: SI ocurre X -> ENTONCES hago Y.", question: "Define una decisión en tu proceso." } 
+            teacher: { intention: "", pedagogy: ["Lógica"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "" } 
         },
         { 
             id: "maker_6", title: "Fase 6: Repetición", time_minutes: 5, 
             config: { interaction_type: "multiple_choice" },
-            teacher: { intention: "Identificar bucles.", pedagogy: ["Patrones"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "Algunos procesos se repiten constantemente.", question: "¿Tu sistema tiene partes repetitivas?", options: [{text: "Ocurre una sola vez"}, {text: "Se repite constantemente"}] } 
+            teacher: { intention: "", pedagogy: ["Patrones"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "", options: [{text: ""}, {text: ""}] } 
         },
         { 
             id: "maker_7", title: "Fase 7: Diseño Final", time_minutes: 10, 
             config: { interaction_type: "open_response" },
-            teacher: { intention: "Formalizar el algoritmo.", pedagogy: ["Algoritmos"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "Ahora construye una solución clara y ordenada.", question: "Escribe tu algoritmo final mejorado." } 
+            teacher: { intention: "", pedagogy: ["Algoritmos"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "" } 
         },
         { 
             id: "maker_8", title: "Fase 8: Simulación", time_minutes: 5, 
             config: { interaction_type: "multiple_choice" },
-            teacher: { intention: "Probar robustez.", pedagogy: ["Pruebas"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "Un sistema debe ser probado antes de implementarse.", question: "¿Qué ocurre si eliminas un paso?", options: [{text: "Funciona igual"}, {text: "Falla el sistema"}] } 
+            teacher: { intention: "", pedagogy: ["Pruebas"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", question: "", options: [{text: ""}, {text: ""}] } 
         },
         { 
             id: "maker_9", title: "Fase 9: Resultado", time_minutes: 5, 
             config: { interaction_type: "auto_display" },
-            teacher: { intention: "Cierre y reconocimiento.", pedagogy: ["Metacognición"], script: "", observation: "", common_errors: [], intervention: "" },
-            student: { context: "¡Has pensado como un ingeniero! Lograste analizar, detectar y diseñar.", concept: "Nivel: Diseñador de Sistemas - Inicial" } 
+            teacher: { intention: "", pedagogy: ["Metacognición"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "", concept: "" } 
         }
     ]
 };
@@ -220,6 +290,7 @@ const TYPE_CONFIG = {
     modular_class: { label: 'Sesión Modular', icon: Workflow, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
     mission: { label: 'Misión', icon: Target, color: 'text-rose-500', bg: 'bg-rose-500/10' },
     maker_lab: { label: 'Laboratorio Maker', icon: Hammer, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+    auto_evaluation: { label: 'Evaluación Automática', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-500/10' },
 };
 
 export const InstitutionalModuleEditor = () => {
@@ -254,7 +325,7 @@ export const InstitutionalModuleEditor = () => {
     // Inline Creation State
     const [isInlineCreating, setIsInlineCreating] = useState(false);
     const [inlineLevelName, setInlineLevelName] = useState('');
-    const [creationType, setCreationType] = useState<'modular_class' | 'mission' | 'quiz' | 'tarea' | 'maker_lab' | null>(null);
+    const [creationType, setCreationType] = useState<'modular_class' | 'mission' | 'quiz' | 'tarea' | 'maker_lab' | 'auto_evaluation' | null>(null);
     const [selectedGrade, setSelectedGrade] = useState<string>("6to EGB");
 
     // Rename state
@@ -320,6 +391,11 @@ export const InstitutionalModuleEditor = () => {
         try {
             const data = await institutionalCurriculumApi.getModulesBySection(sectionId);
             setModules(data);
+            // Also sync the global allModules state to keep unit map accurate
+            setAllModules(prev => {
+                const filtered = prev.filter(m => m.seccionId !== sectionId);
+                return [...filtered, ...data];
+            });
         } catch (error) {
             console.error('Error fetching modules:', error);
         }
@@ -441,9 +517,9 @@ export const InstitutionalModuleEditor = () => {
                 };
             }
 
-            const newMod = await handleAddModule(finalType === 'maker_lab' ? 'mission' : finalType, inlineLevelName.trim(), initialContent);
+            const newMod = await handleAddModule(finalType, inlineLevelName.trim(), initialContent);
             if (newMod) {
-                if (finalType === 'mission' || finalType === 'modular_class') {
+                if (finalType === 'mission' || finalType === 'modular_class' || finalType === 'maker_lab' || finalType === 'auto_evaluation') {
                     setSelectedLevel(newMod);
                 } else {
                     setEditingActivity({ id: newMod.id, tipo: newMod.tipo, data: newMod.contenido });
@@ -466,7 +542,7 @@ export const InstitutionalModuleEditor = () => {
         const parentSec = sections.find(s => s.id === mod.seccionId);
         if (parentSec) setSelectedSection(parentSec);
 
-        if (mod.tipo === 'modular_class' || mod.tipo === 'mission') {
+        if (mod.tipo === 'modular_class' || mod.tipo === 'mission' || mod.tipo === 'maker_lab' || mod.tipo === 'auto_evaluation') {
             setSelectedLevel(mod);
         } else {
             setEditingActivity({ id: mod.id, tipo: mod.tipo, data: mod.contenido || {} });
@@ -488,10 +564,10 @@ export const InstitutionalModuleEditor = () => {
             <aside className="w-80 border-r bg-[#0F172A] flex flex-col z-30 relative shrink-0 shadow-2xl text-white">
                 <div className="p-8 border-b border-white/10 shrink-0">
                     <button 
-                        onClick={() => selectedSection ? setSelectedSection(null) : setLocation('/institucional-teach')}
+                        onClick={() => selectedSection ? setSelectedSection(null) : setLocation(user?.roleId === 13 ? '/institucional-tutor?view=sectores' : '/institucional-teach')}
                         className="flex items-center gap-3 text-white/50 hover:text-white transition-colors mb-6 group text-[10px] font-black uppercase tracking-widest"
                     >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {selectedSection ? 'Volver a Unidades' : 'Volver al Dashboard'}
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {selectedSection ? 'Volver a Unidades' : 'Volver a Sectores'}
                     </button>
                     <div className="space-y-4">
                         <div className="space-y-1">
@@ -538,20 +614,19 @@ export const InstitutionalModuleEditor = () => {
                     </div>
 
                     <nav className="px-3 space-y-1 pb-20">
-                        {sections
-                            .filter(sec => !selectedSection || selectedSection.id === sec.id)
-                            .map((sec, sIdx) => {
+                        {sections.map((sec, sIdx) => {
                             const isSelected = selectedSection?.id === sec.id;
                             const sectionModules = allModules.filter(m => m.seccionId === sec.id);
                             
                             return (
                                 <div key={sec.id} className="space-y-1">
-                                    <button
+                                    <div
+                                        role="button"
                                         onClick={() => {
-                                            setSelectedSection(sec);
+                                            setSelectedSection(isSelected ? null : sec);
                                         }}
                                         className={cn(
-                                            "w-full flex items-center gap-3 p-3 rounded-2xl transition-all group border border-transparent",
+                                            "w-full flex items-center gap-3 p-3 rounded-2xl transition-all group border border-transparent cursor-pointer",
                                             isSelected ? "bg-white/10 border-white/10 shadow-lg" : "hover:bg-white/5"
                                         )}
                                     >
@@ -565,10 +640,34 @@ export const InstitutionalModuleEditor = () => {
                                             <p className={cn("text-[11px] font-black uppercase tracking-tight truncate", isSelected ? "text-white" : "text-white/40 group-hover:text-white/70")}>
                                                 {sec.nombre}
                                             </p>
-                                            <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mt-0.5">{sectionModules.length} Protocolos</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none">{sectionModules.length} Actividades</p>
+                                                <div className={cn("w-1 h-1 rounded-full", sec.activo ? "bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" : "bg-slate-600")} />
+                                            </div>
                                         </div>
+                                        
+                                        {(!isReadOnly || user?.roleId === 13) && (
+                                            <div
+                                                role="button"
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    try {
+                                                        await institutionalCurriculumApi.updateSection(sec.id, { activo: !sec.activo });
+                                                        toast.success("Estado de visibilidad modificado");
+                                                        fetchSections();
+                                                    } catch (err) {
+                                                        toast.error("No se pudo actualizar la unidad");
+                                                    }
+                                                }}
+                                                className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100", 
+                                                    sec.activo ? "text-emerald-400 hover:bg-emerald-500/10" : "text-slate-500 hover:bg-slate-700"
+                                                )}
+                                            >
+                                                {sec.activo ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                            </div>
+                                        )}
                                         <ChevronRight className={cn("w-3.5 h-3.5 text-white/10 transition-transform", isSelected && "rotate-90 text-blue-400")} />
-                                    </button>
+                                    </div>
 
                                     {/* Lessons list - only if selected/expanded */}
                                     <div className={cn("overflow-hidden transition-all pl-4 pr-1 space-y-1", isSelected ? "max-h-[1000px] opacity-100 mt-2 mb-4" : "max-h-0 opacity-0")}>
@@ -578,11 +677,12 @@ export const InstitutionalModuleEditor = () => {
                                             const isLvlActive = selectedLevel?.id === mod.id;
 
                                             return (
-                                                <button
+                                                <div
+                                                    role="button"
                                                     key={mod.id}
                                                     onClick={() => handleEditActivity(mod)}
                                                     className={cn(
-                                                        "w-full flex items-center gap-3 p-2.5 rounded-xl transition-all group relative",
+                                                        "w-full flex items-center gap-3 p-2.5 rounded-xl transition-all group relative cursor-pointer",
                                                         isLvlActive ? "bg-blue-600/20 text-blue-400" : "text-white/30 hover:text-white hover:bg-white/5"
                                                     )}
                                                 >
@@ -598,7 +698,7 @@ export const InstitutionalModuleEditor = () => {
                                                             <Trash2 className="w-3 h-3" />
                                                         </div>
                                                     )}
-                                                </button>
+                                                    </div>
                                             );
                                         })}
                                         {!isReadOnly && (
@@ -610,7 +710,7 @@ export const InstitutionalModuleEditor = () => {
                                                 className="w-full flex items-center gap-3 p-2.5 rounded-xl text-white/20 hover:text-blue-400 hover:bg-blue-600/10 transition-all border border-dashed border-white/5 hover:border-blue-500/30 mt-2"
                                             >
                                                 <Plus className="w-3.5 h-3.5 ml-1" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest">Inyectar Protocolo</span>
+                                                <span className="text-[9px] font-black uppercase tracking-widest">Inyectar Nivel</span>
                                             </button>
                                         )}
                                     </div>
@@ -674,7 +774,7 @@ export const InstitutionalModuleEditor = () => {
                                 MAPA DE <span className="text-blue-600">INGENIERÍA</span> CURRICULAR
                             </h1>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">
-                                {selectedSection ? 'Protocolos de Unidad' : 'Planificación Maestra de Obra'} · Genios Framework
+                                {selectedSection ? 'Planificación de Unidad' : 'Planificación Maestra de Obra'} · Genios Framework
                             </p>
                         </div>
                     </div>
@@ -691,12 +791,18 @@ export const InstitutionalModuleEditor = () => {
                 <div className="flex-1 overflow-y-auto p-12 custom-scrollbar relative">
                     {selectedLevel ? (
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-[1700px] mx-auto min-h-full h-auto">
-                            {selectedLevel.tipo === 'mission' ? (
+                            {selectedLevel.tipo === 'mission' || selectedLevel.tipo === 'maker_lab' ? (
                                 <MissionEditor 
                                     data={selectedLevel.contenido} 
                                     isReadOnly={isReadOnly}
                                     onSave={(content) => handleLevelSave(selectedLevel.id, content)}
                                     onClose={() => setSelectedLevel(null)}
+                                />
+                            ) : selectedLevel.tipo === 'auto_evaluation' ? (
+                                <AutoEvaluationEditor 
+                                    data={selectedLevel.contenido} 
+                                    isReadOnly={isReadOnly} 
+                                    onSave={(content) => handleLevelSave(selectedLevel.id, content)} 
                                 />
                             ) : (
                                 <InstitutionalClassBuilder
@@ -742,6 +848,7 @@ export const InstitutionalModuleEditor = () => {
                                             {/* Gradient accent top bar */}
                                             <div className={cn("h-1 w-full", 
                                                 mod.tipo === 'mission' ? 'bg-gradient-to-r from-rose-500 to-pink-400' :
+                                                mod.tipo === 'maker_lab' ? 'bg-gradient-to-r from-indigo-500 to-cyan-400' :
                                                 mod.tipo === 'modular_class' ? 'bg-gradient-to-r from-indigo-500 to-violet-400' :
                                                 mod.tipo === 'quiz' ? 'bg-gradient-to-r from-amber-500 to-yellow-400' :
                                                 'bg-gradient-to-r from-slate-600 to-slate-500'
@@ -755,6 +862,32 @@ export const InstitutionalModuleEditor = () => {
                                                         <span className={config.color}>{config.label}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={cn("w-1.5 h-1.5 rounded-full", mod.activo ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-600")} />
+                                                            <span className={cn("text-[8px] font-black uppercase tracking-widest mr-2", mod.activo ? "text-emerald-400" : "text-slate-500")}>
+                                                                {mod.activo ? 'Operativo' : 'Inactivo'}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        {(!isReadOnly || user?.roleId === 13) && (
+                                                            <div
+                                                                role="button"
+                                                                onClick={async (e) => { 
+                                                                    e.stopPropagation(); 
+                                                                    try {
+                                                                        await institutionalCurriculumApi.updateModule(mod.id, { activo: !mod.activo });
+                                                                        toast.success("Visibilidad del componente modificada");
+                                                                        fetchModules(selectedSection.id);
+                                                                    } catch (err) {
+                                                                        toast.error("No se pudo actualizar");
+                                                                    }
+                                                                }}
+                                                                className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors", mod.activo ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" : "bg-slate-800 text-slate-500 hover:text-slate-300")}
+                                                            >
+                                                                {mod.activo ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                                            </div>
+                                                        )}
+
                                                         <AssignmentDialog
                                                             module={mod}
                                                             institutionId={user?.institucionId}
@@ -881,7 +1014,7 @@ export const InstitutionalModuleEditor = () => {
                                             <div className="mt-auto">
                                                 <div className="space-y-3 mb-12">
                                                     <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                                        <span>Inventario de Protocolos</span>
+                                                        <span>Inventario de Contenidos</span>
                                                         <span className="text-blue-600">{sectionModules.length} Niveles</span>
                                                     </div>
                                                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
@@ -937,7 +1070,7 @@ export const InstitutionalModuleEditor = () => {
                         </div>
                         <div className="space-y-3">
                             <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Ingeniería de Niveles</h2>
-                            <p className="text-slate-500 font-medium">Selecciona el protocolo de creación para esta unidad.</p>
+                            <p className="text-slate-500 font-medium">Selecciona el tipo de nivel para esta unidad.</p>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
@@ -1010,6 +1143,20 @@ export const InstitutionalModuleEditor = () => {
                                 <p className="text-sm font-black uppercase tracking-tight text-slate-800">Laboratorio Maker</p>
                                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1">Ingeniería de Sistemas</p>
                             </Button>
+
+                            <Button 
+                                onClick={() => { setCreationType('auto_evaluation'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
+                                className="h-24 rounded-3xl bg-amber-50 hover:bg-white border-2 border-amber-100 hover:border-amber-600 shadow-sm hover:shadow-xl transition-all flex flex-col items-start justify-center px-6 group text-left relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <ClipboardCheck className="w-16 h-16 text-amber-600" />
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                                    <ClipboardCheck className="w-5 h-5 text-amber-600" />
+                                </div>
+                                <p className="text-sm font-black uppercase tracking-tight text-slate-800">Evaluación Automática</p>
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1">Base 10 / Flexible</p>
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
@@ -1067,7 +1214,9 @@ export const InstitutionalModuleEditor = () => {
             <Sheet open={!!editingActivity} onOpenChange={(open) => !open && setEditingActivity(null)}>
                 <SheetContent side="right" className="w-full sm:max-max-w-xl p-0 border-l bg-slate-50">
                     <SheetHeader className="p-10 bg-white border-b sticky top-0 z-10 text-slate-800">
-                        <SheetTitle className="text-3xl font-black tracking-tighter italic uppercase">Editor de <span className="text-blue-600">Protocolos</span></SheetTitle>
+                        <SheetTitle className="text-3xl font-black tracking-tighter italic uppercase">
+                            Editor de <span className="text-blue-600">{editingActivity?.tipo ? (TYPE_CONFIG[editingActivity.tipo as keyof typeof TYPE_CONFIG]?.label || 'Protocolo') : 'Nivel'}</span>
+                        </SheetTitle>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{editingActivity?.tipo} Configuration</p>
                     </SheetHeader>
                     <div className="p-10 custom-scrollbar overflow-y-auto">
@@ -1212,7 +1361,7 @@ const AssignmentDialog = ({ module, institutionId, onUpdate }: { module: any; in
                                 <p className="text-center text-slate-500 py-12 uppercase font-black text-[10px]">No se encontraron estudiantes asociados.</p>
                             ) : (
                                 <div className="grid gap-3">
-                                    {(module?.cursoId ? students.filter((s: any) => s.cursoId === module.id) : students).map((student: any) => {
+                                    {(module?.cursoId ? students.filter((s: any) => s.cursoId === module.cursoId) : students).map((student: any) => {
                                         const isAssigned = module?.assignedStudentIds?.includes(student.id);
                                         const isAssignedByCourse = module?.cursoId !== undefined && student.cursoId === module.cursoId;
 

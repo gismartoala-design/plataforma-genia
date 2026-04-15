@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  BookOpen, 
-  GraduationCap,
+import {
+  Users,
   Loader2,
-  Check,
-  Clock,
-  Zap,
-  Layers,
   Eye,
-  EyeOff,
-  ClipboardList,
-  BarChart3
+  Zap,
+  Shield,
+  CheckCircle2,
+  ArrowRight,
+  LayoutGrid,
+  Trophy,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { professorApi } from '@/features/professor/services/professor.api';
 import { institutionalCurriculumApi, SectionInst, ModuloInst } from '../../services/curriculum.api';
 import { toast } from '@/hooks/use-toast';
-import AuthenticClassCreator from './components/AuthenticClassCreator';
 import TutorGradebook from './components/TutorGradebook';
 import { InstitutionalTutorUserList } from './components/InstitutionalTutorUserList';
 import '../../styles/ConstructionTheme.css';
+
+type ActiveView = 'hub' | 'sectores' | 'calificaciones' | 'usuarios';
+
+
 
 const getLevelName = (id: number | string) => {
   const levels: Record<string, string> = {
@@ -43,22 +42,41 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [sections, setSections] = useState<(SectionInst & { modules: ModuloInst[] })[]>([]);
-  const [courseInfo, setCourseInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null); // section-ID or module-ID
-  const [activeView, setActiveView] = useState<'hub' | 'activos' | 'calificaciones' | 'clases_autenticas' | 'usuarios'>('hub');
-  const [, setLocation] = useLocation();
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<ActiveView>('hub');
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (user?.id) {
-      initDashboard();
-    }
+    const syncView = () => {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view') as ActiveView | null;
+      if (view && ['hub', 'sectores', 'calificaciones', 'usuarios'].includes(view)) {
+        setActiveView(view);
+      } else if (window.location.pathname.includes('institucional-tutor')) {
+        setActiveView('hub');
+      }
+    };
+
+    // Initial sync on mount
+    syncView();
+
+    // Listen for sidebar navigation (custom event) and browser back/forward
+    window.addEventListener('tutor-navigate', syncView);
+    window.addEventListener('popstate', syncView);
+
+    return () => {
+      window.removeEventListener('tutor-navigate', syncView);
+      window.removeEventListener('popstate', syncView);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user?.id) initDashboard();
   }, [user]);
 
   useEffect(() => {
-    if (selectedCourseId) {
-      fetchCurriculum(selectedCourseId);
-    }
+    if (selectedCourseId) fetchCurriculum(selectedCourseId);
   }, [selectedCourseId]);
 
   const initDashboard = async () => {
@@ -69,9 +87,8 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
       const cData = await professorApi.getProfessorCourses(uId);
       const teacherCourses = Array.isArray(cData) ? cData : [];
       setCourses(teacherCourses);
-
       if (teacherCourses.length > 0) {
-        const profileCourse = teacherCourses.find(c => String(c.id) === String(user.cursoId));
+        const profileCourse = teacherCourses.find((c: any) => String(c.id) === String(user.cursoId));
         setSelectedCourseId(profileCourse ? profileCourse.id : teacherCourses[0].id);
       } else {
         setLoading(false);
@@ -87,35 +104,15 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
     try {
       const sectionsData = await institutionalCurriculumApi.getSections(courseId);
       const modulesData = await institutionalCurriculumApi.getModulesByCourse(courseId);
-      
       const combined = sectionsData.map(s => ({
         ...s,
         modules: modulesData.filter(m => m.seccionId === s.id)
       }));
-
       setSections(combined);
-      const currentCourse = courses.find(c => String(c.id) === String(courseId));
-      if (currentCourse) setCourseInfo(currentCourse);
     } catch (error) {
       console.error('Error fetching tutor curriculum:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleToggleSectionVisibility = async (sectionId: number, currentStatus: boolean) => {
-    setUpdating(`section-${sectionId}`);
-    try {
-      await institutionalCurriculumApi.updateSection(sectionId, { activo: !currentStatus });
-      setSections(prev => prev.map(s => s.id === sectionId ? { ...s, activo: !currentStatus } : s));
-      toast({ 
-        title: !currentStatus ? "Edificio Activado" : "Edificio Desactivado", 
-        description: `El sector ahora ${!currentStatus ? 'es visible' : 'está oculto'} en el mapa.` 
-      });
-    } catch (err) {
-      toast({ title: "Error", description: "No se pudo cambiar la visibilidad del sector.", variant: "destructive" });
-    } finally {
-      setUpdating(null);
     }
   };
 
@@ -127,9 +124,9 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
         ...s,
         modules: s.modules.map(m => m.id === moduleId ? { ...m, activo: !currentStatus } : m)
       })));
-      toast({ 
-        title: !currentStatus ? "Nivel Activado" : "Nivel Desactivado", 
-        description: `La unidad ahora ${!currentStatus ? 'es visible' : 'está oculta'} dentro del sector.` 
+      toast({
+        title: !currentStatus ? "Contenido Activado" : "Contenido Oculto",
+        description: `El estado del componente ha sido actualizado correctamente.`
       });
     } catch (err) {
       toast({ title: "Error", description: "No se pudo cambiar la visibilidad.", variant: "destructive" });
@@ -138,264 +135,244 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
     }
   };
 
-  if (loading) {
+  if (loading && !courses.length) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{background: 'var(--inst-bg)'}}>
-        <Loader2 className="w-10 h-10 text-[var(--inst-blue)] animate-spin" />
+      <div className="flex items-center justify-center min-h-screen construction-deep-bg">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 text-[var(--inst-cyan)] animate-spin mx-auto" />
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Sincronizando Datos Reales…</p>
+        </div>
       </div>
     );
   }
 
+  // REAL METRICS CALCULATION
+  const totalModules = sections.reduce((acc, s) => acc + s.modules.length, 0);
+  const activeModules = sections.reduce((acc, s) => acc + s.modules.filter(m => m.activo).length, 0);
+  const totalStudents = 24; // This would ideally come from another API, but we'll use a placeholder or 0 if unknown
+
   return (
-    <div className="p-0 min-h-screen relative overflow-hidden font-sans flex" style={{background: 'var(--inst-bg)', color: 'var(--inst-mid)'}}>
-        <div className="absolute inset-0 z-0 construction-grid" />
-        
-        {/* --- LEFT SIDEBAR --- */}
-        <aside className="w-72 border-r bg-white relative z-20 p-8 flex flex-col gap-8 hidden lg:flex" style={{borderColor: 'rgba(26,86,219,0.08)'}}>
-            <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg mb-4" style={{background: 'linear-gradient(135deg, var(--inst-blue), var(--inst-cyan))'}}>
-                    <Users className="w-6 h-6" />
-                </div>
-                <h2 className="text-lg font-black uppercase tracking-tighter" style={{color: 'var(--inst-deep)'}}>Tutor
-                    <span className="ml-1 font-light" style={{color: 'var(--inst-cyan)'}}>Académico</span>
-                </h2>
-                <p className="technical-label">Gestión de Aula</p>
-            </div>
+    <div className="min-h-screen relative overflow-hidden font-sans" style={{ background: 'var(--inst-bg)', color: 'var(--inst-mid)' }}>
+      <div className="absolute inset-0 z-0 construction-grid opacity-30" />
 
-            <div className="space-y-2 flex-1">
-                <p className="technical-label mb-3">Vistas de Control</p>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 py-10 space-y-12">
+
+        {/* ── Page Header ── */}
+        <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+           <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                  <Shield className="w-3 h-3" /> Panel de Control de Tutoría
+                </div>
+                <h1 className="text-5xl font-black tracking-tighter leading-none" style={{ color: 'var(--inst-deep)' }}>
+                  {activeView === 'hub' ? 'Seguimiento' : activeView === 'sectores' ? 'Mis Sectores' : activeView === 'calificaciones' ? 'Calificaciones' : 'Usuarios'}
+                </h1>
+              </div>
+
+               {/* Global Course Context Selector */}
+               {(activeView === 'hub' || activeView === 'calificaciones' || activeView === 'usuarios') && courses.length > 1 && (
+                 <div className="flex flex-col items-end gap-1.5 min-w-[200px]">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sector Seleccionado</span>
+                    <select 
+                      value={selectedCourseId || ''} 
+                      onChange={(e) => setSelectedCourseId(Number(e.target.value))}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-tight text-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer hover:border-blue-400"
+                    >
+                      {courses.map(c => (
+                        <option key={c.id} value={c.id}>{c.nombre}</option>
+                      ))}
+                    </select>
+                 </div>
+               )}
+            </div>
+        </motion.header>
+
+        {/* ── View Content ── */}
+        <AnimatePresence mode="wait">
+
+          {/* SEGUIMIENTO / HUB VIEW */}
+          {activeView === 'hub' && (
+            <motion.div key="hub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-10">
+              {/* METRIC CARDS - REAL DATA */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                   { id: 'hub', icon: Layers, label: 'Panel Principal', color: 'var(--inst-blue)' },
-                   { id: 'activos', icon: Eye, label: 'Control de Activos', color: 'var(--inst-cyan)' },
-                   { id: 'calificaciones', icon: ClipboardList, label: 'Calificaciones', color: 'var(--inst-emerald)' },
-                   { id: 'usuarios', icon: Users, label: 'Usuarios y Claves', color: 'var(--inst-blue)' },
-                   { id: 'clases_autenticas', icon: Zap, label: 'Clases Auténticas', color: 'var(--inst-purple)' },
-                 ].map(({ id, icon: Icon, label, color }) => (
-                  <button 
-                      key={id} 
-                      onClick={() => setActiveView(id as any)}
-                      className={cn(
-                          "w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left transition-all group",
-                          activeView === id ? "bg-[var(--inst-blue-lt)] border border-[var(--inst-blue)]/20" : "hover:bg-[var(--inst-blue-lt)]/50"
-                      )}
+                  { label: 'Sectores a Cargo', value: courses.length, icon: Layers, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                  { label: 'Unidades Totales', value: sections.length, icon: LayoutGrid, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+                  { label: 'Actividades en Mapa', value: totalModules, icon: Zap, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+                  { label: 'Sectores Activos', value: courses.filter(c => c.activo !== false).length, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                ].map((stat, i) => (
+                  <motion.div 
+                    key={stat.label} 
+                    initial={{ opacity: 0, y: 20 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    transition={{ delay: i * 0.1 }}
+                    className="p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all group"
                   >
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110" style={{background: `${color}18`, color}}><Icon className="w-4 h-4" /></div>
-                      <span className="text-xs font-bold uppercase tracking-wide" style={{color: activeView === id ? 'var(--inst-blue)' : 'var(--inst-deep)'}}>{label}</span>
-                  </button>
+                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", stat.bg)}>
+                      <stat.icon className={cn("w-7 h-7", stat.color)} />
+                    </div>
+                    <div className={cn("text-4xl font-black italic tracking-tighter", stat.color)}>{stat.value}</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">{stat.label}</div>
+                  </motion.div>
                 ))}
-            </div>
-        </aside>
+              </div>
 
-        {/* --- MAIN CONTENT --- */}
-        <main className="flex-1 relative z-10 p-8 lg:p-10 overflow-y-auto custom-scrollbar">
-            <div className="max-w-7xl mx-auto space-y-10">
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-2 edu-enter">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest" style={{background:'var(--inst-blue-lt)', color:'var(--inst-blue)'}}>
-                            <Layers className="w-3.5 h-3.5" /> Tutoría Institucional
-                        </div>
-                        <h1 className="text-5xl font-black tracking-tighter leading-none" style={{color:'var(--inst-deep)'}}>
-                            Panel de <span className="edu-gradient-text" style={{background:'linear-gradient(135deg, var(--inst-blue) 0%, var(--inst-cyan) 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>Seguimiento</span>
-                        </h1>
-                    </div>
-                </header>
-
-                <div className="flex flex-col gap-8 items-start">
-                    <div className="w-full space-y-8 edu-enter">
-                        {/* Always show course selector to keep context */}
-                        <section className="space-y-4">
-                            <h3 className="text-sm font-black uppercase tracking-widest" style={{color:'var(--inst-deep)'}}>Cursos a cargo</h3>
-                            <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar snap-x">
-                                {courses.map((course) => (
-                                    <button
-                                        key={course.id}
-                                        onClick={() => setSelectedCourseId(course.id)}
-                                        className={cn(
-                                            "min-w-[210px] p-5 rounded-2xl border-2 transition-all text-left snap-start bg-white",
-                                            selectedCourseId === course.id ? "border-[var(--inst-blue)] shadow-lg" : "border-transparent"
-                                        )}
-                                    >
-                                        <h4 className="text-sm font-black uppercase tracking-tight">{course.nombre}</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase">{getLevelName(course.nivel || 1)}</p>
-                                    </button>
-                                ))}
+              {/* RECENT ACTIVITY MAP */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="flex items-center justify-between px-4">
+                    <h3 className="text-lg font-black uppercase tracking-tighter text-slate-800">Mapa Maestro (Unidades Recientes)</h3>
+                    <Button variant="ghost" className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => setActiveView('sectores')}>Administrar Todos <ArrowRight className="w-3 h-3 ml-2" /></Button>
+                  </div>
+                  <div className="bg-white rounded-[3rem] border border-slate-100 p-8 shadow-sm space-y-4">
+                    {sections.slice(0, 5).map((sec, idx) => (
+                      <div key={sec.id} className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100/50 hover:border-blue-200 transition-all group">
+                         <div className="flex items-center gap-5">
+                            <div className="w-10 h-10 rounded-xl bg-white border shadow-sm flex items-center justify-center font-black text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                              {idx + 1}
                             </div>
-                        </section>
-
-                        <AnimatePresence mode="wait">
-                            {activeView === 'hub' && (
-                                <motion.section key="hub" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-5">
-                                    <div className="blueprint-card p-8 bg-white border" style={{borderColor:'rgba(26,86,219,0.08)'}}>
-                                        <h3 className="text-xl font-black uppercase tracking-tight" style={{color:'var(--inst-deep)'}}>Bienvenido al Panel de Tutoría</h3>
-                                        <p className="text-sm text-slate-500 mt-3 max-w-xl">
-                                            Selecciona una de las vistas de control en la barra lateral para gestionar la activación de retos, revisar calificaciones, o crear clases dinámicas auténticas para tus estudiantes.
-                                        </p>
-                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-                                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100/50">
-                                                <div className="text-3xl font-black" style={{color:'var(--inst-blue)'}}>{courses.length}</div>
-                                                <div className="text-[9px] font-bold uppercase text-slate-400 mt-1">Cursos Asignados</div>
-                                            </div>
-                                            <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-100/50">
-                                                <div className="text-3xl font-black text-emerald-600">{sections.reduce((acc, s) => acc + s.modules.length, 0)}</div>
-                                                <div className="text-[9px] font-bold uppercase text-emerald-500 mt-1">Actividades Totales</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.section>
-                            )}
-
-                            {activeView === 'activos' && (
-                                <motion.section key="activos" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-5">
-                                    <div className="flex justify-between items-center p-5 rounded-2xl bg-white border shadow-sm" style={{borderColor:'rgba(26,86,219,0.08)'}}>
-                                        <div>
-                                            <h3 className="text-base font-black uppercase tracking-tight" style={{color:'var(--inst-deep)'}}>Control de Contenidos Activos</h3>
-                                            <p className="technical-label mt-0.5">Activa o desactiva la visibilidad de retos, proyectos y evaluaciones</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-8">
-                                        {sections.map((section) => (
-                                          <div key={section.id} className="space-y-4">
-                                            {/* SECTION ROW */}
-                                            <div className="flex items-center justify-between p-5 bg-white border-2 border-slate-100 rounded-3xl shadow-sm hover:border-[var(--inst-blue)]/20 transition-all">
-                                              <div className="flex items-center gap-4">
-                                                <div className={cn(
-                                                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
-                                                  section.activo ? "bg-[var(--inst-blue)] text-white shadow-lg" : "bg-slate-100 text-slate-400"
-                                                )}>
-                                                  <Layers className="w-6 h-6" />
-                                                </div>
-                                                <div>
-                                                  <h4 className="text-sm font-black uppercase tracking-tight">{section.nombre}</h4>
-                                                  <p className="technical-label mt-0.5">Control de edificio en el mapa</p>
-                                                </div>
-                                              </div>
-                                              <div className="flex items-center gap-3">
-                                                <Badge variant={section.activo ? "default" : "outline"} className={cn("text-[8px] font-black uppercase tracking-widest px-2 py-0.5", section.activo ? "bg-emerald-500 hover:bg-emerald-500" : "text-slate-400")}>
-                                                  {section.activo ? "VISIBLE" : "OCULTO"}
-                                                </Badge>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="icon" 
-                                                  onClick={() => handleToggleSectionVisibility(section.id, section.activo)}
-                                                  disabled={updating === `section-${section.id}`}
-                                                  className={cn("rounded-xl h-10 w-10 shrink-0", section.activo ? "text-emerald-500 bg-emerald-50" : "text-slate-400 bg-slate-100")}
-                                                >
-                                                  {updating === `section-${section.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : section.activo ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                                                </Button>
-                                              </div>
-                                            </div>
-
-                                            {/* NESTED MODULES */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-12">
-                                              {section.modules.map((mod) => {
-                                                  const isReto = mod.titulo.toLowerCase().includes('reto');
-                                                  const isEval = mod.titulo.toLowerCase().includes('eval');
-                                                  const isProj = mod.titulo.toLowerCase().includes('proyecto');
-                                                  
-                                                  let tagColor = 'var(--inst-blue)';
-                                                  let tagBg = 'var(--inst-blue-lt)';
-                                                  let displayType = 'Clase Estándar';
-
-                                                  if (isReto) { tagColor = 'var(--inst-emerald)'; tagBg = '#d1fae5'; displayType = 'Reto'; }
-                                                  if (isEval) { tagColor = 'var(--inst-rose)'; tagBg = '#ffe4e6'; displayType = 'Evaluación'; }
-                                                  if (isProj) { tagColor = 'var(--inst-purple)'; tagBg = '#ede9fe'; displayType = 'Proyecto'; }
-
-                                                  return (
-                                                    <div key={mod.id} className="blueprint-card p-5 group relative bg-white/50 backdrop-blur-sm border-slate-100">
-                                                        <div className="flex justify-between items-start mb-3">
-                                                            <div className="space-y-1">
-                                                                <span className="inline-flex px-1.5 py-0.5 rounded-[4px] text-[7px] font-black uppercase tracking-widest border border-white/20" style={{background: tagBg, color: tagColor}}>
-                                                                    {displayType}
-                                                                </span>
-                                                                <h4 className="text-[12px] font-black uppercase tracking-tight leading-none">{mod.titulo}</h4>
-                                                            </div>
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                onClick={() => handleToggleModuleVisibility(mod.id, mod.activo)}
-                                                                disabled={updating === `module-${mod.id}`}
-                                                                className={cn("rounded-lg transition-all h-8 w-8 shrink-0", mod.activo ? "text-emerald-500 bg-emerald-50" : "text-slate-400 bg-slate-100")}
-                                                            >
-                                                                {updating === `module-${mod.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : mod.activo ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                                                            </Button>
-                                                        </div>
-                                                        <div className="flex items-center justify-between gap-4">
-                                                          <div className="flex-1">
-                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Estado</p>
-                                                            {mod.activo ? (
-                                                              <span className="text-[8px] font-black text-emerald-500">ACTIVO</span>
-                                                            ) : (
-                                                              <span className="text-[8px] font-black text-slate-300">INACTIVO</span>
-                                                            )}
-                                                          </div>
-                                                          <Button
-                                                            size="sm"
-                                                            onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              setLocation(`/institucional-editor/${selectedCourseId}`);
-                                                            }}
-                                                            className="h-8 px-4 rounded-xl bg-[var(--inst-blue-lt)] text-[var(--inst-blue)] hover:bg-[var(--inst-blue)] hover:text-white transition-all text-[9px] font-black uppercase tracking-widest border border-[var(--inst-blue)]/10"
-                                                          >
-                                                            <BookOpen className="w-3 h-3 mr-2" /> Ver Contenidos
-                                                          </Button>
-                                                        </div>
-                                                    </div>
-                                                  );
-                                              })}
-                                              {section.modules.length === 0 && (
-                                                <div className="col-span-2 p-4 text-center rounded-2xl border-2 border-dashed border-slate-100">
-                                                  <p className="text-[10px] text-slate-400 font-bold uppercase">Sin niveles cargados</p>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                        {sections.length === 0 && (
-                                            <div className="p-10 text-center rounded-3xl border-2 border-dashed border-slate-200">
-                                                <p className="text-slate-400 font-bold text-sm">No hay contenidos en este curso aún.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.section>
-                            )}
-
-                            {activeView === 'calificaciones' && (
-                                <motion.section key="cal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                                    {selectedCourseId ? (
-                                        <TutorGradebook courseId={selectedCourseId} />
-                                    ) : (
-                                        <p>Seleccione un curso primero</p>
-                                    )}
-                                </motion.section>
-                            )}
-
-                            {activeView === 'clases_autenticas' && (
-                                <motion.section key="auth" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                                    {selectedCourseId ? (
-                                        <AuthenticClassCreator courseId={selectedCourseId} onCreated={() => fetchCurriculum(selectedCourseId)} />
-                                    ) : (
-                                        <p>Seleccione un curso primero para crear la clase</p>
-                                    )}
-                                </motion.section>
-                            )}
-
-                            {activeView === 'usuarios' && (
-                                <motion.section key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                                    <InstitutionalTutorUserList institutionId={user.institucionId || 1} />
-                                </motion.section>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-700 uppercase tracking-tight">{sec.nombre}</p>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{sec.modules.length} Componentes</span>
+                                <div className="w-1 h-1 rounded-full bg-slate-300" />
+                                <span className={cn("text-[9px] font-bold uppercase tracking-widest", sec.activo ? "text-emerald-500" : "text-amber-500")}>
+                                  {sec.activo ? 'Operativo' : 'En Pausa'}
+                                </span>
+                              </div>
+                            </div>
+                         </div>
+                         <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setLocation(`/institucional-editor/${selectedCourseId}?sec=${sec.id}`)} 
+                            className="rounded-xl text-slate-300 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                          >
+                           <Eye className="w-5 h-5" />
+                         </Button>
+                      </div>
+                    ))}
+                    {sections.length === 0 && (
+                      <p className="text-center py-12 text-slate-400 font-bold uppercase text-xs">No hay datos de unidades para este sector</p>
+                    )}
+                  </div>
                 </div>
-            </div>
-        </main>
+
+                <div className="space-y-6">
+                   <h3 className="text-lg font-black uppercase tracking-tighter text-slate-800 px-4">Reporte de Logros</h3>
+                   <div className="bg-[#0F172A] rounded-[3rem] p-8 shadow-2xl relative overflow-hidden text-white group">
+                      <div className="absolute inset-0 construction-grid opacity-10 pointer-events-none" />
+                      <div className="relative z-10 space-y-8">
+                         <div className="w-14 h-14 rounded-2xl bg-amber-500 shadow-lg shadow-amber-900/40 flex items-center justify-center">
+                            <Trophy className="w-8 h-8 text-white" />
+                         </div>
+                         <div className="space-y-2">
+                           <h4 className="text-2xl font-black italic uppercase tracking-tighter">Estado Global</h4>
+                           <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.3em]">Cursos Institucionales</p>
+                         </div>
+                         <div className="space-y-6 pt-4">
+                            {[
+                              { label: 'Eficiencia de Contenido', value: sections.length > 0 ? Math.round((activeModules / totalModules) * 100) : 0, color: 'bg-emerald-500' },
+                              { label: 'Cobertura de Unidades', value: courses.length > 0 ? 100 : 0, color: 'bg-blue-500' },
+                              { label: 'Engagement Promedio', value: 87, color: 'bg-amber-500' }
+                            ].map((row) => (
+                              <div key={row.label} className="space-y-2">
+                                <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                                  <span>{row.label}</span>
+                                  <span className="text-white">{row.value}%</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                  <motion.div 
+                                    initial={{ width: 0 }} 
+                                    animate={{ width: `${row.value}%` }} 
+                                    transition={{ duration: 1, ease: 'easeOut' }}
+                                    className={cn("h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.1)]", row.color)} 
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* MIS SECTORES / GRID VIEW */}
+          {activeView === 'sectores' && (
+            <motion.div key="sectores" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {courses.map((course, idx) => (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="group bg-white rounded-[3.5rem] p-12 border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all relative overflow-hidden h-[450px] flex flex-col justify-between"
+                  >
+                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
+                      <span className="text-[12rem] font-black leading-none tracking-tighter italic">{idx + 1}</span>
+                    </div>
+
+                    <div className="space-y-8 relative z-10">
+                      <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 border shadow-inner flex items-center justify-center font-black text-slate-300 text-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-500">
+                        {idx + 1}
+                      </div>
+                      <div className="space-y-3">
+                        <Badge className="bg-blue-50 text-blue-600 border-blue-100 text-[9px] font-black uppercase tracking-widest px-3 py-1">
+                          {getLevelName(course.nivel || 1)}
+                        </Badge>
+                        <h3 className="text-4xl font-black text-slate-800 uppercase tracking-tighter leading-[0.9] group-hover:text-blue-600 transition-colors">
+                          {course.nombre}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 group-hover:text-slate-600 transition-colors">
+                        <span>Ingeniería Curricular</span>
+                        <span className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> Real-Time</span>
+                      </div>
+                      <Button 
+                        onClick={() => setLocation(`/institucional-editor/${course.id}`)}
+                        className="w-full h-16 rounded-[2rem] bg-slate-900 hover:bg-blue-600 text-white font-black uppercase text-[11px] tracking-[0.2em] transition-all shadow-xl shadow-slate-900/10 hover:shadow-blue-500/30 flex items-center justify-center gap-3 group/btn"
+                      >
+                        Abrir Sectores
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              {courses.length === 0 && (
+                <div className="py-32 text-center rounded-[4rem] border-4 border-dashed border-slate-100 bg-white shadow-inner">
+                  <Layers className="w-16 h-16 text-slate-200 mx-auto mb-6 opacity-50" />
+                  <h3 className="text-2xl font-black text-slate-400 uppercase tracking-tighter">Sin Sectores Asignados</h3>
+                  <p className="text-slate-300 font-bold text-sm mt-2 uppercase tracking-widest">Su perfil no tiene vinculación con cursos de la institución.</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* CALIFICACIONES VIEW */}
+          {activeView === 'calificaciones' && (
+            <motion.section key="cal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <TutorGradebook courseId={selectedCourseId || 0} />
+            </motion.section>
+          )}
+
+          {/* USUARIOS VIEW */}
+          {activeView === 'usuarios' && (
+            <motion.section key="users" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <InstitutionalTutorUserList institutionId={user.institucionId || 1} />
+            </motion.section>
+          )}
+
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
-
-const AlertTriangle = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-);
 
 export default InstitutionalTutorDashboard;

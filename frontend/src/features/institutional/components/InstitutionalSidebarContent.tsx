@@ -15,7 +15,9 @@ import {
     Gamepad2,
     Rocket,
     BrainCircuit,
-    ClipboardList
+    ClipboardList,
+    Eye,
+    Shield
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { institutionApi } from "@/services/institution.api";
@@ -30,22 +32,41 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
     const [location] = useLocation();
     const [instLogo, setInstLogo] = useState<string | null>(null);
     const [instName, setInstName] = useState<string | null>(null);
+    const [isTutor, setIsTutor] = useState(false);
+    const [currentSearch, setCurrentSearch] = useState(window.location.search);
 
     useEffect(() => {
-        const userStr = localStorage.getItem("edu_user");
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user.institucionId) {
-                // Fetch institution info for branding
-                institutionApi.getAllInstitutions().then((insts: any) => {
-                    const myInst = insts.find((i: any) => i.id === user.institucionId);
-                    if (myInst) {
-                        setInstLogo(myInst.logoUrl);
-                        setInstName(myInst.nombre);
-                    }
-                });
+        const handleNav = () => setCurrentSearch(window.location.search);
+        window.addEventListener('tutor-navigate', handleNav);
+        window.addEventListener('popstate', handleNav);
+        return () => {
+             window.removeEventListener('tutor-navigate', handleNav);
+             window.removeEventListener('popstate', handleNav);
+        };
+    }, []);
+
+    useEffect(() => {
+        const loadBranding = () => {
+            const userStr = localStorage.getItem("edu_user");
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user.roleId === 13) setIsTutor(true);
+                if (user.institucionId) {
+                    // Fetch institution info for branding
+                    institutionApi.getAllInstitutions().then((insts: any) => {
+                        const myInst = insts.find((i: any) => i.id === user.institucionId);
+                        if (myInst) {
+                            setInstLogo(myInst.logoUrl);
+                            setInstName(myInst.nombre);
+                        }
+                    });
+                }
             }
-        }
+        };
+
+        loadBranding();
+        window.addEventListener('institution-updated', loadBranding);
+        return () => window.removeEventListener('institution-updated', loadBranding);
     }, []);
 
     const adminLinks = [
@@ -65,14 +86,23 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
         { href: "/profile", icon: Settings, label: "Perfil" },
     ];
 
+    const tutorLinks = [
+        { href: "/institucional-tutor", icon: Eye, label: "Seguimiento" },
+        { href: "/institucional-tutor?view=sectores", icon: Shield, label: "Mis Sectores" },
+        { href: "/institucional-tutor?view=calificaciones", icon: ClipboardList, label: "Calificaciones" },
+        { href: "/institucional-tutor?view=usuarios", icon: Users, label: "Usuarios y Claves" },
+        { href: "/profile", icon: Settings, label: "Perfil" },
+    ];
+
     const studentLinks = [
         { href: "/city-dashboard", icon: LayoutDashboard, label: "Metrópolis Neo-Bot" },
         { href: "/lab", icon: Code, label: "Laboratorios" },
         { href: "/profile", icon: Settings, label: "Mi Perfil" },
     ];
 
-    const links = currentRole === "institutional_admin" ? adminLinks : 
-                  (currentRole === "institutional_professor" || currentRole === "profesor_vista") ? professorLinks : 
+    const links = (isTutor || currentRole === "tutor") ? tutorLinks : 
+                  currentRole === "institutional_admin" ? adminLinks :
+                  (currentRole === "institutional_professor" || currentRole === "profesor_vista") ? professorLinks :
                   studentLinks;
 
     return (
@@ -107,9 +137,45 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Menú Principal</span>
                 </div>
                 {links.map((link) => {
-                    const isActive = location === link.href || (link.href.includes('?') && location + window.location.search === link.href);
-                    
-                    return (
+                    const isTutorLink = (isTutor || currentRole === 'tutor') && link.href.includes('institucional-tutor');
+                    const isActive = isTutorLink
+                        ? (window.location.pathname + currentSearch) === link.href ||
+                          (link.href === '/institucional-tutor' && !currentSearch && window.location.pathname === '/institucional-tutor')
+                        : location === link.href;
+
+                    const handleTutorNav = (e: React.MouseEvent) => {
+                        if (!isTutorLink) return;
+                        e.preventDefault();
+                        window.history.pushState(null, '', link.href);
+                        window.dispatchEvent(new CustomEvent('tutor-navigate'));
+                        onClose?.();
+                    };
+
+                    return isTutorLink ? (
+                        <a
+                            key={link.href}
+                            href={link.href}
+                            onClick={handleTutorNav}
+                            style={{ textDecoration: 'none' }}
+                        >
+                            <div
+                                className={cn(
+                                    "group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden",
+                                    isActive
+                                        ? "bg-[var(--inst-blue)]/20 text-white shadow-inner border border-[var(--inst-blue)]/50"
+                                        : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                                )}
+                            >
+                                <link.icon className={cn("h-4 w-4 transition-colors", isActive ? "text-[var(--inst-cyan)]" : "group-hover:text-[var(--inst-blue-lt)]")} />
+                                <span className="font-bold text-[10px] uppercase tracking-widest">
+                                    {link.label}
+                                </span>
+                                {isActive && (
+                                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--inst-cyan)] shadow-[0_0_8px_var(--inst-cyan)]" />
+                                )}
+                            </div>
+                        </a>
+                    ) : (
                         <Link key={link.href} href={link.href} onClick={onClose}>
                             <div
                                 className={cn(
@@ -132,7 +198,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
                 })}
 
                 {/* Lab Hub Section */}
-                {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista") && (
+                {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista" || isTutor || currentRole === "tutor") && (
                     <>
                         <div className="pt-8 px-3 mb-4">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Laboratorios</span>
@@ -165,7 +231,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
             </nav>
 
             {/* Assistant Control */}
-            {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista") && (
+            {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista" || isTutor || currentRole === "tutor") && (
                 <div className="px-5 py-4 space-y-2 border-t border-white/5">
                     <button
                         onClick={() => {
