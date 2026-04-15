@@ -204,20 +204,46 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
     const [assistantOpen, setAssistantOpen] = useState(false);
 
     const parsed = React.useMemo(() => {
+        if (!module.contenido) return { blocks: [] };
         try {
-            return typeof module.contenido === 'string' ? JSON.parse(module.contenido) : module.contenido;
-        } catch { return { blocks: [] }; }
+            const data = typeof module.contenido === 'string' ? JSON.parse(module.contenido) : module.contenido;
+            // If it's a mission or has moments, return it as is
+            if (data?.moments || data?.mission) return data;
+            // If it's a modular class or has blocks, return it
+            if (data?.blocks) return data;
+            
+            // If it's some other JSON but unknown structure, wrap it
+            return { blocks: [{ id: 'auto-1', type: 'NARRATIVE', data: { texto: JSON.stringify(data) } }] };
+        } catch { 
+            // Parsing failed? Check if it's plain text content
+            if (typeof module.contenido === 'string' && module.contenido.trim().length > 0) {
+                return { 
+                    blocks: [{ 
+                        id: 'legacy-1', 
+                        type: 'NARRATIVE', 
+                        data: { texto: module.contenido } 
+                    }] 
+                };
+            }
+            return { blocks: [] }; 
+        }
     }, [module]);
 
     const blocks: Block[] = parsed?.blocks || [];
     const meta = parsed?.metadata || {};
     const progress = blocks.length > 0 ? ((currentBlock + 1) / blocks.length) * 100 : 0;
 
-    if (module.tipo === 'mission' || module.tipo === 'maker_lab' || (parsed?.moments && parsed.moments.length > 0)) {
+    // Detect Missions (New or Legacy Moment-based)
+    if (module.tipo === 'mission' || module.tipo === 'maker_lab' || (parsed?.moments && parsed.moments.length > 0) || parsed?.mission) {
         return <MissionCinematicViewer module={module} onClose={onClose} />;
     }
 
-    if (blocks.length === 0) {
+    // Default to Narrative if we have no blocks but we do have a description
+    const finalBlocks = blocks.length === 0 && module.descripcion 
+        ? [{ id: 'desc-1', type: 'NARRATIVE' as BlockType, data: { texto: module.descripcion } }] 
+        : blocks;
+
+    if (finalBlocks.length === 0) {
         return (
             <div className="fixed inset-0 z-[500] bg-slate-950 flex flex-col items-center justify-center p-10">
                 <div className="max-w-md text-center space-y-8">
@@ -320,7 +346,7 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
                             </motion.div>
                         ) : (
                             <div key={currentBlock}>
-                                <BlockView block={blocks[currentBlock]} onAnswer={() => { }} />
+                                <BlockView block={finalBlocks[currentBlock]} onAnswer={() => { }} />
                             </div>
                         )}
                     </AnimatePresence>
@@ -336,7 +362,7 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
                     </Button>
 
                     <div className="flex gap-3">
-                        {blocks.map((_, i) => (
+                        {finalBlocks.map((_, i) => (
                             <div key={i} className={cn('h-2 rounded-full transition-all duration-500',
                                 i === currentBlock ? 'bg-blue-600 w-12 shadow-lg shadow-blue-500/30' :
                                     i < currentBlock ? 'bg-slate-300 w-2' : 'bg-slate-100 w-2')} />
@@ -345,7 +371,7 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
 
                     <Button
                         onClick={() => {
-                            if (currentBlock < blocks.length - 1) setCurrentBlock(n => n + 1);
+                            if (currentBlock < finalBlocks.length - 1) setCurrentBlock(n => n + 1);
                             else setCompleted(true);
                         }}
                         className="h-14 px-12 bg-blue-600 hover:bg-blue-700 text-white rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs gap-3 shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95"

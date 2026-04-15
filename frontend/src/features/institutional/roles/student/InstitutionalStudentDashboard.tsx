@@ -5,7 +5,7 @@ import {
   Trophy, BookOpen, Building2, Wrench, Hammer, Cog, HardHat,
   Construction, Map as MapIcon, Play, ArrowRight, ArrowUpRight,
   ArrowDownRight, ArrowUp, ArrowDown, ArrowLeft as ArrowLeftIcon, ArrowRight as ArrowRightIcon,
-  CheckCircle2, Lock, ListFilter, ZoomIn, ZoomOut, Search, Focus, MapPin
+  CheckCircle2, Lock, ListFilter, ZoomIn, ZoomOut, Search, Focus, MapPin, Rocket, Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,9 +54,9 @@ const NEAR_THRESHOLD = 7; // % of map
 
 // Decorative elements
 const DECORATIONS = [
-  { id: 'd1', icon: Cog, coords: { x: 35, y: 35 }, color: 'text-slate-300' },
-  { id: 'd2', icon: Construction, coords: { x: 65, y: 35 }, color: 'text-slate-300' },
-  { id: 'd3', icon: Cog, coords: { x: 35, y: 65 }, color: 'text-slate-300' },
+  { id: 'd1', icon: Cog, coords: { x: 35, y: 35 }, color: 'text-slate-600' },
+  { id: 'd2', icon: Construction, coords: { x: 65, y: 35 }, color: 'text-slate-600' },
+  { id: 'd3', icon: Cog, coords: { x: 35, y: 65 }, color: 'text-slate-600' },
   { id: 'd4', icon: HardHat, coords: { x: 65, y: 65 }, color: 'text-amber-500/30' },
 ];
 
@@ -137,7 +137,7 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
     sections.map((s, idx) => {
       const sectionModules = realModules.filter(m => m.seccionId === s.id);
       // Simple progress calculation (for display)
-      const progress = sectionModules.length > 0 ? 0 : 0; // In a future step we'd fetch actual progress
+      const progress = sectionModules.length > 0 ? 0 : 0; 
 
       return {
         id: s.id,
@@ -149,7 +149,7 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
         icon: MODULE_ICONS[idx % MODULE_ICONS.length],
         coords: MODULE_GRID_POSITIONS[idx % MODULE_GRID_POSITIONS.length],
         repaired: progress >= 100,
-        raw: s // Keep the original section object
+        raw: s 
       };
     }),
     [sections, realModules]);
@@ -223,7 +223,7 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
 
         if (close?.id !== nearBuilding?.id) {
           setNearBuilding(close);
-          if (close) setOwlMessage(`🏗️ Estás cerca de "${close.name}". Presiona ENTER para inspeccionar.`);
+          if (close) setOwlMessage(`\uD83C\uDFD7️ Estás cerca de "${close.name}". Presiona ENTER para inspeccionar.`);
         }
       }
     };
@@ -233,11 +233,11 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
 
   // ─── Loading screen ───────────────────────────────────────────────────────────
   if (loading) {
-    return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><Cog className="w-10 h-10 text-blue-500 animate-spin" /></div>;
+    return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><Cog className="w-10 h-10 text-blue-600 animate-spin" /></div>;
   }
 
   return (
-    <div className="relative min-h-screen bg-[#0B132C] flex overflow-hidden font-sans text-slate-100">
+    <div className="relative min-h-screen bg-slate-50 flex overflow-hidden font-sans text-slate-800">
 
       {/* ══════════════════════════════════════════════════════════════
           WORLD SELECT SCREEN
@@ -247,29 +247,29 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
             className="absolute inset-0 z-[200] flex flex-col items-center justify-center p-12 overflow-hidden">
             <div className="absolute inset-0 z-0">
-              <div className="absolute inset-0 opacity-10 academic-grid-pattern" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/30 blur-[150px] rounded-full pointer-events-none" />
+              <div className="absolute inset-0 opacity-40 academic-grid-pattern" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-100/30 blur-[150px] rounded-full pointer-events-none" />
             </div>
 
             <div className="z-10 text-center mb-16">
-              <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-4 tracking-[0.3em] font-black uppercase text-[10px] px-4">Directorio Principal</Badge>
-              <h1 className="text-5xl font-black tracking-tighter text-white">Selecciona tu Mundo</h1>
-              <p className="text-slate-400 mt-2 font-medium">Ingresa a tu mundo para explorar y reparar los edificios de aprendizaje.</p>
+              <Badge className="bg-blue-100 text-blue-600 border border-blue-200 mb-4 tracking-[0.3em] font-black uppercase text-[10px] px-4">Directorio Principal</Badge>
+              <h1 className="text-5xl font-black tracking-tighter text-slate-900">Selecciona tu Mundo</h1>
+              <p className="text-slate-500 mt-2 font-medium">Ingresa a tu mundo para explorar y reparar los edificios de aprendizaje.</p>
             </div>
 
             <div className="z-10 max-w-6xl w-full">
               <button onClick={() => setViewState('CITY_VIEW')}
-                className="group relative bg-[#131F41] rounded-[3rem] p-10 border-2 border-slate-700/50 hover:border-blue-500 transition-all hover:shadow-[0_0_80px_rgba(37,99,235,0.2)] text-left w-full md:w-96 mx-auto block">
-                <div className="absolute top-6 right-6 w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-125 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                className="group relative bg-white rounded-[3rem] p-10 border-2 border-slate-100 hover:border-blue-500 transition-all hover:shadow-[0_20px_50px_rgba(37,99,235,0.1)] text-left w-full md:w-96 mx-auto block">
+                <div className="absolute top-6 right-6 w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-125 group-hover:bg-blue-600 group-hover:text-slate-800 transition-all">
                   <Play className="w-5 h-5 ml-1" />
                 </div>
-                <div className="w-20 h-20 rounded-3xl bg-blue-500/20 flex flex-col items-center justify-center text-blue-400 mb-8 border border-blue-500/30">
+                <div className="w-20 h-20 rounded-3xl bg-blue-50 flex flex-col items-center justify-center text-blue-600 mb-8 border border-blue-100">
                   <Globe className="w-10 h-10" />
                 </div>
-                <h2 className="text-3xl font-black text-white mb-2">{courseName}</h2>
+                <h2 className="text-3xl font-black text-slate-900 mb-2">{courseName}</h2>
                 <div className="flex items-center gap-3">
-                  <Badge className="bg-slate-800 text-slate-300 pointer-events-none border-none">{mapBuildings.length} Edificios</Badge>
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+                  <Badge className="bg-slate-100 text-slate-600 pointer-events-none border-none">{mapBuildings.length} Edificios</Badge>
+                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
                     <MapIcon className="w-3 h-3 inline mr-1" /> Mapa Activo
                   </span>
                 </div>
@@ -277,8 +277,8 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
                 <div className="mt-6 space-y-2">
                   {mapBuildings.slice(0, 4).map(b => (
                     <div key={b.id} className="flex items-center gap-3">
-                      <b.icon className="w-3 h-3 text-slate-400" />
-                      <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <b.icon className="w-3 h-3 text-slate-500" />
+                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${b.progress}%` }} />
                       </div>
                       <span className="text-[9px] text-slate-500 font-bold">{b.progress}%</span>
@@ -293,10 +293,10 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
       </AnimatePresence>
 
       {/* ══════════════════════════════════════════════════════════════
-          CITY VIEW — All buildings on map
+          CITY VIEW
           ══════════════════════════════════════════════════════════════ */}
       {viewState === 'CITY_VIEW' && (
-        <div ref={viewportRef} className="flex-1 relative overflow-hidden bg-[var(--inst-bg)] select-none">
+        <div ref={viewportRef} className="flex-1 relative overflow-hidden bg-[white] select-none">
 
           {/* Top-left controls */}
           <div className="absolute top-4 left-4 z-[150] flex items-center gap-2">
@@ -309,7 +309,7 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
               <Trophy className="w-4 h-4 text-emerald-500" /> Bitácora
             </button>
             <button onClick={() => setShowRawDebug(!showRawDebug)}
-              className="w-10 h-10 bg-white/60 backdrop-blur-md border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm">
+              className="w-10 h-10 bg-white/60 backdrop-blur-md border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-600 transition-all shadow-sm">
               <Bug className="w-4 h-4" />
             </button>
             <div className="h-10 w-[2px] bg-slate-200/50 mx-1" />
@@ -321,7 +321,7 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
-              <div className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-slate-400">
+              <div className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-slate-500">
                 {Math.round(zoom * 100)}%
               </div>
               <button 
@@ -341,7 +341,7 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-[1.5rem] px-6 py-4 font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 flex items-center gap-3 group transition-all active:scale-95"
             >
               <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-12 transition-transform">
-                <MapIcon className="w-4 h-4" />
+                <MapIcon className="w-4 h-4 text-white" />
               </div>
               PLANO DE OBRA
             </button>
@@ -361,59 +361,16 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                 className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[150]">
                 <button onClick={() => setActivePanel(nearBuilding)}
-                  className="bg-slate-900 text-white border-2 border-white/20 rounded-2xl px-8 py-4 shadow-2xl font-black text-sm flex items-center gap-4 hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 group">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center border border-blue-500/30 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  className="bg-white text-slate-800 border-2 border-slate-100 rounded-2xl px-8 py-4 shadow-2xl font-black text-sm flex items-center gap-4 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 group">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <Construction className="w-4 h-4" />
                   </div>
                   INSPECCIONAR MÓDULO: {nearBuilding.name}
-                  <ArrowRight className="w-5 h-5 ml-2 text-blue-400" />
+                  <ArrowRight className="w-5 h-5 ml-2 text-blue-600" />
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* DIRECTIONAL SIGNS to OTHER buildings (HUD overlay, screen-space) */}
-          {mapBuildings.filter(b => {
-            const dx = b.coords.x - playerPos.x;
-            const dy = b.coords.y - playerPos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            return dist > NEAR_THRESHOLD + 5; // only show arrows for far buildings
-          }).map(b => {
-            const dx = b.coords.x - playerPos.x;
-            const dy = b.coords.y - playerPos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const ArrowIcon = getArrow(dx, dy);
-            // Clamp arrow to screen edge
-            const angle = Math.atan2(dy, dx);
-            const edgeDist = 42; // % from center
-            const screenX = 50 + Math.cos(angle) * edgeDist;
-            const screenY = 50 + Math.sin(angle) * edgeDist;
-
-            return (
-              <motion.div
-                key={`sign-${b.id}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute z-[140] pointer-events-none"
-                style={{ left: `${Math.max(5, Math.min(92, screenX))}%`, top: `${Math.max(5, Math.min(92, screenY))}%`, transform: 'translate(-50%, -50%)' }}
-              >
-                <div className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded-xl border shadow-lg",
-                  b.repaired
-                    ? "bg-emerald-50/80 border-emerald-200 text-emerald-700"
-                    : "bg-amber-50/80 border-amber-300 text-amber-700"
-                )}>
-                  <ArrowIcon className="w-4 h-4" />
-                  <span className="text-[8px] font-black uppercase whitespace-nowrap max-w-[64px] truncate">{b.name.split(' ')[0]}</span>
-                  <span className="text-[7px] font-bold">{Math.round(dist)}u</span>
-                  {b.repaired
-                    ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    : <Wrench className="w-3 h-3 text-amber-500" />
-                  }
-                </div>
-              </motion.div>
-            );
-          })}
 
           {/* MAP */}
           <motion.div
@@ -434,42 +391,20 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
               </div>
             ))}
 
-            {/* ALL BUILDINGS — every module */}
+            {/* ALL BUILDINGS */}
             {mapBuildings.map((b) => {
               const isNear = Math.abs(playerPos.x - b.coords.x) < NEAR_THRESHOLD && Math.abs(playerPos.y - b.coords.y) < NEAR_THRESHOLD;
               const isNext = firstIncomplete?.id === b.id;
               return (
                 <div key={`b-${b.id}`} className="absolute" style={{ left: `${b.coords.x}%`, top: `${b.coords.y}%`, transform: 'translate(-50%, -50%)' }}>
-                  {/* Clickable building */}
                   <button className="relative group" onClick={() => { if (isNear) setActivePanel(b); }}>
                     <Building2D icon={b.icon} name={b.name} isRepaired={b.repaired} isLocked={false} isNext={isNext} isNear={isNear} />
                     {!b.repaired && (
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-slate-900 border border-white/10 px-3 py-1.5 rounded-xl text-white font-black text-[9px] shadow-2xl whitespace-nowrap">
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-slate-900 border border-slate-200 px-3 py-1.5 rounded-xl text-white font-black text-[9px] shadow-2xl whitespace-nowrap">
                         <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                         MÓDULO EN OBRA
                       </div>
                     )}
-                    {isNext && (
-                      <motion.div 
-                        animate={{ y: [0, -20, 0] }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                        className="absolute -top-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-                      >
-                         <div className="bg-blue-600 text-white p-2 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.5)] border-2 border-white/20">
-                           <MapPin className="w-6 h-6" />
-                         </div>
-                         <div className="w-2 h-2 rounded-full bg-blue-500 blur-[2px]" />
-                      </motion.div>
-                    )}
-                    {b.repaired && (
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-emerald-400 font-black text-[9px] shadow-2xl whitespace-nowrap">
-                        <CheckCircle2 className="w-3 h-3" /> COMPLETADO
-                      </div>
-                    )}
-                    {/* Progress bar under building */}
-                    <div className="mt-4 w-full h-2 bg-white/5 border border-white/5 rounded-full overflow-hidden shadow-inner">
-                      <div className="h-full bg-blue-500 rounded-full transition-all shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${b.progress}%` }} />
-                    </div>
                   </button>
                 </div>
               );
@@ -484,50 +419,54 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          BUILDING INSPECTION PANEL
-          ══════════════════════════════════════════════════════════════ */}
-      {/* ══════════════════════════════════════════════════════════════
-          CINEMATIC MODULE VIEWER (NETFLIX STYLE)
+          CINEMATIC SELECTION PANEL
           ══════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {activePanel && (
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            className="fixed inset-0 z-[400] bg-[#0B132C] flex flex-col overflow-hidden">
-            
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: 50 }} 
+            transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+            className="fixed inset-0 z-[400] bg-slate-50 flex flex-col overflow-hidden"
+          >
             {/* HERO SECTION */}
-            <div className="relative w-full h-[30vh] min-h-[220px] shrink-0 bg-[#1E293B]">
-               <div className="absolute inset-0 bg-gradient-to-t from-[#0B132C] via-[#0B132C]/60 to-transparent z-10" />
-               <div className="absolute inset-0 academic-grid-pattern opacity-20" />
+            <div className="relative w-full h-[35vh] min-h-[250px] shrink-0 bg-white border-b border-slate-100">
+               <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/60 to-transparent z-10" />
+               <div className="absolute inset-0 academic-grid-pattern opacity-40" />
                
                {/* Close Button */}
-               <button onClick={() => setActivePanel(null)} className="absolute top-8 right-8 z-50 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md transition-all border border-white/20 text-white">
+               <button 
+                  onClick={() => setActivePanel(null)} 
+                  className="absolute top-8 right-8 z-50 w-12 h-12 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center shadow-lg transition-all border border-slate-100 text-slate-500 hover:text-rose-500"
+               >
                   <X className="w-6 h-6" />
                </button>
 
                {/* Background big icon */}
-               <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-10 blur-sm pointer-events-none z-0 mix-blend-screen scale-150">
-                  <activePanel.icon className="w-96 h-96 text-blue-500" />
+               <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-10 blur-sm pointer-events-none z-0 scale-150">
+                  <activePanel.icon className="w-96 h-96 text-blue-600" />
                </div>
 
                {/* Hero Content */}
-               <div className="absolute bottom-6 left-8 right-8 z-20">
+               <div className="absolute bottom-10 left-12 right-12 z-20">
                   <div className="max-w-4xl">
-                     <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 font-black text-[9px] tracking-widest uppercase hover:bg-blue-600/30">
+                     <div className="flex items-center gap-3 mb-3">
+                        <Badge className="bg-blue-600 text-white border-none shadow-lg px-3 py-1 font-black text-[10px] tracking-widest uppercase">
                            SECTOR DE OBRA
                         </Badge>
-                        <span className="text-slate-400 text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5">
-                           <Construction className="w-3 h-3" /> ID-CONSTRUCT-{activePanel.id}
+                        <span className="text-slate-400 text-[10px] font-black tracking-widest uppercase flex items-center gap-2">
+                           <Construction className="w-3.5 h-3.5" /> ID-CONSTRUCT-{activePanel.id}
                         </span>
                      </div>
-                     <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase leading-[0.9] mb-2 drop-shadow-2xl">
+                     <h2 className="text-4xl md:text-6xl font-black text-slate-800 italic tracking-tighter uppercase leading-[0.85] mb-4">
                         {activePanel.name}
                      </h2>
-                     <p className="text-slate-300 text-xs md:text-sm font-medium max-w-2xl leading-relaxed italic border-l-2 border-blue-500 pl-3 bg-slate-900/30 py-1.5">
+                     <p className="text-slate-500 text-sm md:text-base font-medium max-w-2xl leading-relaxed italic border-l-4 border-blue-500 pl-4 bg-white/40 py-2 rounded-r-2xl">
                         "{activePanel.description}"
                      </p>
                      
-                     <div className="mt-4 flex items-center gap-4">
+                     <div className="mt-8 flex items-center gap-6">
                         <Button 
                            onClick={() => {
                               const firstAvailable = activePanel.levels.find((l: any) => !l.bloqueado);
@@ -536,16 +475,22 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
                               }
                            }}
                            disabled={!activePanel.levels.find((l: any) => !l.bloqueado)}
-                           className="bg-white text-black hover:bg-slate-200 h-10 px-6 rounded-[2rem] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-white/10 transition-all hover:scale-105"
+                           className="bg-blue-600 text-white hover:bg-blue-700 h-14 px-8 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-blue-500/30 transition-all hover:scale-105 active:scale-95"
                         >
-                           <Play className="w-4 h-4 mr-2 fill-black" /> REANUDAR OBRA
+                           <Play className="w-5 h-5 mr-3 fill-white" /> REANUDAR OBRA
                         </Button>
-                        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AVANCE</span>
-                           <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${activePanel.progress}%` }} />
+                        <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-[2rem] border border-slate-100 shadow-xl">
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AVANCE ACTUAL</span>
+                           <div className="w-32 h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${activePanel.progress}%` }}
+                                className="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
+                              />
                            </div>
-                           <span className="text-xs font-black text-white tabular-nums">{activePanel.progress}%</span>
+                           <span className="text-lg font-black text-slate-800 tabular-nums italic tracking-tighter">
+                              {activePanel.progress}%
+                           </span>
                         </div>
                      </div>
                   </div>
@@ -553,147 +498,165 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
             </div>
 
             {/* LEVELS CAROUSEL */}
-            <div className="flex-1 relative z-20 pb-6 pt-2">
-               <div className="px-8 mb-3">
-                  <h3 className="text-lg font-black text-white uppercase tracking-tighter">Niveles de Construcción</h3>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Selecciona el sector listo para operar</p>
+            <div className="flex-1 relative z-20 pb-12 pt-10 flex flex-col min-h-0 bg-slate-50">
+               <div className="px-12 mb-8 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Fases de la Operación</h3>
+                    <p className="text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 mt-1">
+                        <ListFilter className="w-4 h-4 text-blue-500" /> Selecciona un sector para iniciar el despliegue técnico
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white px-5 py-2 rounded-2xl border border-slate-100 shadow-sm">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">Sistemas en Línea</span>
+                  </div>
                </div>
                
-               <div className="px-8 flex gap-4 overflow-x-auto pb-6 pt-4 snap-x snap-mandatory custom-scrollbar">
+               <div className="flex-1 overflow-x-auto pb-12 pt-4 px-12 snap-x snap-mandatory flex gap-10 items-stretch custom-scrollbar">
                   {activePanel.levels.length > 0 ? activePanel.levels.map((level: any, idx: number) => {
                      const isLocked = level.bloqueado;
+                     const isCompleted = level.completado;
                      return (
-                     <div key={level.id} className="snap-start shrink-0">
+                     <div key={level.id} className="snap-start shrink-0 first:pl-2 last:pr-32">
                         <button
                            onClick={() => {
                               if (!isLocked) setActiveModularModule(level);
                            }}
                            className={cn(
-                              "relative w-56 md:w-64 h-32 rounded-2xl border-2 mx-auto overflow-hidden flex flex-col items-start justify-between p-4 transition-all duration-300 group text-left",
-                              isLocked 
-                                 ? "bg-slate-900/50 border-slate-800 cursor-not-allowed opacity-80" 
-                                 : "bg-gradient-to-br from-[#1E293B] to-[#0F172A] border-white/10 hover:from-white hover:to-white hover:border-white hover:shadow-[0_15px_30px_rgba(255,255,255,0.2)] hover:-translate-y-2 hover:scale-[1.02]"
+                               "relative w-80 md:w-96 h-[260px] rounded-[3.5rem] border-2 flex flex-col p-10 transition-all duration-700 group text-left",
+                               isLocked 
+                                  ? "bg-slate-100/50 border-slate-200/50 cursor-not-allowed grayscale" 
+                                  : "bg-white border-slate-100 hover:border-blue-500 hover:shadow-[0_40px_80px_rgba(37,99,235,0.15)] hover:-translate-y-4"
                            )}
                         >
-                           {/* Background element */}
-                           {!isLocked && <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/5 transition-all duration-500 pointer-events-none" />}
+                           {!isLocked && (
+                               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                           )}
                            
                            {isLocked && (
-                              <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center gap-1 transition-all">
-                                 <div className="w-8 h-8 rounded-xl bg-black/60 border border-slate-700 flex items-center justify-center shadow-2xl">
-                                    <Lock className="w-4 h-4 text-slate-400" />
+                              <div className="absolute inset-0 bg-slate-50/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center gap-4">
+                                 <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 flex items-center justify-center shadow-2xl text-slate-300">
+                                    <Lock className="w-7 h-7" />
                                  </div>
-                                 <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-3 py-1 bg-black/80 rounded-full border border-white/5">Restringido</span>
+                                 <Badge className="bg-slate-200 text-slate-500 border-none font-black text-[9px] tracking-[0.3em] uppercase px-4 py-1">Bloqueo de Seguridad</Badge>
                               </div>
                            )}
 
-                           <div className="relative z-20 flex justify-between w-full">
-                              <span className={cn("text-3xl font-black italic tracking-tighter opacity-20 transition-all duration-300", isLocked ? "text-slate-600" : "text-blue-200 group-hover:text-slate-200 group-hover:opacity-100")}>
-                                 {String(idx + 1).padStart(2, '0')}
-                              </span>
-                              {!isLocked && (
-                                 <div className="w-8 h-8 rounded-full border border-white/20 bg-white/5 group-hover:bg-black group-hover:border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-4 group-hover:translate-x-0 shadow-xl">
-                                    <Play className="w-3 h-3 text-white fill-white ml-0.5" />
-                                 </div>
-                              )}
-                           </div>
+                            <div className="relative z-20 flex justify-between items-start w-full mb-6">
+                               <div className={cn(
+                                   "w-16 h-16 rounded-[1.75rem] flex items-center justify-center border-2 transition-all duration-700",
+                                   isLocked ? "bg-slate-100 border-slate-200 text-slate-300" : "bg-white border-slate-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:border-blue-600 shadow-xl shadow-blue-500/5"
+                               )}>
+                                  {level.tipo === 'mission' || level.tipo === 'mission_advanced' ? <Rocket className="w-8 h-8" /> : 
+                                   level.tipo === 'maker_lab' ? <Wrench className="w-8 h-8" /> : 
+                                   <Target className="w-8 h-8" />}
+                               </div>
+                               <span className={cn("text-7xl font-black italic tracking-tighter opacity-5 transition-all duration-500 group-hover:opacity-10 group-hover:scale-110", isLocked ? "text-slate-400" : "text-blue-500")}>
+                                  {String(idx + 1).padStart(2, '0')}
+                               </span>
+                            </div>
                            
-                           <div className="relative z-20 w-full mt-auto">
-                              <Badge className={cn("border-0 text-[8px] font-black uppercase tracking-widest px-1.5 mb-1 hover:bg-transparent transition-all duration-300", isLocked ? "bg-slate-800 text-slate-500" : "bg-blue-500/20 text-blue-300 group-hover:bg-blue-600 group-hover:text-white")}>
-                                 {level.tipo ? `NIVEL-${level.tipo.toUpperCase()}` : 'NIVEL-TEÓRICO'}
-                              </Badge>
-                              <h4 className={cn("font-black text-sm italic uppercase tracking-tighter leading-tight line-clamp-2 transition-colors duration-300", isLocked ? "text-slate-500" : "text-white group-hover:text-slate-900")}>
+                           <div className="relative z-20 w-full mt-auto space-y-4">
+                              <div className="flex items-center gap-3">
+                                <Badge className={cn(
+                                    "border-0 text-[9px] font-black uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-xl",
+                                    isLocked ? "bg-slate-200 text-slate-500" : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+                                )}>
+                                    {level.tipo ? level.tipo.replace('_', ' ').toUpperCase() : 'NIVEL ESTÁNDAR'}
+                                </Badge>
+                                {isCompleted && (
+                                    <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-xl shadow-lg shadow-emerald-500/20">
+                                        COMPLETADO
+                                    </Badge>
+                                )}
+                              </div>
+                              <h4 className={cn(
+                                  "font-bold text-xl md:text-2xl italic uppercase tracking-tighter leading-[1] line-clamp-2 transition-colors duration-300",
+                                  isLocked ? "text-slate-400" : "text-slate-700 group-hover:text-slate-900"
+                              )}>
                                  {level.titulo}
                               </h4>
+                              {!isLocked && (
+                                  <div className="flex items-center gap-3 text-[10px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-all translate-x-6 group-hover:translate-x-0 tracking-widest uppercase">
+                                      INICIAR DESPLIEGUE <ArrowRight className="w-4 h-4 translate-y-[-1px]" />
+                                  </div>
+                              )}
                            </div>
                         </button>
                      </div>
                   )}) : (
-                     <div className="w-full h-48 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center bg-white/5 text-center px-10">
-                         <Construction className="w-10 h-10 text-slate-600 mb-3" />
-                         <p className="text-slate-400 font-black uppercase tracking-widest italic text-lg">Área sin construir</p>
-                         <p className="text-slate-500 text-xs mt-1">El arquitecto aún no ha publicado los planos de este sector.</p>
+                     <div className="w-full max-w-2xl h-80 border-4 border-dashed border-slate-200 rounded-[4rem] flex flex-col items-center justify-center bg-white/50 text-center px-20 mx-auto shadow-inner">
+                         <div className="w-24 h-24 rounded-[2rem] bg-white shadow-2xl flex items-center justify-center mb-8 border border-slate-100">
+                            <Construction className="w-12 h-12 text-slate-300 animate-bounce" />
+                         </div>
+                         <h4 className="text-slate-800 font-black uppercase tracking-tighter italic text-3xl">Planos en Construcción</h4>
+                         <p className="text-slate-400 text-base mt-3 font-medium leading-relaxed max-w-md">Vuelve pronto para iniciar la operación.</p>
                      </div>
                   )}
                </div>
             </div>
           </motion.div>
         )}
+
+        {showRawDebug && (
+          <div className="fixed inset-0 z-[500] bg-black/90 flex flex-col p-10">
+            <Button variant="ghost" onClick={() => setShowRawDebug(false)} className="self-end bg-amber-600 text-slate-800 mb-4">CERRAR DEBUG</Button>
+            <pre className="flex-1 overflow-auto bg-slate-950 p-8 rounded-3xl text-[10px] text-amber-400 border-4 border-amber-900 leading-tight">
+              {JSON.stringify({ mapBuildings, playerPos }, null, 2)}
+            </pre>
+          </div>
+        )}
       </AnimatePresence>
 
-      {/* GRADES MODAL (BITÁCORA) */}
+      {/* GRADES MODAL */}
       <AnimatePresence>
         {showGrades && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-12">
-            <Card className="w-full max-w-4xl bg-[#0F172A] border border-white/10 rounded-[4rem] shadow-2xl flex flex-col overflow-hidden max-h-[85vh]">
-              {/* Modal Header */}
-              <div className="p-10 border-b border-white/10 flex justify-between items-center bg-[#1E293B] relative overflow-hidden">
+            className="fixed inset-0 z-[300] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-12">
+            <Card className="w-full max-w-4xl bg-[white] border border-slate-200 rounded-[4rem] shadow-2xl flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-10 border-b border-slate-200 flex justify-between items-center bg-[white] relative overflow-hidden">
                 <div className="absolute inset-0 academic-grid-pattern opacity-10" />
                 <div className="relative z-10">
-                  <Badge className="bg-blue-500/10 text-blue-400 border-0 mb-2 px-3 py-1 font-black text-[10px] tracking-widest uppercase">Sistema de Trazabilidad</Badge>
-                  <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Bitácora de <span className="text-blue-500">Construcción</span></h2>
+                  <Badge className="bg-blue-100 text-blue-600 border-0 shadow-none mb-2 px-3 py-1 font-black text-[10px] tracking-widest uppercase">Sistema de Trazabilidad</Badge>
+                  <h2 className="text-4xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Bitácora de <span className="text-blue-600">Construcción</span></h2>
                 </div>
                 <button onClick={() => setShowGrades(false)}
-                  className="w-16 h-16 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-colors border border-white/10 relative z-10 group">
-                  <X className="w-8 h-8 text-slate-400 group-hover:text-white transition-colors" />
+                  className="w-16 h-16 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-colors border border-slate-200 relative z-10 group">
+                  <X className="w-8 h-8 text-slate-500 group-hover:text-slate-800 transition-colors" />
                 </button>
               </div>
 
-              {/* Modal Body */}
               <div className="flex-1 overflow-y-auto p-10 space-y-6">
                 {mapBuildings.map((b, idx) => (
-                  <div key={`g-${b.id}`} className="group flex items-center gap-6 p-8 rounded-[2.5rem] border-2 border-white/5 hover:border-blue-500/30 transition-all bg-white/5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                    {/* Index */}
-                    <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center text-slate-500 font-black italic text-xl">
+                  <div key={`g-${b.id}`} className="group flex items-center gap-6 p-8 rounded-[2.5rem] border-2 border-slate-100 hover:border-blue-500/30 transition-all bg-white/5 relative overflow-hidden">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-200 flex items-center justify-center text-slate-500 font-black italic text-xl">
                       {idx + 1}
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="font-black text-white text-xl tracking-tight uppercase italic">{b.name}</p>
-                        <Badge className={cn("border-0 font-black text-[9px] tracking-widest px-2 py-0.5",
+                        <p className="font-black text-slate-800 text-xl tracking-tight uppercase italic">{b.name}</p>
+                        <Badge className={cn("border-0 font-black text-[10px] tracking-widest px-2 py-0.5",
                           b.repaired ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400")}>
                           {b.repaired ? 'ENTREGABLE' : 'FASE ACTIVA'}
                         </Badge>
                       </div>
-
                       <div className="flex items-center gap-4">
-                        <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                          <div className={cn("h-full rounded-full transition-all", b.repaired ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]")}
+                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                          <div className={cn("h-full rounded-full transition-all", b.repaired ? "bg-emerald-500" : "bg-blue-500")}
                             style={{ width: `${b.progress}%` }} />
                         </div>
-                        <span className="text-sm font-black text-white italic tabular-nums">{b.progress}%</span>
+                        <span className="text-sm font-black text-slate-800 italic tabular-nums">{b.progress}%</span>
                       </div>
                     </div>
-
-                    {/* Result Icon */}
                     <div className={cn("w-16 h-16 rounded-[1.5rem] flex items-center justify-center border-2 transition-all",
-                      b.repaired ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/5 border-white/10 text-slate-600 group-hover:border-blue-500/30 group-hover:text-blue-400")}>
+                      b.repaired ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/5 border-slate-200 text-slate-600 group-hover:border-blue-500/30 group-hover:text-blue-400")}>
                       {b.repaired ? <CheckCircle2 className="w-8 h-8" /> : <Construction className="w-8 h-8" />}
                     </div>
                   </div>
                 ))}
               </div>
-
-              {/* Modal Footer */}
-              <div className="p-10 border-t border-white/10 bg-[#0F172A] flex justify-center">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic">Argos Academy v4.0 — Unified Construction Log</p>
-              </div>
             </Card>
           </motion.div>
-        )}
-
-        {showRawDebug && (
-          <div className="fixed inset-0 z-[500] bg-black/90 flex flex-col p-10">
-            <Button variant="ghost" onClick={() => setShowRawDebug(false)} className="self-end bg-amber-600 text-white mb-4">CERRAR DEBUG</Button>
-            <pre className="flex-1 overflow-auto bg-slate-950 p-8 rounded-3xl text-[10px] text-amber-400 border-4 border-amber-900 leading-tight">
-              {JSON.stringify({ mapBuildings, playerPos }, null, 2)}
-            </pre>
-          </div>
         )}
       </AnimatePresence>
 
@@ -702,42 +665,37 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
         {blueprintOpen && (
           <>
             <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setBlueprintOpen(false)}
               className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[500]"
             />
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#0F172A] z-[510] flex flex-col border-l border-white/10 shadow-3xl"
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[white] z-[510] flex flex-col border-l border-slate-200 shadow-3xl"
             >
-              <div className="p-8 bg-[#1E293B] border-b border-white/5 relative overflow-hidden">
+              <div className="p-8 bg-[white] border-b border-slate-100 relative overflow-hidden">
                 <div className="absolute inset-0 academic-grid-pattern opacity-10" />
                 <div className="flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
+                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl">
                       <MapIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-white font-black italic tracking-tighter uppercase leading-none">Plano Maestro</h3>
-                      <p className="text-blue-400 text-[9px] font-black uppercase tracking-widest mt-1">Directorio de Sectores</p>
+                      <h3 className="text-slate-800 font-black italic tracking-tighter uppercase leading-none">Plano Maestro</h3>
+                      <p className="text-blue-500 text-[9px] font-black uppercase tracking-widest mt-1">Directorio de Sectores</p>
                     </div>
                   </div>
-                  <button onClick={() => setBlueprintOpen(false)} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-slate-400">
+                  <button onClick={() => setBlueprintOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 border border-slate-100">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
                 <div className="mt-8 relative">
-                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                    <Input 
                     placeholder="Buscar sector de obra..."
                     value={searchBlueprint}
                     onChange={e => setSearchBlueprint(e.target.value)}
-                    className="pl-12 bg-white/5 border-white/10 text-white rounded-2xl h-12 focus:ring-blue-500/20 focus:border-blue-500/50"
+                    className="pl-12 bg-white border-slate-200 text-slate-800 rounded-2xl h-12"
                    />
                 </div>
               </div>
@@ -752,36 +710,20 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
                         setPlayerPos(b.coords);
                         playerRef.current = b.coords;
                         setBlueprintOpen(false);
-                        // Trigger panel automatically after teleport
                         setTimeout(() => setActivePanel(b), 500);
                       }}
-                      className={cn(
-                        "w-full flex items-center gap-4 p-5 rounded-[1.5rem] border-2 transition-all group text-left",
-                        b.repaired 
-                          ? "bg-emerald-500/5 border-emerald-500/10 hover:border-emerald-500/30" 
-                          : "bg-white/5 border-white/5 hover:border-blue-500/50"
-                      )}
+                      className="w-full flex items-center gap-4 p-5 rounded-[1.5rem] border-2 bg-white border-slate-100 hover:border-blue-500 group transition-all"
                     >
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
-                        b.repaired ? "bg-emerald-500/10 text-emerald-400" : "bg-white/5 text-slate-500 group-hover:bg-blue-600 group-hover:text-white"
-                      )}>
+                      <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
                         <b.icon className="w-6 h-6" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black text-white uppercase italic group-hover:text-blue-400 transition-colors">{b.name}</p>
+                        <p className="text-sm font-black text-slate-800 uppercase italic transition-colors">{b.name}</p>
                         <p className="text-[10px] text-slate-500 font-bold truncate">{b.levelCount} Niveles • {b.progress}% Terminado</p>
                       </div>
-                      <div className="w-10 h-10 rounded-full border border-white/5 flex items-center justify-center group-hover:bg-blue-600/20 group-hover:border-blue-500/30 transition-all">
-                        <Focus className="w-4 h-4 text-slate-600 group-hover:text-blue-400" />
-                      </div>
+                      <Focus className="w-5 h-5 text-slate-300" />
                     </button>
                   ))}
-              </div>
-
-              <div className="p-8 border-t border-white/5 bg-[#0B132C]">
-                 <p className="text-[9px] text-slate-600 font-black uppercase tracking-[0.3em] text-center mb-4">Usa el plano para transporte rápido</p>
-                 <Button onClick={() => setBlueprintOpen(false)} className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-black uppercase tracking-widest text-[10px]">Cerrar Plano</Button>
               </div>
             </motion.div>
           </>
@@ -793,26 +735,13 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
           background-image: linear-gradient(rgba(26, 86, 219, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(26, 86, 219, 0.04) 1px, transparent 1px);
           background-size: 100px 100px;
         }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
       `}</style>
 
       <EngineerOwl message={owlMessage} />
 
-      {/* Dynamic Viewer Overlay */}
       <AnimatePresence>
         {activeModularModule && (
           <InstitutionalDynamicViewer

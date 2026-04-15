@@ -6,7 +6,9 @@ import {
     Trophy, Clock, Activity, Rocket,
     ArrowRight, Sparkles, CheckCircle2,
     MessageSquare, Cpu, Box, XCircle,
-    UploadCloud, FileText, ListVideo
+    UploadCloud, FileText, ListVideo,
+    BookOpen, Lightbulb, HelpCircle, List,
+    ToggleLeft, ArrowUpDown, FileUp, Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -53,16 +55,52 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
     }, [currentMomentIdx]);
 
     const speak = (text: string) => {
-        if (!isNarrating || !synth || isReadOnly) return;
+        if (!isNarrating || !synth || isReadOnly || !text.trim()) return;
         try {
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'es-ES';
             utterance.rate = 1.0;
-            utterance.pitch = 1.1;
+            utterance.pitch = 1.05; // Slightly adjusted for better clarity
             utteranceRef.current = utterance;
             synth.speak(utterance);
         } catch (error) { console.error("Speech Error:", error); }
+    };
+
+    const getBlockText = (block: any) => {
+        if (!block?.content) return "";
+        return (
+            block.content.text || 
+            block.content.content || 
+            block.content.question || 
+            block.content.instruction || 
+            block.content.statement ||
+            block.content.title ||
+            ""
+        );
+    };
+
+    const getBlockIcon = (type: string) => {
+        switch (type) {
+            case 'student_context': return BookOpen;
+            case 'student_concept': return Lightbulb;
+            case 'student_activity': return Zap;
+            case 'interaction_choice': return List;
+            case 'interaction_truefalse': return ToggleLeft;
+            case 'interaction_sequence': return ArrowUpDown;
+            case 'interaction_upload': return FileUp;
+            case 'interaction_open': return MessageSquare;
+            default: return FileText;
+        }
+    };
+
+    const getBlockColor = (type: string) => {
+        switch (type) {
+            case 'student_context': return 'blue';
+            case 'student_concept': return 'indigo';
+            case 'student_activity': return 'amber';
+            default: return 'slate';
+        }
     };
 
     useEffect(() => {
@@ -70,9 +108,11 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
         
         let textToSpeak = currentMoment.title + ". ";
         
-        if (currentMoment.blocks && currentMoment.blocks.length > 0) {
-            const studentBlocks = currentMoment.blocks.filter((b: any) => b.visibleToStudent !== false);
-            textToSpeak += studentBlocks.map((b: any) => b.content?.text || b.content?.content || b.content?.question || b.content?.instruction || "").join(". ");
+        const narBlocks = (currentMoment.blocks || [])
+            .filter((b: any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_'));
+        
+        if (narBlocks.length > 0) {
+            textToSpeak += narBlocks.map(getBlockText).filter(Boolean).join(". ");
         } else {
             const studentData = currentMoment.student || {};
             textToSpeak += studentData.content || studentData.question || studentData.instruction || "";
@@ -294,32 +334,87 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                     </div>
                                     
                                     <div className="flex-1 w-full space-y-4 sm:space-y-6">
-                                        {currentMoment.blocks && currentMoment.blocks.length > 0 ? (
-                                            currentMoment.blocks
-                                                .filter((b: any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_'))
-                                                .map((block: any) => (
-                                                    <div key={block.id} className={cn("relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md")}>
-                                                        <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
-                                                        <p className="text-base sm:text-xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
-                                                            {block.content?.text || block.content?.content || "..."}
-                                                        </p>
+                                        {(() => {
+                                            const narBlocks = (currentMoment.blocks || [])
+                                                .filter((b: any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_'));
+
+                                            if (narBlocks.length > 0) {
+                                                return narBlocks.map((block: any) => {
+                                                    const Icon = getBlockIcon(block.type);
+                                                    const color = getBlockColor(block.type);
+                                                    const text = getBlockText(block);
+                                                    if (!text) return null;
+
+                                                    return (
+                                                        <motion.div 
+                                                            key={block.id} 
+                                                            initial={{ opacity: 0, x: -20 }} 
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            className={cn(
+                                                                "relative p-6 sm:p-8 rounded-[2.5rem] bg-white border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md group"
+                                                            )}
+                                                        >
+                                                            <div className="absolute inset-0 pointer-events-none opacity-[0.03] construction-grid" />
+                                                            <div className={cn(
+                                                                "absolute top-0 left-0 w-1.5 h-full transition-colors",
+                                                                color === 'blue' ? 'bg-blue-500' : color === 'indigo' ? 'bg-indigo-500' : color === 'amber' ? 'bg-amber-500' : 'bg-slate-400'
+                                                            )} />
+                                                            
+                                                            <div className="flex items-start gap-5 relative z-10">
+                                                                <div className={cn(
+                                                                    "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all shadow-sm",
+                                                                    color === 'blue' ? 'bg-blue-50 border-blue-100 text-blue-500' : 
+                                                                    color === 'indigo' ? 'bg-indigo-50 border-indigo-100 text-indigo-500' : 
+                                                                    color === 'amber' ? 'bg-amber-50 border-amber-100 text-amber-500' : 
+                                                                    'bg-slate-50 border-slate-100 text-slate-400'
+                                                                )}>
+                                                                    <Icon className="w-6 h-6" />
+                                                                </div>
+                                                                <div className="flex-1 space-y-1">
+                                                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                                                                        {block.type === 'student_context' ? 'Contexto Narrativo' : 
+                                                                         block.type === 'student_concept' ? 'Marco Teórico' : 
+                                                                         block.type === 'student_activity' ? 'Consigna de Fase' : 'Información Técnica'}
+                                                                    </p>
+                                                                    <p className="text-base sm:text-lg lg:text-xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
+                                                                        {text}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                });
+                                            }
+
+                                            // Fallback to legacy
+                                            const legacyText = currentMoment?.student?.content || currentMoment?.student?.question || currentMoment?.student?.instruction;
+                                            return (
+                                                <div className={cn("relative p-6 sm:p-8 rounded-[2.5rem] bg-white border border-slate-200 shadow-sm overflow-hidden group")}>
+                                                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] construction-grid" />
+                                                    <div className="absolute top-0 left-0 w-2 h-full bg-blue-500" />
+                                                    <div className="flex items-start gap-5 relative z-10">
+                                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-500 flex items-center justify-center shrink-0 shadow-sm">
+                                                            <BookOpen className="w-6 h-6" />
+                                                        </div>
+                                                        <div className="flex-1 space-y-1">
+                                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Instrucciones de Sincronización</p>
+                                                            <p className="text-base sm:text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
+                                                                "{legacyText || "Recibiendo datos de sincronización..."}"
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                ))
-                                        ) : (
-                                            <div className={cn("relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200 shadow-sm overflow-hidden")}>
-                                                <div className="absolute top-0 left-0 w-2 h-full bg-blue-500" />
-                                                <p className="text-base sm:text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
-                                                    "{currentMoment?.student?.content || currentMoment?.student?.question || currentMoment?.student?.instruction || "Recibiendo datos..."}"
-                                                </p>
-                                            </div>
-                                        )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     {!isReadOnly && (
                                         <Button 
                                             onClick={() => {
-                                                const text = currentMoment.blocks?.length 
-                                                    ? currentMoment.blocks.filter((b:any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_')).map((b:any) => b.content?.text || b.content?.content || "").join(". ")
+                                                const narBlocks = (currentMoment.blocks || [])
+                                                    .filter((b: any) => b.visibleToStudent !== false && !b.type.startsWith('interaction_'));
+                                                const text = narBlocks.length 
+                                                    ? narBlocks.map(getBlockText).filter(Boolean).join(". ")
                                                     : (currentMoment?.student?.content || "");
                                                 speak(text);
                                             }}
@@ -444,21 +539,41 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
 
                                         // Default Fallback / Activity Block
                                         const activityBlock = currentMoment.blocks?.find((b: any) => b.type === 'student_activity');
-                                        const instruction = activityBlock?.content?.text || currentMoment?.student?.activity || currentMoment?.student?.instruction || "Continúa con la siguiente fase de tu aprendizaje.";
+                                        const instruction = getBlockText(activityBlock) || currentMoment?.student?.activity || currentMoment?.student?.instruction || "Continúa con la siguiente fase de tu aprendizaje.";
 
                                         return (
                                             <div className="text-center space-y-8 sm:space-y-10 relative z-10 my-auto py-8">
                                                 <div className="relative w-fit mx-auto">
-                                                    <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 4, repeat: Infinity }} className="w-24 h-24 sm:w-40 sm:h-40 rounded-[2rem] sm:rounded-[3rem] bg-indigo-50 border border-indigo-100 shadow-md flex items-center justify-center">
-                                                        <Box className="w-12 h-12 sm:w-20 sm:h-20 text-indigo-400" />
+                                                    <motion.div 
+                                                        animate={{ 
+                                                            scale: [1, 1.05, 1],
+                                                            rotate: [0, 5, -5, 0]
+                                                        }} 
+                                                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} 
+                                                        className="w-24 h-24 sm:w-40 sm:h-40 rounded-[2.5rem] sm:rounded-[3.5rem] bg-indigo-50 border border-indigo-100 shadow-xl flex items-center justify-center relative overflow-hidden"
+                                                    >
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent" />
+                                                        <Box className="w-12 h-12 sm:w-20 sm:h-20 text-indigo-400 relative z-10" />
                                                     </motion.div>
-                                                    <div className="absolute -bottom-2 -right-2 sm:-bottom-4 sm:-right-4 w-10 h-10 sm:w-12 sm:h-12 bg-white border border-slate-200 shadow-md rounded-xl sm:rounded-2xl flex items-center justify-center animate-bounce">
-                                                        <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
-                                                    </div>
+                                                    <motion.div 
+                                                        animate={{ y: [0, -10, 0] }}
+                                                        transition={{ duration: 2, repeat: Infinity }}
+                                                        className="absolute -bottom-2 -right-2 sm:-bottom-4 sm:-right-4 w-10 h-10 sm:w-14 sm:h-14 bg-white border border-slate-200 shadow-xl rounded-2xl flex items-center justify-center z-20"
+                                                    >
+                                                        <Activity className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+                                                    </motion.div>
                                                 </div>
-                                                <div className="space-y-3 sm:space-y-4 px-4 sm:px-10">
-                                                    <h4 className="text-xl sm:text-2xl font-black italic uppercase text-slate-800">Fase de Aplicación</h4>
-                                                    <p className="text-sm sm:text-lg font-bold text-slate-500 leading-relaxed italic whitespace-pre-wrap">"{instruction}"</p>
+                                                <div className="space-y-4 sm:space-y-6 px-4 sm:px-10">
+                                                    <div className="space-y-2">
+                                                        <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em] text-blue-500 italic">Intervención Técnica</p>
+                                                        <h4 className="text-2xl sm:text-4xl font-black italic uppercase text-slate-800 tracking-tighter">Fase de Aplicación</h4>
+                                                    </div>
+                                                    <div className="relative p-6 sm:p-8 bg-slate-50/50 border border-slate-100 rounded-[2rem] overflow-hidden">
+                                                        <div className="absolute inset-0 pointer-events-none opacity-[0.02] construction-grid" />
+                                                        <p className="text-base sm:text-xl lg:text-2xl font-bold text-slate-500 leading-relaxed italic whitespace-pre-wrap relative z-10">
+                                                            "{instruction}"
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
