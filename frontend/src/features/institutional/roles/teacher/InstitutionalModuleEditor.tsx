@@ -382,7 +382,6 @@ export const InstitutionalModuleEditor = () => {
             
             toast.success("Progreso guardado");
             await fetchModules(selectedSection!.id);
-            setSelectedLevel(null);
         } catch (error) {
             console.error('Save error:', error);
             toast.error("Error al guardar");
@@ -463,6 +462,10 @@ export const InstitutionalModuleEditor = () => {
     };
 
     const handleEditActivity = (mod: ModuloInst) => {
+        // Ensure the parent section is selected so the sidebar focuses on it
+        const parentSec = sections.find(s => s.id === mod.seccionId);
+        if (parentSec) setSelectedSection(parentSec);
+
         if (mod.tipo === 'modular_class' || mod.tipo === 'mission') {
             setSelectedLevel(mod);
         } else {
@@ -535,7 +538,9 @@ export const InstitutionalModuleEditor = () => {
                     </div>
 
                     <nav className="px-3 space-y-1 pb-20">
-                        {sections.map((sec, sIdx) => {
+                        {sections
+                            .filter(sec => !selectedSection || selectedSection.id === sec.id)
+                            .map((sec, sIdx) => {
                             const isSelected = selectedSection?.id === sec.id;
                             const sectionModules = allModules.filter(m => m.seccionId === sec.id);
                             
@@ -554,7 +559,7 @@ export const InstitutionalModuleEditor = () => {
                                             "w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] shrink-0 transition-colors",
                                             isSelected ? "bg-blue-600 text-white" : "bg-white/5 text-white/30 group-hover:bg-white/10 group-hover:text-white/60"
                                         )}>
-                                            {String(sIdx + 1).padStart(2, '0')}
+                                            {sIdx + 1 < 10 ? `0${sIdx + 1}` : sIdx + 1}
                                         </div>
                                         <div className="flex-1 min-w-0 text-left">
                                             <p className={cn("text-[11px] font-black uppercase tracking-tight truncate", isSelected ? "text-white" : "text-white/40 group-hover:text-white/70")}>
@@ -768,7 +773,9 @@ export const InstitutionalModuleEditor = () => {
 
                                                 {/* Number + title / inline rename */}
                                                 <div className="flex items-start gap-4 mb-6">
-                                                    <span className="text-[11px] font-black text-white/20 mt-2 shrink-0 tabular-nums">{String(mIdx + 1).padStart(2, '0')}</span>
+                                                    <span className="text-[11px] font-black text-white/20 mt-2 shrink-0 tabular-nums">
+                                                        {mIdx + 1 < 10 ? `0${mIdx + 1}` : mIdx + 1}
+                                                    </span>
                                                     {renamingModuleId === mod.id ? (
                                                         <input
                                                             autoFocus
