@@ -66,10 +66,22 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
     };
 
     useEffect(() => {
-        if (currentMoment && showMomentIntro) {
+        if (!currentMoment) return;
+        
+        let textToSpeak = currentMoment.title + ". ";
+        
+        if (currentMoment.blocks && currentMoment.blocks.length > 0) {
+            // New block-based narrations
+            const studentBlocks = currentMoment.blocks.filter((b: any) => b.visibleToStudent && (b.type.startsWith('student_') || b.type.startsWith('interaction_')));
+            textToSpeak += studentBlocks.map((b: any) => b.content?.text || b.content?.question || b.content?.instruction || "").join(". ");
+        } else {
+            // Legacy narration
             const studentData = currentMoment.student || {};
-            const textToSpeak = `${currentMoment.title}. ${studentData.content || studentData.question || studentData.instruction || ""}`;
-            if (textToSpeak.trim()) speak(textToSpeak);
+            textToSpeak += studentData.content || studentData.question || studentData.instruction || "";
+        }
+
+        if (textToSpeak.trim() && showMomentIntro) {
+            speak(textToSpeak);
         }
         return () => synth?.cancel();
     }, [currentMoment, showMomentIntro, isNarrating]);
@@ -252,23 +264,47 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                             className="w-full max-w-7xl grid grid-cols-1 xl:grid-cols-2 gap-10 sm:gap-20 items-center"
                         >
                             {/* NARRATION WING */}
-                            <div className="space-y-8 text-center xl:text-left">
+                            <div className="space-y-8 text-center xl:text-left h-full flex flex-col justify-center">
                                 <div className="space-y-4">
                                     <Badge className="bg-blue-600 text-white border-none px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.3em]">ENLACE ACTIVO</Badge>
                                     <h3 className="text-3xl sm:text-5xl lg:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase text-white/90">
-                                        {currentMoment?.student?.concept || "Transmisión de Conocimiento"}
+                                        {currentMoment?.title}
                                     </h3>
                                 </div>
-                                <div className={cn("relative group transition-transform hover:scale-[1.02]", getPadding(), getCardRadius(), "bg-white/5 border border-white/10 backdrop-blur-3xl shadow-2xl overflow-hidden")}>
-                                    <div className="absolute top-0 left-0 w-2 h-full bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.5)]" />
-                                    <p className="text-xl sm:text-3xl font-medium text-slate-200 leading-relaxed italic tracking-tight">
-                                        "{currentMoment?.student?.content || currentMoment?.student?.question || currentMoment?.student?.instruction || "Recibiendo datos..."}"
-                                    </p>
+                                
+                                <div className="space-y-4 overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar">
+                                    {currentMoment.blocks && currentMoment.blocks.length > 0 ? (
+                                        // Render New Blocks
+                                        currentMoment.blocks
+                                            .filter((b: any) => b.visibleToStudent && (b.type.startsWith('student_') || b.type === 'teacher_script'))
+                                            .map((block: any) => (
+                                                <div key={block.id} className={cn("relative group transition-transform hover:scale-[1.01]", getPadding(), getCardRadius(), "bg-white/5 border border-white/10 backdrop-blur-3xl shadow-xl overflow-hidden")}>
+                                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600/50" />
+                                                    <p className="text-lg sm:text-2xl font-medium text-slate-200 leading-relaxed italic tracking-tight">
+                                                        {block.content?.text || block.content?.content || "Cargando protocolo..."}
+                                                    </p>
+                                                </div>
+                                            ))
+                                    ) : (
+                                        // Legacy Rendering
+                                        <div className={cn("relative group transition-transform hover:scale-[1.02]", getPadding(), getCardRadius(), "bg-white/5 border border-white/10 backdrop-blur-3xl shadow-2xl overflow-hidden")}>
+                                            <div className="absolute top-0 left-0 w-2 h-full bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.5)]" />
+                                            <p className="text-xl sm:text-3xl font-medium text-slate-200 leading-relaxed italic tracking-tight">
+                                                "{currentMoment?.student?.content || currentMoment?.student?.question || currentMoment?.student?.instruction || "Recibiendo datos..."}"
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
+
                                 {!isReadOnly && (
                                     <Button 
-                                        onClick={() => speak(currentMoment?.student?.content || currentMoment?.student?.question || currentMoment?.student?.instruction || "")}
-                                        variant="ghost" className="text-slate-500 hover:text-blue-400 gap-3 font-black uppercase tracking-[0.4em] text-[10px]"
+                                        onClick={() => {
+                                            const text = currentMoment.blocks?.length 
+                                                ? currentMoment.blocks.filter((b:any) => b.visibleToStudent).map((b:any) => b.content?.text || "").join(". ")
+                                                : (currentMoment?.student?.content || "");
+                                            speak(text);
+                                        }}
+                                        variant="ghost" className="text-slate-500 hover:text-blue-400 gap-3 font-black uppercase tracking-[0.4em] text-[10px] w-fit mx-auto xl:mx-0"
                                     >
                                         <Volume2 className="w-4 h-4" /> REINICIAR NARRACIÓN
                                     </Button>
@@ -279,79 +315,99 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                             <div className={cn(getPadding(), getCardRadius(), "bg-slate-900/40 border border-white/5 backdrop-blur-md shadow-2xl flex flex-col items-center justify-center min-h-[400px] sm:min-h-[550px] relative overflow-hidden")}>
                                 <div className="absolute inset-0 construction-grid opacity-5 pointer-events-none" />
                                 
-                                {currentMoment?.config?.interaction_type === 'multiple_choice' ? (
-                                    <div className="w-full space-y-6">
-                                        <div className="text-center mb-8">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-500 mb-2 italic">Análisis de Datos</p>
-                                            <h4 className="text-xl sm:text-2xl font-black italic uppercase text-white">Selecciona tu Respuesta</h4>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-4 text-left">
-                                            {currentMoment?.student?.options?.map((opt: any, i: number) => (
-                                                <button 
-                                                    key={i} disabled={isReadOnly}
-                                                    onClick={() => !isReadOnly && setSelectedOpt(i)}
-                                                    className={cn(
-                                                        "w-full p-5 sm:p-7 rounded-[1.5rem] border-2 text-left transition-all flex items-center gap-5 group border-transparent",
-                                                        selectedOpt === i ? "bg-blue-600 border-blue-500 text-white shadow-2xl shadow-blue-600/20" : "bg-white/5 border-white/5 hover:border-blue-500/50 text-slate-300",
-                                                        isReadOnly && "cursor-default"
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-black transition-all",
-                                                        selectedOpt === i ? "bg-white text-blue-600" : "bg-white/10 text-white/40 group-hover:bg-blue-500 group-hover:text-white"
-                                                    )}>
-                                                        {String.fromCharCode(65 + i)}
-                                                    </div>
-                                                    <span className="text-sm sm:text-lg font-bold">{opt?.text || opt}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : currentMoment?.config?.interaction_type === 'true_false' ? (
-                                    <div className="w-full space-y-12">
-                                        <div className="text-center">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.6em] text-cyan-400 mb-2 italic">Verificación de Integridad</p>
-                                            <h4 className="text-2xl sm:text-4xl font-black italic uppercase">¿Verdad o <span className="text-rose-500">Error</span>?</h4>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                            <button 
-                                                onClick={() => !isReadOnly && setSelectedOpt(true)} disabled={isReadOnly}
-                                                className={cn(
-                                                    "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group border-transparent",
-                                                    selectedOpt === true ? "bg-blue-600 border-blue-400 text-white shadow-2xl shadow-blue-600/40" : "bg-white/5 border-white/10 hover:border-blue-500 text-slate-400"
-                                                )}
-                                            >
-                                                <CheckCircle2 className={cn("w-14 h-14", selectedOpt === true ? "text-blue-200" : "text-blue-500 group-hover:scale-110 transition-transform")} />
-                                                <span className="font-black uppercase tracking-[0.3em] text-xs">CERTEZA</span>
-                                            </button>
-                                            <button 
-                                                onClick={() => !isReadOnly && setSelectedOpt(false)} disabled={isReadOnly}
-                                                className={cn(
-                                                    "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group border-transparent",
-                                                    selectedOpt === false ? "bg-rose-600 border-rose-400 text-white shadow-2xl shadow-rose-600/40" : "bg-white/5 border-white/10 hover:border-rose-500 text-slate-400"
-                                                )}
-                                            >
-                                                <XCircle className={cn("w-14 h-14", selectedOpt === false ? "text-white" : "text-rose-500 group-hover:scale-110 transition-transform")} />
-                                                <span className="font-black uppercase tracking-[0.3em] text-xs">DISCREPANCIA</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-center space-y-10">
-                                        <div className="relative">
-                                            <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="w-32 h-32 sm:w-48 sm:h-48 rounded-[3rem] sm:rounded-[4rem] bg-blue-600/10 flex items-center justify-center mx-auto border-2 border-blue-500/20 shadow-[0_0_50px_rgba(37,99,235,0.1)]">
-                                                {currentMoment?.config?.interaction_type === 'interactive_lab' ? <Cpu className="w-16 h-16 sm:w-24 sm:h-24 text-blue-500" /> : <Box className="w-16 h-16 sm:w-24 sm:h-24 text-blue-500" />}
-                                            </motion.div>
-                                            <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center animate-bounce">
-                                                <Activity className="w-6 h-6 text-cyan-400" />
+                                {(() => {
+                                    // Identify current interaction (Legacy or Block-based)
+                                    let interactionBlock = currentMoment.blocks?.find((b: any) => b.type.startsWith('interaction_'));
+                                    let interactionType = interactionBlock?.type || currentMoment?.config?.interaction_type;
+                                    let content = interactionBlock?.content || currentMoment?.student;
+
+                                    if (interactionType === 'interaction_choice' || interactionType === 'multiple_choice') {
+                                        const options = content.options || [];
+                                        return (
+                                            <div className="w-full space-y-6">
+                                                <div className="text-center mb-8">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-500 mb-2 italic">Análisis de Datos</p>
+                                                    <h4 className="text-xl sm:text-2xl font-black italic uppercase text-white">{content.question || "Selecciona tu Respuesta"}</h4>
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-4 text-left">
+                                                    {options.map((opt: any, i: number) => (
+                                                        <button 
+                                                            key={i} disabled={isReadOnly}
+                                                            onClick={() => !isReadOnly && setSelectedOpt(i)}
+                                                            className={cn(
+                                                                "w-full p-5 sm:p-7 rounded-[1.5rem] border-2 text-left transition-all flex items-center gap-5 group border-transparent",
+                                                                selectedOpt === i ? "bg-blue-600 border-blue-500 text-white shadow-2xl shadow-blue-600/20" : "bg-white/5 border-white/5 hover:border-blue-500/50 text-slate-300",
+                                                                isReadOnly && "cursor-default"
+                                                            )}
+                                                        >
+                                                            <div className={cn(
+                                                                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-black transition-all",
+                                                                selectedOpt === i ? "bg-white text-blue-600" : "bg-white/10 text-white/40 group-hover:bg-blue-500 group-hover:text-white"
+                                                            )}>
+                                                                {String.fromCharCode(65 + i)}
+                                                            </div>
+                                                            <span className="text-sm sm:text-lg font-bold">{opt?.text || opt}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (interactionType === 'interaction_truefalse' || interactionType === 'true_false') {
+                                        return (
+                                            <div className="w-full space-y-12">
+                                                <div className="text-center px-6">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.6em] text-cyan-400 mb-4 italic">Verificación de Integridad</p>
+                                                    <h4 className="text-xl sm:text-2xl font-black italic uppercase mb-8">{content.statement || "¿Es verdadera esta afirmación?"}</h4>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl mx-auto">
+                                                    <button 
+                                                        onClick={() => !isReadOnly && setSelectedOpt(true)} disabled={isReadOnly}
+                                                        className={cn(
+                                                            "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group border-transparent",
+                                                            selectedOpt === true ? "bg-blue-600 border-blue-400 text-white shadow-2xl shadow-blue-600/40" : "bg-white/5 border-white/10 hover:border-blue-500 text-slate-400"
+                                                        )}
+                                                    >
+                                                        <CheckCircle2 className={cn("w-14 h-14", selectedOpt === true ? "text-blue-200" : "text-blue-500 group-hover:scale-110 transition-transform")} />
+                                                        <span className="font-black uppercase tracking-[0.3em] text-xs">CERTEZA</span>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => !isReadOnly && setSelectedOpt(false)} disabled={isReadOnly}
+                                                        className={cn(
+                                                            "p-10 sm:p-14 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group border-transparent",
+                                                            selectedOpt === false ? "bg-rose-600 border-rose-400 text-white shadow-2xl shadow-rose-600/40" : "bg-white/5 border-white/10 hover:border-rose-500 text-slate-400"
+                                                        )}
+                                                    >
+                                                        <XCircle className={cn("w-14 h-14", selectedOpt === false ? "text-white" : "text-rose-500 group-hover:scale-110 transition-transform")} />
+                                                        <span className="font-black uppercase tracking-[0.3em] text-xs">DISCREPANCIA</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    // Default Fallback / Activity Block
+                                    const activityBlock = currentMoment.blocks?.find((b: any) => b.type === 'student_activity');
+                                    const instruction = activityBlock?.content?.text || currentMoment?.student?.activity || currentMoment?.student?.instruction || "Continúa con la siguiente fase.";
+
+                                    return (
+                                        <div className="text-center space-y-10">
+                                            <div className="relative">
+                                                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="w-32 h-32 sm:w-48 sm:h-48 rounded-[3rem] sm:rounded-[4rem] bg-blue-600/10 flex items-center justify-center mx-auto border-2 border-blue-500/20 shadow-[0_0_50px_rgba(37,99,235,0.1)]">
+                                                    {interactionType === 'interactive_lab' ? <Cpu className="w-16 h-16 sm:w-24 sm:h-24 text-blue-500" /> : <Box className="w-16 h-16 sm:w-24 sm:h-24 text-blue-500" />}
+                                                </motion.div>
+                                                <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center animate-bounce">
+                                                    <Activity className="w-6 h-6 text-cyan-400" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4 px-10">
+                                                <h4 className="text-2xl font-black italic uppercase text-white/90">Fase de Aplicación</h4>
+                                                <p className="text-sm sm:text-lg font-bold text-slate-400 leading-relaxed italic">"{instruction}"</p>
                                             </div>
                                         </div>
-                                        <div className="space-y-4 px-10">
-                                            <h4 className="text-2xl font-black italic uppercase text-white/90">Fase de Aplicación</h4>
-                                            <p className="text-sm sm:text-lg font-bold text-slate-400 leading-relaxed italic">"{currentMoment?.student?.activity || "Utiliza tus herramientas digitales para completar esta sección según las instrucciones."}"</p>
-                                        </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </div>
                         </motion.div>
                     )}

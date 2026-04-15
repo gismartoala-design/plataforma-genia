@@ -79,91 +79,51 @@ const getLevelClass = (id: number | string) => {
 
 export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
   const [courses, setCourses] = useState<any[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
-  const [sections, setSections] = useState<any[]>([]);
-  const [modules, setModules] = useState<any[]>([]);
-  const [courseInfo, setCourseInfo] = useState<any>(null);
-  const [sectionInfo, setSectionInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<'section' | 'module'>('section');
   const [newModule, setNewModule] = useState({ nombre: '', duracion: 30 });
   const [creating, setCreating] = useState(false);
-  const [renamingSectionId, setRenamingSectionId] = useState<number | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [, setLocation] = useLocation();
+    const [renamingSectionId, setRenamingSectionId] = useState<number | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+    const [sections, setSections] = useState<any[]>([]);
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+    const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
+    const [courseInfo, setCourseInfo] = useState<any>(null);
+    const [sectionInfo, setSectionInfo] = useState<any>(null);
+    const [allModules, setAllModules] = useState<ModuloInst[]>([]);
+    const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (user?.id) {
       initDashboard();
     }
-  }, [user]);
-
-  useEffect(() => {
-    if (selectedCourseId) {
-      window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: true }));
-      fetchSections(selectedCourseId);
-    } else {
-      window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: false }));
-      setSections([]);
-    }
-
-    return () => {
-      window.dispatchEvent(new CustomEvent('nav:force-hide', { detail: false }));
-    };
-  }, [selectedCourseId]);
-
-
+  }, [user?.id]);
 
   const initDashboard = async () => {
-    if (!user?.id) return;
     setLoading(true);
     try {
-      // 1. Fetch assigned courses
-      const uId = String(user.id);
-      console.log('[PROFESSOR_DASHBOARD] Initializing for ID:', uId);
-      const cData = await professorApi.getProfessorCourses(uId);
-      const teacherCourses = Array.isArray(cData) ? cData : [];
-      console.log('[PROFESSOR_DASHBOARD] Assigned Courses Found:', teacherCourses.length, teacherCourses);
-      setCourses(teacherCourses);
-
-      // 2. Select initial course
-      // Don't auto-select anymore, let the user pick from the list
-      /*
-      if (teacherCourses.length > 0) {
-        // Prefer the one in user profile if it's in the assigned list
-        const profileCourse = teacherCourses.find(c => String(c.id) === String(user.cursoId));
-        const finalId = profileCourse ? profileCourse.id : teacherCourses[0].id;
-
-        console.log('[PROFESSOR_DASHBOARD] Selected Initial Course ID:', finalId);
-        setSelectedCourseId(finalId);
-      } else {
-        console.warn('[PROFESSOR_DASHBOARD] No assigned courses for this professor.');
+        const data = await professorApi.getProfessorCourses(user.id);
+        setCourses(data || []);
+        const mods = await institutionalCurriculumApi.getModulesByCourse(0); // Dummy or fetch all relevant
+        setAllModules(mods);
+      } catch (error) {
+        console.error('Error initializing dashboard:', error);
+      } finally {
+        setLoading(false);
       }
-      */
-      setLoading(false);
-    } catch (error) {
-      console.error('Error initializing dashboard:', error);
-      setLoading(false);
-    }
-  };
+    };
 
-  const fetchSections = async (courseId: number) => {
-    setLoading(true);
-    try {
-      const sData = await institutionApi.getCourseSections(courseId);
-      setSections(Array.isArray(sData) ? sData : []);
-
-      const currentCourse = courses.find(c => String(c.id) === String(courseId));
-      if (currentCourse) setCourseInfo(currentCourse);
-    } catch (error) {
-      console.error('Error fetching sections:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    const fetchSections = async (cId: number | string) => {
+        try {
+            const data = await institutionalCurriculumApi.getSections(Number(cId));
+            setSections(data);
+            const course = courses.find(c => c.id === Number(cId));
+            if (course) setCourseInfo(course);
+        } catch (error) {
+            console.error('Error fetching sections:', error);
+        }
+    };
 
 
   const handleCreateModule = async () => {
@@ -333,160 +293,67 @@ export const InstitutionalTeacherDashboard = ({ user }: { user: any }) => {
                   </DialogContent>
                 </Dialog>
 
-                {!selectedCourseId ? (
-                  <motion.section
-                    key="course-list"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="space-y-6"
-                  >
-                    <div className="flex items-center justify-between px-2">
-                      <div className="space-y-1">
-                        <h3 className="text-xl font-black uppercase tracking-tight" style={{ color: 'var(--inst-deep)' }}>Mis Obras Asignadas</h3>
-                        <p className="technical-label">{courses.length} cursos bajo tu gestión curricular</p>
-                      </div>
+                <motion.section
+                  key="course-list"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between px-2">
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-black uppercase tracking-tight" style={{ color: 'var(--inst-deep)' }}>Mis Obras Asignadas</h3>
+                      <p className="technical-label">{courses.length} cursos bajo tu gestión curricular</p>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {courses.length > 0 ? (
-                        courses.map((course, idx) => (
-                          <motion.button
-                            key={course.id}
-                            whileHover={{ y: -5, scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSelectedCourseId(course.id)}
-                            className="group p-8 rounded-[2.5rem] border-2 bg-white transition-all text-left relative overflow-hidden flex flex-col justify-between h-[220px] shadow-sm hover:shadow-xl hover:border-[var(--inst-blue)]"
-                            style={{ borderColor: 'rgba(26,86,219,0.06)' }}
-                          >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:bg-[var(--inst-blue)] group-hover:opacity-[0.07]" />
-
-                            <div className="space-y-4 relative z-10">
-                              <div className="flex justify-end items-start w-full">
-                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[var(--inst-blue-lt)] group-hover:text-[var(--inst-blue)] transition-all shadow-sm">
-                                  <ChevronRight className="w-5 h-5" />
-                                </div>
-                              </div>
-                              <h4 className="text-xl font-black uppercase tracking-tighter leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors">{course.nombre}</h4>
-                            </div>
-
-                            <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-50">
-                              <div className="flex items-center gap-2" style={{ color: 'var(--inst-muted)' }}>
-                                <Users className="w-4 h-4" />
-                                <span className="text-xs font-bold">{course.studentCount || 0} alumnos</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-[var(--inst-blue)] opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                                <span className="text-[10px] font-black uppercase tracking-widest">Abrir Obra</span>
-                                <ArrowLeft className="w-4 h-4 rotate-180" />
-                              </div>
-                            </div>
-                          </motion.button>
-                        ))
-                      ) : (
-                        <div className="col-span-full py-20 bg-white/50 rounded-[3rem] border-2 border-dashed border-blue-100 flex flex-col items-center justify-center text-center space-y-4">
-                          <div className="w-20 h-20 rounded-[2rem] bg-blue-50 flex items-center justify-center text-blue-400">
-                            <Layers className="w-10 h-10" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="text-xl font-black text-slate-800">No se detectan obras asignadas</h3>
-                            <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto">Tu perfil de profesor aún no tiene cursos vinculados en el sistema central.</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </motion.section>
-                ) : (
-                  <motion.section
-                    key="section-list"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
-                  >
-                    <div className="flex items-center justify-between p-8 rounded-[3rem] bg-white border border-blue-50 shadow-sm relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 opacity-30 rounded-full blur-3xl -mr-32 -mt-32" />
-
-                      <div className="relative z-10 space-y-2">
-                        <button
-                          onClick={() => setSelectedCourseId(null)}
-                          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)] hover:gap-3 transition-all mb-4"
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {courses.length > 0 ? (
+                      courses.map((course, idx) => (
+                        <motion.button
+                          key={course.id}
+                          whileHover={{ y: -5, scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setLocation(`/institucional-editor/${course.id}`)}
+                          className="group p-8 rounded-[2.5rem] border-2 bg-white transition-all text-left relative overflow-hidden flex flex-col justify-between h-[220px] shadow-sm hover:shadow-xl hover:border-[var(--inst-blue)]"
+                          style={{ borderColor: 'rgba(26,86,219,0.06)' }}
                         >
-                          <ArrowLeft className="w-4 h-4" /> Volver a los Cursos
-                        </button>
-                        <h3 className="text-3xl font-black uppercase tracking-tight" style={{ color: 'var(--inst-deep)' }}>Módulos de la Obra</h3>
-                        <p className="technical-label italic">Organización estructural para {courseInfo?.nombre}</p>
-                      </div>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:bg-[var(--inst-blue)] group-hover:opacity-[0.07]" />
 
-                      <div className="flex items-center gap-4 relative z-10">
-                        <Button
-                          onClick={() => { setDialogType('section'); setIsDialogOpen(true); }}
-                          className="font-black uppercase tracking-widest text-xs h-14 px-8 rounded-2xl shadow-xl text-white hover:scale-105 active:scale-95 transition-all"
-                          style={{ background: 'linear-gradient(135deg, var(--inst-blue), var(--inst-purple))' }}
-                        >
-                          <Plus className="w-5 h-5 mr-3" /> Nuevo Módulo
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {sections.map((sec, i) => (
-                        <div
-                          key={sec.id}
-                          onClick={() => setLocation(`/institucional-editor/${selectedCourseId}?sec=${sec.id}`)}
-                          className="blueprint-card accent-hover p-8 group border-none shadow-sm hover:shadow-xl rounded-[3rem] text-left w-full min-h-[12rem] flex flex-col justify-between relative overflow-hidden bg-white cursor-pointer transition-all hover:-translate-y-1"
-                        >
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--inst-blue)] opacity-[0.03] rounded-bl-[5rem] -mr-10 -mt-10 transition-all group-hover:opacity-[0.08]" />
-                          
-                          <div className="space-y-4 relative z-10 w-full mb-4">
+                          <div className="space-y-4 relative z-10">
                             <div className="flex justify-end items-start w-full">
-                              <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setRenamingSectionId(sec.id);
-                                    setRenameValue(sec.nombre);
-                                  }}
-                                  className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-[var(--inst-blue)] hover:bg-[var(--inst-blue-lt)] transition-all z-20 hover:scale-105"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={(e) => handleDeleteSection(sec.id, e)}
-                                  className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all z-20 hover:scale-105"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[var(--inst-blue-lt)] group-hover:text-[var(--inst-blue)] transition-all shadow-sm">
+                                <ChevronRight className="w-5 h-5" />
                               </div>
                             </div>
-
-                            {renamingSectionId === sec.id ? (
-                                <input
-                                    autoFocus
-                                    value={renameValue}
-                                    onClick={e => e.stopPropagation()}
-                                    onChange={e => setRenameValue(e.target.value)}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter') handleRenameSection(sec.id, e);
-                                        if (e.key === 'Escape') { setRenamingSectionId(null); setRenameValue(''); }
-                                    }}
-                                    onBlur={(e) => handleRenameSection(sec.id, e)}
-                                    className="w-full bg-slate-50 border border-[var(--inst-blue)] rounded-xl px-4 py-3 mt-4 text-xl font-black uppercase tracking-tighter leading-none outline-none text-[var(--inst-deep)] shadow-inner focus:ring-4 focus:ring-blue-500/10"
-                                />
-                            ) : (
-                                <h4 className="text-2xl font-black uppercase tracking-tight mt-4 leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors w-full break-words">
-                                    {sec.nombre}
-                                </h4>
-                            )}
+                            <h4 className="text-xl font-black uppercase tracking-tighter leading-none text-[var(--inst-deep)] group-hover:text-[var(--inst-blue)] transition-colors">{course.nombre}</h4>
                           </div>
 
-                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--inst-blue)] relative z-10 transition-all transform group-hover:translate-x-2 mt-auto">
-                             Explorar Ingeniería <ChevronRight className="w-4 h-4" />
+                          <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-50">
+                            <div className="flex items-center gap-2" style={{ color: 'var(--inst-muted)' }}>
+                              <Users className="w-4 h-4" />
+                              <span className="text-xs font-bold">{course.studentCount || 0} alumnos</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[var(--inst-blue)] opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                              <span className="text-[10px] font-black uppercase tracking-widest">Abrir Obra</span>
+                              <ArrowLeft className="w-4 h-4 rotate-180" />
+                            </div>
                           </div>
+                        </motion.button>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-20 bg-white/50 rounded-[3rem] border-2 border-dashed border-blue-100 flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="w-20 h-20 rounded-[2rem] bg-blue-50 flex items-center justify-center text-blue-400">
+                          <Layers className="w-10 h-10" />
                         </div>
-                      ))}
-                    </div>
-                  </motion.section>
-                )}
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-black text-slate-800">No se detectan obras asignadas</h3>
+                          <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto">Tu perfil de profesor aún no tiene cursos vinculados en el sistema central.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.section>
               </AnimatePresence>
             </div>
           </div>

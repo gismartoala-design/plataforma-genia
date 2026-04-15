@@ -139,6 +139,72 @@ const INITIAL_ACTIVITY_DATA: Record<string, any> = {
     }
 };
 
+const MAKER_LAB_TEMPLATE = {
+    ...INITIAL_ACTIVITY_DATA.mission,
+    mission: {
+        ...INITIAL_ACTIVITY_DATA.mission.mission,
+        title: "Laboratorio Maker: Disección de Sistema",
+        domain: "Ingeniería de Sistemas",
+        type: ["construccion", "maker"]
+    },
+    moments: [
+        { 
+            id: "maker_1", title: "Fase 1: Selección", time_minutes: 5, 
+            config: { interaction_type: "multiple_choice" },
+            teacher: { intention: "Seleccionar un proceso cotidiano.", pedagogy: ["Observación"], script: "Hoy vamos a pensar como ingenieros.", observation: "", common_errors: [], intervention: "" },
+            student: { context: "En la ciudad inteligente, antes de automatizar, debemos entender la vida real.", question: "¿Qué proceso quieres analizar hoy?", options: [{text: "Preparar comida"}, {text: "Organizar mochila"}, {text: "Rutina antes de dormir"}] } 
+        },
+        { 
+            id: "maker_2", title: "Fase 2: Identificación", time_minutes: 10, 
+            config: { interaction_type: "sequence_order" },
+            teacher: { intention: "Descomponer el proceso.", pedagogy: ["Descomposición"], script: "", observation: "", common_errors: ["Olvidar pasos"], intervention: "" },
+            student: { context: "Para que un sistema funcione, debemos conocer todos sus pasos.", question: "Define los pasos de tu proceso en orden.", items: [{text: "Paso 1"}, {text: "Paso 2"}, {text: "Paso 3"}] } 
+        },
+        { 
+            id: "maker_3", title: "Fase 3: Detección de Errores", time_minutes: 8, 
+            config: { interaction_type: "multiple_choice" },
+            teacher: { intention: "Detectar inconsistencias.", pedagogy: ["Pensamiento Crítico"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "Los sistemas fallan por orden incorrecto o pasos faltantes.", question: "¿Cuál de estos es un error lógico?", options: [{text: "Zapatos antes de medias"}, {text: "Cocinar sin ingredientes"}] } 
+        },
+        { 
+            id: "maker_4", title: "Fase 4: Conexión Lógica", time_minutes: 7, 
+            config: { interaction_type: "sequence_order" },
+            teacher: { intention: "Vincular acciones.", pedagogy: ["Abstracción"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "Un sistema requiere un orden lógico para avanzar.", question: "Ordena esta secuencia.", items: [{text: "Paso A"}, {text: "Paso B"}, {text: "Paso C"}] } 
+        },
+        { 
+            id: "maker_5", title: "Fase 5: Decisiones", time_minutes: 10, 
+            config: { interaction_type: "open_response" },
+            teacher: { intention: "Entender condicionales.", pedagogy: ["Lógica"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "Los sistemas inteligentes toman decisiones: SI ocurre X -> ENTONCES hago Y.", question: "Define una decisión en tu proceso." } 
+        },
+        { 
+            id: "maker_6", title: "Fase 6: Repetición", time_minutes: 5, 
+            config: { interaction_type: "multiple_choice" },
+            teacher: { intention: "Identificar bucles.", pedagogy: ["Patrones"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "Algunos procesos se repiten constantemente.", question: "¿Tu sistema tiene partes repetitivas?", options: [{text: "Ocurre una sola vez"}, {text: "Se repite constantemente"}] } 
+        },
+        { 
+            id: "maker_7", title: "Fase 7: Diseño Final", time_minutes: 10, 
+            config: { interaction_type: "open_response" },
+            teacher: { intention: "Formalizar el algoritmo.", pedagogy: ["Algoritmos"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "Ahora construye una solución clara y ordenada.", question: "Escribe tu algoritmo final mejorado." } 
+        },
+        { 
+            id: "maker_8", title: "Fase 8: Simulación", time_minutes: 5, 
+            config: { interaction_type: "multiple_choice" },
+            teacher: { intention: "Probar robustez.", pedagogy: ["Pruebas"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "Un sistema debe ser probado antes de implementarse.", question: "¿Qué ocurre si eliminas un paso?", options: [{text: "Funciona igual"}, {text: "Falla el sistema"}] } 
+        },
+        { 
+            id: "maker_9", title: "Fase 9: Resultado", time_minutes: 5, 
+            config: { interaction_type: "auto_display" },
+            teacher: { intention: "Cierre y reconocimiento.", pedagogy: ["Metacognición"], script: "", observation: "", common_errors: [], intervention: "" },
+            student: { context: "¡Has pensado como un ingeniero! Lograste analizar, detectar y diseñar.", concept: "Nivel: Diseñador de Sistemas - Inicial" } 
+        }
+    ]
+};
+
 const TYPE_CONFIG = {
     video: { label: 'Video', icon: Video, color: 'text-rose-400', bg: 'bg-rose-500/10' },
     pdf: { label: 'PDF', icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
@@ -153,6 +219,7 @@ const TYPE_CONFIG = {
     python_lab: { label: 'Python Lab', icon: Terminal, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
     modular_class: { label: 'Sesión Modular', icon: Workflow, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
     mission: { label: 'Misión', icon: Target, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+    maker_lab: { label: 'Laboratorio Maker', icon: Hammer, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
 };
 
 export const InstitutionalModuleEditor = () => {
@@ -187,7 +254,7 @@ export const InstitutionalModuleEditor = () => {
     // Inline Creation State
     const [isInlineCreating, setIsInlineCreating] = useState(false);
     const [inlineLevelName, setInlineLevelName] = useState('');
-    const [creationType, setCreationType] = useState<'modular_class' | 'mission' | 'quiz' | 'tarea' | null>(null);
+    const [creationType, setCreationType] = useState<'modular_class' | 'mission' | 'quiz' | 'tarea' | 'maker_lab' | null>(null);
     const [selectedGrade, setSelectedGrade] = useState<string>("6to EGB");
 
     // Rename state
@@ -309,10 +376,15 @@ export const InstitutionalModuleEditor = () => {
         setSaving(true);
         try {
             await institutionalCurriculumApi.updateModule(modId, { contenido: content });
+            
+            // Fix: Sync allModules list immediately to prevent "loss" of data in UI
+            setAllModules(prev => prev.map(m => m.id === modId ? { ...m, contenido: content } : m));
+            
             toast.success("Progreso guardado");
-            fetchModules(selectedSection!.id);
+            await fetchModules(selectedSection!.id);
             setSelectedLevel(null);
         } catch (error) {
+            console.error('Save error:', error);
             toast.error("Error al guardar");
         } finally {
             setSaving(false);
@@ -356,12 +428,21 @@ export const InstitutionalModuleEditor = () => {
         setSaving(true);
         try {
             const finalType = creationType || 'modular_class';
-            const initialContent = finalType === 'mission' ? {
-                ...INITIAL_ACTIVITY_DATA.mission,
-                mission: { ...INITIAL_ACTIVITY_DATA.mission.mission, title: inlineLevelName.trim(), level: selectedGrade }
-            } : undefined;
+            let initialContent = INITIAL_ACTIVITY_DATA[finalType] || {};
 
-            const newMod = await handleAddModule(finalType, inlineLevelName.trim(), initialContent);
+            if (finalType === 'mission') {
+                initialContent = {
+                    ...INITIAL_ACTIVITY_DATA.mission,
+                    mission: { ...INITIAL_ACTIVITY_DATA.mission.mission, title: inlineLevelName.trim(), level: selectedGrade }
+                };
+            } else if (finalType === 'maker_lab') {
+                initialContent = {
+                    ...MAKER_LAB_TEMPLATE,
+                    mission: { ...MAKER_LAB_TEMPLATE.mission, title: inlineLevelName.trim(), level: selectedGrade }
+                };
+            }
+
+            const newMod = await handleAddModule(finalType === 'maker_lab' ? 'mission' : finalType, inlineLevelName.trim(), initialContent);
             if (newMod) {
                 if (finalType === 'mission' || finalType === 'modular_class') {
                     setSelectedLevel(newMod);
@@ -409,12 +490,25 @@ export const InstitutionalModuleEditor = () => {
                     >
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {selectedSection ? 'Volver a Unidades' : 'Volver al Dashboard'}
                     </button>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <CpuIcon className="w-4 h-4 text-cyan-400" />
-                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-cyan-400/70">Diseño Curricular</span>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <CpuIcon className="w-4 h-4 text-cyan-400" />
+                                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-cyan-400/70">Arquitectura Docente</span>
+                            </div>
+                            <h2 className="text-xl font-black italic tracking-tighter leading-none">{(sections[0] as any)?.courseName || "Genia Curriculum"}</h2>
                         </div>
-                        <h2 className="text-xl font-black italic tracking-tighter leading-none">{(sections[0] as any)?.courseName || "Arquitectura del Curso"}</h2>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest mb-1">Niveles</p>
+                                <p className="text-lg font-black leading-none">{allModules.length}</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest mb-1">Unidades</p>
+                                <p className="text-lg font-black leading-none">{sections.length}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -441,103 +535,84 @@ export const InstitutionalModuleEditor = () => {
                     </div>
 
                     <nav className="px-3 space-y-1 pb-20">
-                        {selectedSection ? (
-                            /* ─── Focused view: only the active section ─── */
-                            <div className="space-y-1">
-                                {/* Mini back button to return to all sections */}
-                                <button
-                                    onClick={() => setSelectedSection(null)}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-white/30 hover:text-white/70 transition-colors text-[9px] font-black uppercase tracking-widest mb-2"
-                                >
-                                    <ArrowLeft className="w-3 h-3" /> Todas las Unidades
-                                </button>
-
-                                {/* Active section header */}
-                                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/10 border border-white/5 mb-2">
-                                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                                        <span className="text-[10px] font-black text-white/60">
-                                            {(sections.findIndex(s => s.id === selectedSection.id) + 1)}
-                                        </span>
-                                    </div>
-                                    <span className="text-xs font-black truncate flex-1 text-left uppercase tracking-tight text-white">
-                                        {selectedSection.nombre}
-                                    </span>
-                                </div>
-
-                                {/* Only this section's modules */}
-                                <div className="pl-4 pr-2 space-y-1">
-                                    {allModules.filter(m => m.seccionId === selectedSection.id).map((mod) => {
-                                        const config = TYPE_CONFIG[mod.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
-                                        const Icon = config.icon;
-                                        const isActive = selectedLevel?.id === mod.id;
-
-                                        return (
-                                            <button
-                                                key={mod.id}
-                                                onClick={() => handleEditActivity(mod)}
-                                                className={cn(
-                                                    "w-full flex items-center gap-3 p-3 rounded-xl transition-all group relative",
-                                                    isActive ? "bg-blue-600 text-white shadow-lg" : "text-white/40 hover:text-white hover:bg-white/5"
-                                                )}
-                                            >
-                                                <div className={cn("w-6 h-6 rounded-md flex items-center justify-center shrink-0", isActive ? "bg-white/20" : config.bg)}>
-                                                    <Icon className={cn("w-3.5 h-3.5", isActive ? "text-white" : config.color)} />
-                                                </div>
-                                                <span className="text-[11px] font-bold truncate tracking-tight uppercase flex-1 text-left">{mod.titulo}</span>
-                                                {!isReadOnly && (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
-                                                        className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                    {!isReadOnly && (
-                                        <button
-                                            onClick={() => { setIsToolboxOpen(true); }}
-                                            className="w-full flex items-center gap-3 p-3 rounded-xl text-cyan-400 hover:bg-white/5 transition-all"
-                                        >
-                                            <Plus className="w-3.5 h-3.5" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest">Añadir Misión</span>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            /* ─── Overview: all sections ─── */
-                            sections.map((sec, sIdx) => {
-                                const isExpanded = expandedSections[sec.id];
-                                const sectionModules = allModules.filter(m => m.seccionId === sec.id);
-
-                                return (
-                                    <div key={sec.id} className="space-y-1">
-                                        <button
-                                            onClick={() => {
-                                                setSelectedSection(sec);
-                                                setExpandedSections(prev => ({ ...prev, [sec.id]: true }));
-                                            }}
-                                            className={cn(
-                                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-all group border border-transparent hover:bg-white/5"
-                                            )}
-                                        >
-                                            <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                                                <span className="text-[10px] font-black text-white/40">{sIdx + 1}</span>
-                                            </div>
-                                            <span className="text-xs font-bold truncate flex-1 text-left uppercase tracking-tight text-white/60 group-hover:text-white">
+                        {sections.map((sec, sIdx) => {
+                            const isSelected = selectedSection?.id === sec.id;
+                            const sectionModules = allModules.filter(m => m.seccionId === sec.id);
+                            
+                            return (
+                                <div key={sec.id} className="space-y-1">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedSection(sec);
+                                        }}
+                                        className={cn(
+                                            "w-full flex items-center gap-3 p-3 rounded-2xl transition-all group border border-transparent",
+                                            isSelected ? "bg-white/10 border-white/10 shadow-lg" : "hover:bg-white/5"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] shrink-0 transition-colors",
+                                            isSelected ? "bg-blue-600 text-white" : "bg-white/5 text-white/30 group-hover:bg-white/10 group-hover:text-white/60"
+                                        )}>
+                                            {String(sIdx + 1).padStart(2, '0')}
+                                        </div>
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <p className={cn("text-[11px] font-black uppercase tracking-tight truncate", isSelected ? "text-white" : "text-white/40 group-hover:text-white/70")}>
                                                 {sec.nombre}
-                                            </span>
-                                            <span className="text-[9px] text-white/20 shrink-0">{sectionModules.length}</span>
-                                            <ChevronRight className="w-3.5 h-3.5 text-white/20 shrink-0" />
-                                        </button>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </nav>
+                                            </p>
+                                            <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mt-0.5">{sectionModules.length} Protocolos</p>
+                                        </div>
+                                        <ChevronRight className={cn("w-3.5 h-3.5 text-white/10 transition-transform", isSelected && "rotate-90 text-blue-400")} />
+                                    </button>
 
+                                    {/* Lessons list - only if selected/expanded */}
+                                    <div className={cn("overflow-hidden transition-all pl-4 pr-1 space-y-1", isSelected ? "max-h-[1000px] opacity-100 mt-2 mb-4" : "max-h-0 opacity-0")}>
+                                        {sectionModules.map((mod) => {
+                                            const config = TYPE_CONFIG[mod.tipo as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.nota;
+                                            const Icon = config.icon;
+                                            const isLvlActive = selectedLevel?.id === mod.id;
+
+                                            return (
+                                                <button
+                                                    key={mod.id}
+                                                    onClick={() => handleEditActivity(mod)}
+                                                    className={cn(
+                                                        "w-full flex items-center gap-3 p-2.5 rounded-xl transition-all group relative",
+                                                        isLvlActive ? "bg-blue-600/20 text-blue-400" : "text-white/30 hover:text-white hover:bg-white/5"
+                                                    )}
+                                                >
+                                                    <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border border-transparent", isLvlActive ? "bg-blue-600/20 border-blue-500/30" : config.bg)}>
+                                                        <Icon className={cn("w-3 h-3", isLvlActive ? "text-blue-400" : config.color)} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black truncate tracking-tight uppercase flex-1 text-left">{mod.titulo}</span>
+                                                    {!isReadOnly && !isLvlActive && (
+                                                        <div 
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
+                                                            className="p-1.5 opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-opacity"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                        {!isReadOnly && (
+                                            <button 
+                                                onClick={() => { 
+                                                    setSelectedSection(sec);
+                                                    setIsToolboxOpen(true); 
+                                                }}
+                                                className="w-full flex items-center gap-3 p-2.5 rounded-xl text-white/20 hover:text-blue-400 hover:bg-blue-600/10 transition-all border border-dashed border-white/5 hover:border-blue-500/30 mt-2"
+                                            >
+                                                <Plus className="w-3.5 h-3.5 ml-1" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">Inyectar Protocolo</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </nav>
                 </div>
             </aside>
             )}
@@ -586,18 +661,15 @@ export const InstitutionalModuleEditor = () => {
                 ) : (
                 <header className="px-10 py-6 border-b flex items-center justify-between bg-white/80 backdrop-blur-xl sticky top-0 z-20 shrink-0">
                     <div className="flex items-center gap-5">
-                        <div className={cn(
-                            "w-12 h-12 rounded-[1.25rem] flex items-center justify-center border shadow-inner transition-opacity",
-                            selectedSection ? "bg-orange-50 border-orange-100" : "bg-slate-50 border-slate-100"
-                        )}>
-                            {selectedSection ? <Construction className="w-6 h-6 text-orange-600" /> : <LayoutDashboard className="w-6 h-6 text-slate-400" />}
+                        <div className="w-12 h-12 rounded-2xl bg-[#0F172A] flex items-center justify-center text-white shadow-lg">
+                            <LayoutDashboard className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">
-                                {selectedSection ? selectedSection.nombre : 'Mapa de Ingeniería Curricular'}
+                            <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none">
+                                MAPA DE <span className="text-blue-600">INGENIERÍA</span> CURRICULAR
                             </h1>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-2">
-                                {selectedSection ? 'Unidad Seleccionada' : 'Estructura General'} · Genios Architecture
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">
+                                {selectedSection ? 'Protocolos de Unidad' : 'Planificación Maestra de Obra'} · Genios Framework
                             </p>
                         </div>
                     </div>
@@ -773,40 +845,55 @@ export const InstitutionalModuleEditor = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                                 {sections.map((sec, sIdx) => {
                                     const sectionModules = allModules.filter(m => m.seccionId === sec.id);
                                     return (
                                         <motion.div
                                             key={sec.id}
                                             initial={{ opacity: 0, y: 30 }}
+                                            whileHover={{ y: -8, scale: 1.02 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: sIdx * 0.1 }}
-                                            className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 hover:shadow-2xl transition-all relative group overflow-hidden"
+                                            className="bg-white rounded-[3.5rem] p-12 shadow-sm border border-slate-100/50 hover:shadow-2xl hover:border-blue-100 transition-all relative group overflow-hidden flex flex-col justify-between min-h-[420px]"
                                         >
-                                            <div className="w-16 h-16 rounded-[2.5rem] bg-slate-50 border shadow-inner flex items-center justify-center font-black text-slate-300 mb-8 text-xl">
-                                                {sIdx + 1}
-                                            </div>
-                                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter leading-tight mb-4">{sec.nombre}</h3>
-                                            <div className="space-y-2 mb-10">
-                                                <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                    <span>Inventario</span>
-                                                    <span>{sectionModules.length} Niveles</span>
-                                                </div>
-                                                <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-blue-500 w-[60%] opacity-20" />
-                                                </div>
+                                            {/* Decorative Number */}
+                                            <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
+                                                <span className="text-[12rem] font-black leading-none tracking-tighter italic">{sIdx + 1}</span>
                                             </div>
 
-                                            <div className="space-y-3">
+                                            <div>
+                                                <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 border shadow-inner flex items-center justify-center font-black text-slate-300 mb-10 text-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-500">
+                                                    {sIdx + 1}
+                                                </div>
+                                                <h3 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-[0.9] mb-6 line-clamp-3 group-hover:text-blue-600 transition-colors">
+                                                    {sec.nombre}
+                                                </h3>
+                                            </div>
+
+                                            <div className="mt-auto">
+                                                <div className="space-y-3 mb-12">
+                                                    <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                                        <span>Inventario de Protocolos</span>
+                                                        <span className="text-blue-600">{sectionModules.length} Niveles</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
+                                                        <div 
+                                                            className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full shadow-lg transition-all duration-1000" 
+                                                            style={{ width: sectionModules.length > 0 ? `${Math.min(100, (sectionModules.length / 5) * 100)}%` : '5%' }}
+                                                        />
+                                                    </div>
+                                                </div>
+
                                                 <Button 
                                                     onClick={() => {
                                                         setSelectedSection(sec);
                                                         setExpandedSections(prev => ({ ...prev, [sec.id]: true }));
                                                     }}
-                                                    className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 hover:border-blue-500 text-slate-500 hover:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all shadow-sm"
+                                                    className="w-full h-16 rounded-[2rem] bg-slate-900 hover:bg-blue-600 text-white font-black uppercase text-[11px] tracking-[0.2em] transition-all shadow-xl shadow-slate-900/10 hover:shadow-blue-500/30 flex items-center justify-center gap-3 group/btn"
                                                 >
-                                                    Abrir Unidad
+                                                    Abrir Arquitectura
+                                                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                                 </Button>
                                             </div>
                                         </motion.div>
@@ -902,6 +989,20 @@ export const InstitutionalModuleEditor = () => {
                                 <p className="text-sm font-black uppercase tracking-tight text-slate-800">Proyecto Real</p>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Actividad de Entrega</p>
                             </Button>
+
+                            <Button 
+                                onClick={() => { setCreationType('maker_lab'); setIsInlineCreating(true); setIsToolboxOpen(false); }}
+                                className="h-24 rounded-3xl bg-indigo-50 hover:bg-white border-2 border-indigo-100 hover:border-indigo-600 shadow-sm hover:shadow-xl transition-all flex flex-col items-start justify-center px-6 group text-left relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Hammer className="w-16 h-16 text-indigo-600" />
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                                    <Hammer className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <p className="text-sm font-black uppercase tracking-tight text-slate-800">Laboratorio Maker</p>
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1">Ingeniería de Sistemas</p>
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
@@ -963,15 +1064,15 @@ export const InstitutionalModuleEditor = () => {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{editingActivity?.tipo} Configuration</p>
                     </SheetHeader>
                     <div className="p-10 custom-scrollbar overflow-y-auto">
-                        {editingActivity?.tipo === 'desafio_algoritmo' && <AlgoritmoEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'pregunta_abierta' && <PreguntaEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'quiz' && <QuizEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'tarea' && <TareaEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'nota' && <NotaEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'video' && <VideoEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'pdf' && <PdfEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'link' && <LinkEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
-                        {editingActivity?.tipo === 'python_lab' && <PythonLabEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'desafio_algoritmo' && <AlgoritmoEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'pregunta_abierta' && <PreguntaEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'quiz' && <QuizEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'tarea' && <TareaEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'nota' && <NotaEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'video' && <VideoEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'pdf' && <PdfEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'link' && <LinkEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
+                        {editingActivity?.tipo === 'python_lab' && <PythonLabEditor data={editingActivity.data} isReadOnly={isReadOnly} onSave={(data: any) => handleLevelSave(editingActivity.id, data)} />}
                     </div>
                 </SheetContent>
             </Sheet>

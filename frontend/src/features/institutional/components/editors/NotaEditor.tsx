@@ -56,8 +56,14 @@ export const NotaEditor = ({ data, onSave, isReadOnly = false }: NotaEditorProps
                     readOnly={isReadOnly}
                     value={contenido}
                     onChange={(e) => setContenido(e.target.value)}
+                    onInput={(e) => {
+                        const el = e.currentTarget;
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                    }}
                     placeholder="Escriba aquí la teoría, pasos o información que desea transmitir..."
-                    className="min-h-[250px] bg-slate-900 border-white/10 rounded-2xl p-6 focus:border-sky-500/50 transition-all text-white font-medium leading-relaxed"
+                    className="min-h-[250px] bg-slate-900 border-white/10 rounded-2xl p-6 focus:border-sky-500/50 transition-all text-white font-medium leading-relaxed resize-none overflow-hidden"
+                    style={{ height: 'auto' }}
                 />
             </div>
 

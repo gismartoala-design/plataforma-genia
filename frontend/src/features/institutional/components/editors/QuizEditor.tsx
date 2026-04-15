@@ -141,8 +141,14 @@ export const QuizEditor = ({ data, onSave, isReadOnly = false }: QuizEditorProps
                     readOnly={isReadOnly}
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
+                    onInput={(e) => {
+                        const el = e.currentTarget;
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                    }}
                     placeholder="Mensaje al responder correctamente..."
-                    className="min-h-[100px] bg-slate-900 border-white/10 rounded-2xl p-6 focus:border-emerald-500/50 transition-all text-white font-medium"
+                    className="min-h-[100px] bg-slate-900 border-white/10 rounded-2xl p-6 focus:border-emerald-500/50 transition-all text-white font-medium resize-none overflow-hidden"
+                    style={{ height: 'auto' }}
                 />
             </div>
 
