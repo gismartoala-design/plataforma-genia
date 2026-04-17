@@ -70,8 +70,8 @@ export const institutionApi = {
     cloneModule: async (moduleId: number, targetSectionId?: number) => {
         return apiClient.post(`/api/institutional-cloning/module/${moduleId}/clone`, { targetSectionId });
     },
-    aiGenerateStructure: async (data: { institucionId: number; text: string }) => {
-        return apiClient.post('/api/institution-curriculum/ai-generate', data);
+    generateStructureFromText: async (data: { institucionId: number; text: string }) => {
+        return apiClient.post('/api/institution-curriculum/generate-from-text', data);
     },
 
     getUserCourses: async (userId: number) => {

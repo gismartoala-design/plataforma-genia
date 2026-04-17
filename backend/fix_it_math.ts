@@ -20,13 +20,13 @@ async function fixIT() {
   }
 
   const itLevel4Fases = {
-    // 1. Datos Generales
-    codigo: "IT-PEC-L4",
-    mes: "Mes 2",
-    duracion: "2h 00m",
-    modalidad: "Aplicación y Simulación",
-    requisito: "",
-
+    identificacion: {
+        codigo: "IT-PEC-L4",
+        mes: "Mes 2",
+        duracion: "2h 00m",
+        modalidad: "Aplicación y Simulación"
+    },
+    
     // 2. Propósito
     proposito: "Aplicar conceptos de variables aleatorias y distribuciones de probabilidad mediante la simulación de eventos estocásticos aplicados a videojuegos o simuladores.",
 
@@ -43,18 +43,19 @@ async function fixIT() {
     ],
 
     // 4. Caso Aplicado
-    casoEscenario: "El equipo de desarrollo de un juego RPG necesita balancear el sistema de recompensas (loot drops) de los jefes. Actualmente, los jugadores se quejan de que los objetos raros nunca caen o caen demasiadas veces seguidas.\nEl sistema actual usa un Math.random() básico sin contemplar probabilidades ponderadas o 'pity systems' (sistemas de compensación por mala racha).",
-    casoProblemas: [
-        "Falta de balance y previsibilidad estadística (Varianza extrema).",
-        "Ausencia de probabilidades condicionadas para equilibrar el juego."
-    ],
+    escenario: {
+        situación: "El equipo de desarrollo de un juego RPG necesita balancear el sistema de recompensas (loot drops) de los jefes. Actualmente, los jugadores se quejan de que los objetos raros nunca caen o caen demasiadas veces seguidas.",
+        funcionamiento: "El sistema actual usa un Math.random() básico sin contemplar probabilidades ponderadas o 'pity systems' (sistemas de compensación por mala racha).",
+        problemas: [
+            "Falta de balance y previsibilidad estadística (Varianza extrema).",
+            "Ausencia de probabilidades condicionadas para equilibrar el juego."
+        ]
+    },
 
     // 5. Desafío Técnico
-    desafioEstudiante: "Analiza el requerimiento: Define al menos 5 items posibles, asigna una probabilidad teórica exacta a cada uno y describe matemáticamente qué distribución empírica crees que seguirá tu experimento.",
-    desafioEstudiante_blocks: [],
+    desafioEstudiante: "Diseña y programa un Simulador Estocástico para el sistema de recompensas. Debes implementar un modelo ponderado y comprobar empíricamente que las frecuencias relativas coinciden con las probabilidades teóricas tras 10.000 iteraciones.",
 
     // 6. Estructura de Desarrollo (Actividades Modulares)
-    estructura_blocks: [],
     fase1MinLines: 10,
     fase2Filas: [
         {
@@ -65,37 +66,28 @@ async function fixIT() {
         {
             criterio: "Manejo de Series Temporales (Pity System)",
             opcionA: { nombre: "Eventos Independientes Completos", ventajas: "Estadística pura", desventajas: "Puede frustrar al jugador (mala experiencia si falla repetidamente)" },
-            opcionB: { nombre: "Eventos Condicionados (Crecen prob.)", ventajas: "Alineado a Game Design UX", desventajas: "Estructura de probabilidad dinámica compleja" }
+            opcionB: { nombre: "Eventos Condicionados (La prob crece si fallas)", ventajas: "Alineado a Game Design UX", desventajas: "Estructura de probabilidad dinámica compleja (Requiere Bayes o estados)" }
         }
     ],
-    fase3Instrucciones: "Elige la propuesta ganadora y adjunta el algoritmo o la arquitectura principal de tu generador estocástico justificado.",
-    fase4Instrucciones: "Escribe tu código en Python o JS y ejecuta el simulador 10.000 veces. Escribe un análisis del resultado contrastando la frecuencia de apariciones empíricas contra tus probabilidades teóricas (Ley de Grandes Números).",
-
-    // 7. Producto Entregable
-    entregables: [
-        "Notebook interactivo o script documentado con el código.",
-        "Pantallazo del log de simulaciones (10.000 iteraciones).",
-        "Análisis de varianza final resultante."
-    ],
-    
-    // 8. Rúbrica Oficial
-    rubrica: [
-        { criterio: "Exactitud Probabilística", porcentaje: 40 },
-        { criterio: "Lógica de Programación", porcentaje: 30 },
-        { criterio: "Análisis y Demostración", porcentaje: 30 }
-    ],
-
-    fase1: { instrucciones: "Analiza el requerimiento: Define al menos 5 items posibles, asigna una probabilidad teórica exacta a cada uno y describe matemáticamente qué distribución empírica crees que seguirá tu experimento." }
+    fase1: {
+        instrucciones: "Analiza el requerimiento: Define al menos 5 items posibles, asigna una probabilidad teórica exacta a cada uno (cuya suma sea 1.0 = 100%), y describe matemáticamente qué distribución empírica crees que seguirá tu experimento."
+    },
+    fase3: {
+        instrucciones: "Elige la propuesta ganadora y adjunta el algoritmo o la arquitectura principal de tu generador estocástico justificado."
+    },
+    fase4: {
+        instrucciones: "Escribe tu código en Python, Node o el lenguaje que prefieras, y ejecuta el simulador 10.000 veces. Escribe un análisis del resultado contrastando la frecuencia de apariciones empíricas contra tus probabilidades teóricas establecidas (Demostración de la Ley de Grandes Números).",
+        entregable: "Notebook interactivo o documento con el código, pantallazo del log de simulaciones (10k intentos) y la varianza final resultante."
+    }
   };
 
   const itLevel7Fases = {
-    // 1. Datos Generales
-    codigo: "IT-PEC-L7",
-    mes: "Mes 4",
-    duracion: "2h 30m",
-    modalidad: "Desarrollo Algorítmico",
-    requisito: "",
-
+    identificacion: {
+        codigo: "IT-PEC-L7",
+        mes: "Mes 4",
+        duracion: "2h 30m",
+        modalidad: "Desarrollo Algorítmico"
+    },
     // 2. Propósito
     proposito: "Diseñar y construir un motor de clasificación inicial utilizando el Teorema de Bayes (Naive Bayes Empírico) aplicado al filtrado de datos textuales.",
 
@@ -111,18 +103,19 @@ async function fixIT() {
     ],
 
     // 4. Caso Aplicado
-    casoEscenario: "La plataforma de foros de tu base de datos sufre miles de mensajes marcados como 'Spam' manuales, dificultando enormemente la lectura de consultas y desgastando a los moderadores.\nActualmente existe un Simple Ruleset de palabras prohibidas estrictas, el cual es ineficiente y no escala con las variantes morfológicas.",
-    casoProblemas: [
-        "Reglas estáticas incapaces de asignar un nivel de riesgo (Score).",
-        "Muchos Falsos Positivos donde se bloquean correos genuinos (HAM)."
-    ],
+    escenario: {
+        situación: "La plataforma de foros de tu base de datos sufre miles de mensajes marcados como 'Spam' manuales, dificultando enormemente la lectura de consultas y desgastando a los moderadores.",
+        funcionamiento: "Actualmente existe un Simple Ruleset de palabras prohibidas estrictas, el cual es ineficiente y no escala con las variantes morfológicas.",
+        problemas: [
+            "Reglas estáticas incapaces de asignar un nivel de riesgo (Score).",
+            "Muchos Falsos Positivos donde se bloquean correos genuinos (HAM)."
+        ]
+    },
 
     // 5. Desafío Técnico
-    desafioEstudiante: "Formula matemáticamente el problema. Define unas frecuencias de prueba (ej: 50% Spam, 50% Ham globalmente) e inventa 4 palabras clave a ponderar. Escribe explícitamente la fórmula de Bayes aplicada a tu modelo documental.",
-    desafioEstudiante_blocks: [],
+    desafioEstudiante: "Construirás un Clasificador Naive Bayes programáticamente puro (sin importar módulos pre-entrenados) para diferenciar textos SPAM vs HAM utilizando la regla de Bayes. Emplearás cálculos básicos de frecuencia a priori y likelihood para determinar probabilidades condicionales.",
 
     // 6. Estructura de Desarrollo (Actividades Modulares)
-    estructura_blocks: [],
     fase1MinLines: 12,
     fase2Filas: [
         {
@@ -133,26 +126,19 @@ async function fixIT() {
         {
             criterio: "Manejo de Probabilidad Cero",
             opcionA: { nombre: "Cero Absoluto (0%)", ventajas: "Ninguna", desventajas: "Anula (multiplica por cero) el score entero" },
-            opcionB: { nombre: "Corrección de Laplace (+1)", ventajas: "Impide el cero total y división por cero", desventajas: "Altera muy levemente la realidad estadística" }
+            opcionB: { nombre: "Corrección de Laplace (+1 Smoothing)", ventajas: "Asigna una probabilidad residual asintótica impidiendo el cero total", desventajas: "Altera muy levemente la realidad estadística del corpus" }
         }
     ],
-    fase3Instrucciones: "Detalla con precisión el modelo ganador: ¿Cómo estructurarás los diccionarios de frecuencias y de qué manera evitarás que una frase con una palabra inexistente colapse tu predictor (Smoothing)?",
-    fase4Instrucciones: "Sube un script empírico que tome una frase nueva, evalúe matemáticamente su probabilidad bayesiana posterior total, y retorne un booleano (SPAM/HAM).",
-
-    // 7. Producto Entregable
-    entregables: [
-        "Documento con el cálculo probabilístico previo.",
-        "Script Python/NodeJS validando 4 frases de prueba."
-    ],
-    
-    // 8. Rúbrica Oficial
-    rubrica: [
-        { criterio: "Desarrollo del Modelo Bayesiano", porcentaje: 40 },
-        { criterio: "Manejo Correctivo de Errores Numéricos", porcentaje: 30 },
-        { criterio: "Resultado Práctico Script", porcentaje: 30 }
-    ],
-
-    fase1: { instrucciones: "Formula matemáticamente el problema. Define unas frecuencias de prueba (ej: 50% Spam, 50% Ham globalmente) e inventa 4 palabras clave a ponderar. Escribe explícitamente la fórmula de Bayes aplicada a tu modelo documental." }
+    fase1: {
+        instrucciones: "Formula matemáticamente el problema. Define unas frecuencias de prueba (ej: 50% Spam, 50% Ham globalmente) e inventa 4 palabras clave a ponderar. Escribe explícitamente la fórmula de Bayes aplicada a tu modelo documental."
+    },
+    fase3: {
+        instrucciones: "Detalla con precisión el modelo ganador: ¿Cómo estructurarás los diccionarios de frecuencias en tu entorno y de qué manera evitarás que una frase con una palabra inexistente colapse tu predictor (Smoothing)?"
+    },
+    fase4: {
+        instrucciones: "Sube un script empírico que tome una frase / array nuevo como entrada de prueba, evalúe matemáticamente su probabilidad bayesiana posterior total, y retorne un booleano (SPAM/HAM) con sus porcentajes de probabilidad como argumento.",
+        entregable: "Documento técnico y script (.py o .ts) con el código de entrenamiento estático y el parseador P(C|X). Ejecuta pruebas con 4 frases diferentes para verificar el comportamiento."
+    }
   };
 
   // Update Level 4

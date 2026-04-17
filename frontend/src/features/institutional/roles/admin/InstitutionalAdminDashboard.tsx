@@ -468,10 +468,10 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
   const [userCoursesMap, setUserCoursesMap] = useState<Record<number, number[]>>({});
   const [exportingReport, setExportingReport] = useState<number | null>(null);
 
-  // AI Builder State
-  const [showAIBuilder, setShowAIBuilder] = useState(false);
-  const [aiText, setAiText] = useState('');
-  const [generatingAI, setGeneratingAI] = useState(false);
+  // Text Builder State
+  const [showTextBuilder, setShowTextBuilder] = useState(false);
+  const [builderText, setBuilderText] = useState('');
+  const [generatingStructure, setGeneratingStructure] = useState(false);
   
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -627,31 +627,31 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
     }
   };
 
-  const handleAIGenerate = async (e: React.FormEvent) => {
+  const handleGenerateFromText = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!aiText.trim()) return;
-    setGeneratingAI(true);
+    if (!builderText.trim()) return;
+    setGeneratingStructure(true);
     try {
-      await institutionApi.aiGenerateStructure({
+      await institutionApi.generateStructureFromText({
         institucionId: user.institucionId,
-        text: aiText
+        text: builderText
       });
-      setAiText('');
-      setShowAIBuilder(false);
+      setBuilderText('');
+      setShowTextBuilder(false);
       await fetchData();
       toast({ 
         title: '✅ Estructura Generada', 
-        description: 'La IA ha procesado el currículo y creado el curso con sus módulos.',
+        description: 'El currículo ha sido procesado y se han creado los cursos y unidades.',
         variant: 'default'
       });
     } catch (error: any) {
       toast({ 
-        title: 'Error de IA', 
+        title: 'Error al generar', 
         description: error.message || 'No se pudo procesar el texto.', 
         variant: 'destructive' 
       });
     } finally {
-      setGeneratingAI(false);
+      setGeneratingStructure(false);
     }
   };
 
@@ -754,11 +754,11 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
 
           <div className="flex gap-3">
             <Button
-              onClick={() => setShowAIBuilder(true)}
+              onClick={() => setShowTextBuilder(true)}
               variant="outline"
               className="h-12 px-6 rounded-2xl border-[var(--inst-mauve)]/30 bg-white text-[var(--inst-mauve)] font-black uppercase italic tracking-widest hover:bg-[var(--inst-peach)] transition-all"
             >
-              <Sparkles className="w-5 h-5 mr-2" /> Constructor IA
+              <Sparkles className="w-5 h-5 mr-2" /> Constructor de Texto
             </Button>
             <Button
               onClick={() => setShowCreateCourse(true)}
@@ -1004,9 +1004,9 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
         </Tabs>
       </div>
 
-      {/* AI Builder Modal */}
+      {/* Text Builder Modal */}
       <AnimatePresence>
-        {showAIBuilder && (
+        {showTextBuilder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--inst-navy)]/40 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -1018,7 +1018,7 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" style={{background:'var(--inst-blue-lt)'}} />
               
               <button
-                onClick={() => setShowAIBuilder(false)}
+                onClick={() => setShowTextBuilder(false)}
                 className="absolute top-6 right-6 w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors z-10"
               >
                 <X className="w-5 h-5 text-slate-400" />
@@ -1026,20 +1026,20 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
 
               <div className="space-y-2 mb-8 relative z-10">
                 <div className="flex items-center gap-2 font-black uppercase tracking-[0.4em] text-[10px]" style={{color:'var(--inst-blue)'}}>
-                  <Sparkles className="w-4 h-4" /> Inteligencia Artificial
+                  <Sparkles className="w-4 h-4" /> Constructor de Texto
                 </div>
                 <h2 className="text-3xl font-black tracking-tighter" style={{color:'var(--inst-deep)'}}>
                   Constructor de <span style={{color:'var(--inst-blue)'}}>Currículo</span>
                 </h2>
-                <p className="text-slate-500 text-xs">Pega el texto de tu currículo o lista de módulos. La IA creará los cursos y unidades automáticamente.</p>
+                <p className="text-slate-500 text-xs">Pega el texto de tu currículo o lista de módulos. El sistema creará los cursos y unidades automáticamente.</p>
               </div>
 
-              <form onSubmit={handleAIGenerate} className="space-y-6 relative z-10">
+              <form onSubmit={handleGenerateFromText} className="space-y-6 relative z-10">
                 <div className="space-y-2">
                   <label className="technical-label ml-1">Entrada de Datos Curriculum</label>
                   <Textarea
-                    value={aiText}
-                    onChange={(e) => setAiText(e.target.value)}
+                    value={builderText}
+                    onChange={(e) => setBuilderText(e.target.value)}
                     placeholder="Ej: Unidad 1. Descubro objetos, secuencias y funciones - Unidad 2. Exploro acciones..."
                     className="min-h-[200px] bg-slate-50/50 border-blue-100 rounded-2xl p-5 text-sm font-bold placeholder:text-slate-300 focus:border-[var(--inst-blue)]/50 transition-all resize-none shadow-inner"
                     autoFocus
@@ -1061,18 +1061,18 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => setShowAIBuilder(false)}
+                    onClick={() => setShowTextBuilder(false)}
                     className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-xs text-slate-400"
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
-                    disabled={generatingAI || !aiText.trim()}
+                    disabled={generatingStructure || !builderText.trim()}
                     className="flex-[2] h-14 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg flex gap-2"
                     style={{background:'var(--inst-blue)'}}
                   >
-                    {generatingAI ? (
+                    {generatingStructure ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Analizando Datos...

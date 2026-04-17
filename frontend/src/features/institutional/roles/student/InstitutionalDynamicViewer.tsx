@@ -57,12 +57,22 @@ const BlockView = ({ block, onAnswer }: { block: Block; onAnswer: (id: string, v
 
             <div className="edu-content min-h-[100px]">
                 {block.type === 'NARRATIVE' && (
-                    <div className="space-y-6">
-                        <p className="text-slate-600 font-medium leading-relaxed text-lg whitespace-pre-wrap">{data.texto}</p>
+                    <div className="space-y-8 relative">
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+                        <div className="relative z-10 p-8 sm:p-10 rounded-[2.5rem] bg-gradient-to-br from-slate-50/50 to-white/30 backdrop-blur-md border border-white/20 shadow-inner">
+                            <p className="text-slate-700 font-bold leading-relaxed text-xl lg:text-2xl italic tracking-tight whitespace-pre-wrap">
+                                {data.texto}
+                            </p>
+                        </div>
                         {data.multimedia && (
-                            <div className="rounded-[2rem] overflow-hidden border-4 border-slate-100 shadow-inner">
-                                <img src={data.multimedia} alt="visual" className="w-full object-cover" />
-                            </div>
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl relative group"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <img src={data.multimedia} alt="visual" className="w-full object-cover max-h-[500px]" />
+                            </motion.div>
                         )}
                     </div>
                 )}
@@ -207,13 +217,21 @@ export const InstitutionalDynamicViewer = ({ module, onClose }: { module: any; o
         if (!module.contenido) return { blocks: [] };
         try {
             const data = typeof module.contenido === 'string' ? JSON.parse(module.contenido) : module.contenido;
+            
+            // UNWRAP nested GENIA data if present
+            const innerData = data?.data || data?.content || data;
+            
             // If it's a mission or has moments, return it as is
-            if (data?.moments || data?.mission) return data;
+            if (innerData?.moments || innerData?.mission) return innerData;
+            
             // If it's a modular class or has blocks, return it
-            if (data?.blocks) return data;
+            if (innerData?.blocks) return innerData;
+            
+            // Special Case: institutional legacy moments without "moments" key but having "fases"
+            if (innerData?.fases) return { moments: innerData.fases };
             
             // If it's some other JSON but unknown structure, wrap it
-            return { blocks: [{ id: 'auto-1', type: 'NARRATIVE', data: { texto: JSON.stringify(data) } }] };
+            return { blocks: [{ id: 'auto-1', type: 'NARRATIVE', data: { texto: JSON.stringify(innerData, null, 2) } }] };
         } catch { 
             // Parsing failed? Check if it's plain text content
             if (typeof module.contenido === 'string' && module.contenido.trim().length > 0) {

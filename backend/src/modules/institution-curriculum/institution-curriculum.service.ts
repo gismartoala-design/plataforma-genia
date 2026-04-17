@@ -184,7 +184,7 @@ export class InstitutionalCurriculumService {
   }
 
   // --- LOCAL CURRICULUM PARSER ---
-  private parseCurriculum(text: string): Array<{ courseName: string; modules: string[] }> {
+  private parseCurriculumFromText(text: string): Array<{ courseName: string; modules: string[] }> {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
     const courses: Array<{ courseName: string; modules: string[] }> = [];
     let currentCourse: { courseName: string; modules: string[] } | null = null;
@@ -230,9 +230,9 @@ export class InstitutionalCurriculumService {
     return courses.filter(c => c.modules.length > 0);
   }
 
-  // --- AI BUILDER REPLACED WITH LOCAL PARSER ---
-  async generateStructureFromAI(institucionId: number, text: string) {
-    const parsedCourses = this.parseCurriculum(text);
+  // --- TEXT-BASED STRUCTURE BUILDER ---
+  async generateStructureFromText(institucionId: number, text: string) {
+    const parsedCourses = this.parseCurriculumFromText(text);
     if (parsedCourses.length === 0) {
       throw new Error('No se pudieron extraer cursos ni módulos del texto proporcionado.');
     }

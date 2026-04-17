@@ -3,7 +3,7 @@ import { InstitutionalCurriculumService } from './institution-curriculum.service
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('institution-curriculum')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class InstitutionalCurriculumController {
   constructor(private readonly curriculumService: InstitutionalCurriculumService) { }
 
@@ -65,9 +65,9 @@ export class InstitutionalCurriculumController {
     return this.curriculumService.updateProgress(data.estudianteId, data.moduloInstId, data.data);
   }
 
-  @Post('ai-generate')
-  async aiGenerate(@Body() data: { institucionId: number; text: string }) {
-    return this.curriculumService.generateStructureFromAI(data.institucionId, data.text);
+  @Post('generate-from-text')
+  async generateFromText(@Body() data: { institucionId: number; text: string }) {
+    return this.curriculumService.generateStructureFromText(data.institucionId, data.text);
   }
 
   @Get('student/:estudianteId/course/:courseId/progress')

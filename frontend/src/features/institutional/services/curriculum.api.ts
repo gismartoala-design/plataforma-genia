@@ -23,6 +23,7 @@ export interface ModuloInst {
   activo: boolean;
   bloqueado: boolean;
   xpRecompensa: number;
+  completado?: boolean;
   fechaLimite?: string;
   fechaCreacion: string;
 }

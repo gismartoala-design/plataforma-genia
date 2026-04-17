@@ -69,7 +69,7 @@ export function InstitutionalTutorUserList({ institutionId }: TutorUserListProps
 
     const renderPassword = (password: string) => {
         const patternRegex = /^[1-9]-[1-9]-[1-9]-[1-9]$/;
-        if (patternRegex && patternRegex.test(password)) {
+        if (password && patternRegex.test(password)) {
             const icons = [
                 { id: '1', emoji: '🐶' },
                 { id: '2', emoji: '🐱' },
@@ -150,6 +150,7 @@ export function InstitutionalTutorUserList({ institutionId }: TutorUserListProps
                                 <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Email</th>
                                 <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Privilegios</th>
                                 <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 text-center">Estado</th>
+                                <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 text-center">Credencial</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.03]">
@@ -198,6 +199,19 @@ export function InstitutionalTutorUserList({ institutionId }: TutorUserListProps
                                                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Inactivo</span>
                                                 </>
                                             )}
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="min-w-[180px]">
+                                                {showPasswords[u.id] ? renderPassword(u.clave) : <span className="text-slate-500 font-mono">••••••••</span>}
+                                            </div>
+                                            <Button variant="ghost" size="icon" onClick={() => togglePassword(u.id)} className="text-slate-400 hover:text-white hover:bg-white/10 h-9 w-9 rounded-lg">
+                                                {showPasswords[u.id] 
+                                                    ? <EyeOff className="w-4 h-4" /> 
+                                                    : <Eye className="w-4 h-4" />
+                                                }
+                                            </Button>
                                         </div>
                                     </td>
                                 </motion.tr>

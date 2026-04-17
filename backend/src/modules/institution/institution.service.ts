@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 
 @Injectable()
 export class InstitutionService {
@@ -121,39 +121,32 @@ export class InstitutionService {
     }
 
     async getGradeReport(courseId: number) {
-        const courseUsers = await this.db
+        const result = await this.db
             .select({
                 id: schema.usuarios.id,
                 nombre: schema.usuarios.nombre,
                 email: schema.usuarios.email,
+                promedio: sql<number>`avg(${schema.entregas.calificacionNumerica})`.mapWith(Number),
+                entregas: sql<number>`count(${schema.entregas.id})`.mapWith(Number),
             })
             .from(schema.usuarios)
             .innerJoin(
-                schema.usuariosCursos, 
+                schema.usuariosCursos,
                 eq(schema.usuarios.id, schema.usuariosCursos.usuarioId)
             )
-            .where(eq(schema.usuariosCursos.cursoId, courseId));
-
-        const reports = await Promise.all(courseUsers.map(async (user) => {
-            const userSubmissions = await this.db
-                .select({
-                    calificacion: schema.entregas.calificacionNumerica,
-                })
-                .from(schema.entregas)
-                .where(eq(schema.entregas.estudianteId, user.id));
-            
-            const avg = userSubmissions.length > 0 
-                ? userSubmissions.reduce((acc, curr) => acc + (curr.calificacion || 0), 0) / userSubmissions.length 
-                : 0;
-            
-            return {
-                ...user,
-                promedio: avg.toFixed(2),
-                entregas: userSubmissions.length
-            };
+            .leftJoin( // leftJoin in case a user has no submissions
+                schema.entregas,
+                eq(schema.usuarios.id, schema.entregas.estudianteId)
+            )
+            .where(eq(schema.usuariosCursos.cursoId, courseId))
+            .groupBy(schema.usuarios.id, schema.usuarios.nombre, schema.usuarios.email)
+            .orderBy(schema.usuarios.nombre); // Optional: order by name
+    
+        return result.map(r => ({
+            ...r,
+            promedio: r.promedio ? r.promedio.toFixed(2) : '0.00',
+            entregas: r.entregas || 0,
         }));
-
-        return reports;
     }
 
     async updateInstitutionLogo(id: number, logoUrl: string) {

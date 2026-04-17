@@ -31,32 +31,29 @@ export const AuthenticClassCreator = ({ courseId, sectionId, onCreated }: Props)
 
     setLoading(true);
     try {
-      // In the backend schema:
-      // If we use standard modulosInst creation from institutional curriculum
-      const payload = {
-        cursoId: courseId,
-        seccionId: sectionId || 1, // Fallback if sections mapping is required
-        titulo: formData.titulo,
-        descripcion: formData.descripcion,
-        tipo: formData.tipo,
-        activo: true,
-        bloqueado: false
-      };
-
-      // Depending on API, we hit createModule. Wait, institutionApi has createModule taking {nombreModulo, duracionDias, cursoId} mapped to old modulos.
-      // If we map to modulosInst we likely need to use curriculum framework, or fallback to standard createModule payload structure.
-      await institutionApi.createModule({
+      // The API expects a specific payload for creating a module.
+      const payload: any = {
         nombreModulo: formData.titulo,
         duracionDias: formData.duracionDias,
         cursoId: courseId
-      });
+      };
+
+      if (sectionId) {
+        payload.seccionId = sectionId;
+      }
+      await institutionApi.createModule(payload);
 
       toast({ title: "Clase Auténtica Creada", description: "Se ha añadido a tu curso exitosamente." });
       onCreated();
-      setFormData({ ...formData, titulo: '', descripcion: '' });
+      setFormData({ titulo: '', descripcion: '', tipo: 'authentic_class', duracionDias: 1 });
     } catch (error) {
-      console.error(error);
-      toast({ title: "Error", description: "No se pudo crear la clase auténtica.", variant: "destructive" });
+      console.error("Error creating authentic class:", error);
+      const errorMessage = (error as any)?.response?.data?.message || "No se pudo crear la clase auténtica.";
+      toast({ 
+        title: "Error al crear la clase", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }

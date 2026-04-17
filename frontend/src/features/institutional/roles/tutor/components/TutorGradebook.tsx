@@ -60,7 +60,7 @@ export const TutorGradebook = ({ courseId }: Props) => {
 
   const STUDENT_ROLE_IDS = [3, 6, 10, 11];
   const filtered = students.filter(s => 
-    STUDENT_ROLE_IDS.includes(s.roleId) &&
+    STUDENT_ROLE_IDS.includes(s.roleId) && s.activo &&
     s.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -76,7 +76,7 @@ export const TutorGradebook = ({ courseId }: Props) => {
   const getStatusColor = (promedio: number) => {
     if (promedio >= 90) return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
     if (promedio >= 75) return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
-    if (promedio === 0) return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
+    if (promedio <= 0) return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
     return 'text-rose-400 bg-rose-400/10 border-rose-400/20';
   };
 

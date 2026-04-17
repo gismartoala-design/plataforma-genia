@@ -1,19 +1,19 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import * as React from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Library, ClipboardList, Bug, Globe, ChevronRight, X, Navigation,
   Trophy, BookOpen, Building2, Wrench, Hammer, Cog, HardHat,
   Construction, Map as MapIcon, Play, ArrowRight, ArrowUpRight,
   ArrowDownRight, ArrowUp, ArrowDown, ArrowLeft as ArrowLeftIcon, ArrowRight as ArrowRightIcon,
-  CheckCircle2, Lock, ListFilter, ZoomIn, ZoomOut, Search, Focus, MapPin, Rocket, Target
+  CheckCircle2, Lock, ListFilter, ZoomIn, ZoomOut, Search, Focus, MapPin, Rocket, Target, XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useLocation } from 'wouter';
-import { studentApi } from '@/features/student/services/student.api';
 import { institutionalCurriculumApi, ModuloInst, SectionInst } from '@/features/institutional/services/curriculum.api';
 import { InstitutionalDynamicViewer } from './InstitutionalDynamicViewer';
 import '../../styles/ConstructionTheme.css';
@@ -120,24 +120,30 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
       }
 
       if (sectionsData.length > 0) {
-        setOwlMessage(`Bienvenido. La obra tiene ${sectionsData.length} frentes de trabajo (módulos). ¡Explóralos!`);
+        const completedSectors = sectionsData.filter((s: any) => s.completado).length;
+        if (completedSectors === sectionsData.length) {
+          setOwlMessage(`¡Extraordinario! Todos los frentes de obra han sido entregados. El Proyecto "${courseName}" es un éxito.`);
+        } else {
+          setOwlMessage(`Capataz reportándose. La obra "${courseName}" tiene ${sectionsData.length} frentes de trabajo. ¡Reanuda la construcción!`);
+        }
       } else {
-        setOwlMessage(`No se detectan planos de obra asignados. Consulta con tu supervisor.`);
+        setOwlMessage(`No se detectan planos de obra asignados para "${courseName}". Consulta con el Ingeniero Residente.`);
       }
     } catch (e) {
       console.error(e);
-      setOwlMessage("Error al sincronizar con el centro de mando.");
+      setOwlMessage("Error crítico de sincronización. Los sistemas de telemetría están fuera de línea.");
     } finally {
-      setLoading(false);
+      // Small artificial delay for premium feel
+      setTimeout(() => setLoading(false), 800);
     }
   };
 
   // ─── Build map objects from real sections ─────────────────────────────────────
   const mapBuildings = useMemo(() =>
     sections.map((s, idx) => {
-      const sectionModules = realModules.filter(m => m.seccionId === s.id);
-      // Simple progress calculation (for display)
-      const progress = sectionModules.length > 0 ? 0 : 0; 
+      const sectionModules = realModules.filter(m => String(m.seccionId) === String(s.id));
+      const completedCount = sectionModules.filter(m => m.completado).length;
+      const progress = sectionModules.length > 0 ? Math.round((completedCount / sectionModules.length) * 100) : 0; 
 
       return {
         id: s.id,
@@ -233,7 +239,37 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
 
   // ─── Loading screen ───────────────────────────────────────────────────────────
   if (loading) {
-    return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><Cog className="w-10 h-10 text-blue-600 animate-spin" /></div>;
+    return (
+      <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 construction-grid opacity-10 pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center">
+            <motion.div 
+               animate={{ rotate: 360 }}
+               transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+               className="w-24 h-24 rounded-[2rem] border-4 border-dashed border-blue-500/30 flex items-center justify-center mb-8"
+            >
+               <Cog className="w-12 h-12 text-blue-500" />
+            </motion.div>
+            <motion.h2 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               className="text-white text-lg font-black uppercase tracking-[0.5em] italic"
+            >
+               Sincronizando Planos
+            </motion.h2>
+            <div className="mt-4 flex gap-1">
+               {[0, 1, 2].map(i => (
+                  <motion.div 
+                    key={i}
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-1.5 h-1.5 bg-blue-500 rounded-full"
+                  />
+               ))}
+            </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -275,15 +311,18 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
                 </div>
                 {/* Progress preview */}
                 <div className="mt-6 space-y-2">
-                  {mapBuildings.slice(0, 4).map(b => (
-                    <div key={b.id} className="flex items-center gap-3">
-                      <b.icon className="w-3 h-3 text-slate-500" />
-                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${b.progress}%` }} />
+                  {mapBuildings.slice(0, 4).map(b => {
+                    const BIcon = b.icon;
+                    return (
+                      <div key={b.id} className="flex items-center gap-3">
+                        <BIcon className="w-3 h-3 text-slate-500" />
+                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${b.progress}%` }} />
+                        </div>
+                        <span className="text-[9px] text-slate-500 font-bold">{b.progress}%</span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-bold">{b.progress}%</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {mapBuildings.length > 4 && <p className="text-[9px] text-slate-600 font-bold">+{mapBuildings.length - 4} más...</p>}
                 </div>
               </button>
@@ -443,10 +482,13 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
                   <X className="w-6 h-6" />
                </button>
 
-               {/* Background big icon */}
-               <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-10 blur-sm pointer-events-none z-0 scale-150">
-                  <activePanel.icon className="w-96 h-96 text-blue-600" />
-               </div>
+                {/* Background big icon */}
+                <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-10 blur-sm pointer-events-none z-0 scale-150">
+                   {(() => {
+                      const LargeIcon = activePanel.icon;
+                      return <LargeIcon className="w-96 h-96 text-blue-600" />;
+                   })()}
+                </div>
 
                {/* Hero Content */}
                <div className="absolute bottom-10 left-12 right-12 z-20">
@@ -715,7 +757,10 @@ export const InstitutionalStudentDashboard = ({ user }: { user: any }) => {
                       className="w-full flex items-center gap-4 p-5 rounded-[1.5rem] border-2 bg-white border-slate-100 hover:border-blue-500 group transition-all"
                     >
                       <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <b.icon className="w-6 h-6" />
+                        {(() => {
+                          const ItemIcon = b.icon;
+                          return <ItemIcon className="w-6 h-6" />;
+                        })()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-black text-slate-800 uppercase italic transition-colors">{b.name}</p>

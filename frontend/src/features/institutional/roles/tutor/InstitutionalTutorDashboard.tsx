@@ -9,9 +9,14 @@ import {
   Shield,
   CheckCircle2,
   ArrowRight,
+  ChevronLeft,
   LayoutGrid,
   Trophy,
   Layers,
+  Search,
+  Wrench,
+  Rocket,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +26,7 @@ import { institutionalCurriculumApi, SectionInst, ModuloInst } from '../../servi
 import { toast } from '@/hooks/use-toast';
 import TutorGradebook from './components/TutorGradebook';
 import { InstitutionalTutorUserList } from './components/InstitutionalTutorUserList';
+import { InstitutionalCurriculumExplorer } from './components/InstitutionalCurriculumExplorer';
 import '../../styles/ConstructionTheme.css';
 
 type ActiveView = 'hub' | 'sectores' | 'calificaciones' | 'usuarios';
@@ -45,6 +51,11 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>('hub');
+  const [drilledDownCourse, setDrilledDownCourse] = useState<any | null>(null);
+  const [drilledDownModule, setDrilledDownModule] = useState<ModuloInst | null>(null);
+  const [initialModuleId, setInitialModuleId] = useState<number | null>(null);
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [allModules, setAllModules] = useState<ModuloInst[]>([]);
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
@@ -116,7 +127,68 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
     }
   };
 
-  const handleToggleModuleVisibility = async (moduleId: number, currentStatus: boolean) => {
+  // GLOBAL MODULE INDEXER
+  useEffect(() => {
+    if (courses.length > 0) {
+      const indexAllModules = async () => {
+        try {
+          const allResults = await Promise.all(
+            courses.map(c => institutionalCurriculumApi.getModulesByCourse(c.id))
+          );
+          // Flatten results and attach course context
+          const flattened = allResults.flatMap((mods, idx) => 
+            mods.map(m => ({ ...m, _courseName: courses[idx].nombre }))
+          );
+          setAllModules(flattened);
+        } catch (err) {
+          console.error("Error indexing global modules:", err);
+        }
+      };
+      indexAllModules();
+    }
+  }, [courses]);
+
+  async function handleToggleSectionVisibility(sectionId: number, currentStatus: boolean) {
+    setUpdating(`section-${sectionId}`);
+    try {
+      await institutionalCurriculumApi.updateSection(sectionId, { activo: !currentStatus });
+      setSections(prev => prev.map(s => s.id === sectionId ? { ...s, activo: !currentStatus } : s));
+      toast({
+        title: !currentStatus ? "Sección Activada" : "Sección Oculta",
+        description: `El estado del bloque ha sido actualizado.`
+      });
+    } catch (err) {
+      toast({ title: "Error", description: "No se pudo cambiar la visibilidad de la sección.", variant: "destructive" });
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function handleReorderSections(orderedIds: number[]) {
+    setUpdating('reorder-sections');
+    try {
+      await institutionalCurriculumApi.reorderSections(orderedIds);
+      // Reorder local state
+      setSections(prev => {
+        const sorted = [...prev].sort((a, b) => {
+          const idxA = orderedIds.indexOf(a.id);
+          const idxB = orderedIds.indexOf(b.id);
+          return idxA - idxB;
+        });
+        return sorted;
+      });
+      toast({
+        title: "Estructura Sincronizada",
+        description: "El orden de los bloques ha sido actualizado."
+      });
+    } catch (err) {
+      toast({ title: "Error", description: "No se pudo guardar el orden de las secciones.", variant: "destructive" });
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function handleToggleModuleVisibility(moduleId: number, currentStatus: boolean) {
     setUpdating(`module-${moduleId}`);
     try {
       await institutionalCurriculumApi.updateModule(moduleId, { activo: !currentStatus });
@@ -133,7 +205,50 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
     } finally {
       setUpdating(null);
     }
-  };
+  }
+
+  async function handleUpdateModuleContent(moduleId: number, newContent: any) {
+    setUpdating(`content-${moduleId}`);
+    try {
+      await institutionalCurriculumApi.updateModule(moduleId, { contenido: newContent });
+      setSections(prev => prev.map(s => ({
+        ...s,
+        modules: s.modules.map(m => m.id === moduleId ? { ...m, contenido: newContent } : m)
+      })));
+      toast({
+        title: "Estructura Actualizada",
+        description: "Los cambios en el orden y visibilidad han sido sincronizados."
+      });
+    } catch (err) {
+      toast({ title: "Error", description: "No se pudo actualizar el contenido.", variant: "destructive" });
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function handleReorderModules(sectionId: number, orderedIds: number[]) {
+    setUpdating(`reorder-${sectionId}`);
+    try {
+      await institutionalCurriculumApi.reorderModules(orderedIds);
+      setSections(prev => prev.map(s => {
+        if (s.id === sectionId) {
+            const sortedModules = [...s.modules].sort((a,b) => 
+                orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id)
+            );
+            return { ...s, modules: sortedModules };
+        }
+        return s;
+      }));
+      toast({
+        title: "Secuencia Sincronizada",
+        description: "El orden de la cuadrícula ha sido actualizado."
+      });
+    } catch (err) {
+      toast({ title: "Error", description: "No se pudo guardar el nuevo orden.", variant: "destructive" });
+    } finally {
+      setUpdating(null);
+    }
+  }
 
   if (loading && !courses.length) {
     return (
@@ -155,37 +270,46 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
     <div className="min-h-screen relative overflow-hidden font-sans" style={{ background: 'var(--inst-bg)', color: 'var(--inst-mid)' }}>
       <div className="absolute inset-0 z-0 construction-grid opacity-30" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 py-10 space-y-12">
+      <div className={cn(
+        "relative z-10 mx-auto px-6 lg:px-10 py-10 transition-all duration-700",
+        drilledDownCourse ? "max-w-none w-full px-0 py-0" : "max-w-7xl space-y-12"
+      )}>
 
         {/* ── Page Header ── */}
-        <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-           <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-                  <Shield className="w-3 h-3" /> Panel de Control de Tutoría
+        {!drilledDownCourse && (
+          <motion.header 
+            initial={{ opacity: 0, y: -20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="space-y-4"
+          >
+             <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                    <Shield className="w-3 h-3" /> Panel de Control de Tutoría
+                  </div>
+                  <h1 className="text-5xl font-black tracking-tighter leading-none" style={{ color: 'var(--inst-deep)' }}>
+                    {activeView === 'hub' ? 'Seguimiento' : activeView === 'sectores' ? 'Mis Sectores' : activeView === 'calificaciones' ? 'Calificaciones' : 'Usuarios'}
+                  </h1>
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter leading-none" style={{ color: 'var(--inst-deep)' }}>
-                  {activeView === 'hub' ? 'Seguimiento' : activeView === 'sectores' ? 'Mis Sectores' : activeView === 'calificaciones' ? 'Calificaciones' : 'Usuarios'}
-                </h1>
+  
+                 {/* Global Course Context Selector */}
+                 {(activeView === 'hub' || activeView === 'calificaciones' || activeView === 'usuarios') && courses.length > 1 && (
+                   <div className="flex flex-col items-end gap-1.5 min-w-[200px]">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sector Seleccionado</span>
+                      <select 
+                        value={selectedCourseId || ''} 
+                        onChange={(e) => setSelectedCourseId(Number(e.target.value))}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-tight text-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer hover:border-blue-400"
+                      >
+                        {courses.map(c => (
+                          <option key={c.id} value={c.id}>{c.nombre}</option>
+                        ))}
+                      </select>
+                   </div>
+                 )}
               </div>
-
-               {/* Global Course Context Selector */}
-               {(activeView === 'hub' || activeView === 'calificaciones' || activeView === 'usuarios') && courses.length > 1 && (
-                 <div className="flex flex-col items-end gap-1.5 min-w-[200px]">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sector Seleccionado</span>
-                    <select 
-                      value={selectedCourseId || ''} 
-                      onChange={(e) => setSelectedCourseId(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-tight text-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer hover:border-blue-400"
-                    >
-                      {courses.map(c => (
-                        <option key={c.id} value={c.id}>{c.nombre}</option>
-                      ))}
-                    </select>
-                 </div>
-               )}
-            </div>
-        </motion.header>
+          </motion.header>
+        )}
 
         {/* ── View Content ── */}
         <AnimatePresence mode="wait">
@@ -245,7 +369,11 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
                          <Button 
                             variant="ghost" 
                             size="icon" 
-                            onClick={() => setLocation(`/institucional-editor/${selectedCourseId}?sec=${sec.id}`)} 
+                            onClick={() => {
+                              setSelectedCourseId(selectedCourseId);
+                              setDrilledDownCourse(courses.find(c => c.id === selectedCourseId));
+                              setActiveView('sectores');
+                            }} 
                             className="rounded-xl text-slate-300 hover:text-blue-600 hover:bg-blue-50 transition-all"
                           >
                            <Eye className="w-5 h-5" />
@@ -299,59 +427,91 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
             </motion.div>
           )}
 
-          {/* MIS SECTORES / GRID VIEW */}
+          {/* MIS SECTORES — 3-Level Navigation: Courses → Modules → Levels */}
           {activeView === 'sectores' && (
-            <motion.div key="sectores" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {courses.map((course, idx) => (
-                  <motion.div
-                    key={course.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="group bg-white rounded-[3.5rem] p-12 border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all relative overflow-hidden h-[450px] flex flex-col justify-between"
-                  >
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
-                      <span className="text-[12rem] font-black leading-none tracking-tighter italic">{idx + 1}</span>
-                    </div>
-
-                    <div className="space-y-8 relative z-10">
-                      <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 border shadow-inner flex items-center justify-center font-black text-slate-300 text-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-500">
-                        {idx + 1}
-                      </div>
-                      <div className="space-y-3">
-                        <Badge className="bg-blue-50 text-blue-600 border-blue-100 text-[9px] font-black uppercase tracking-widest px-3 py-1">
-                          {getLevelName(course.nivel || 1)}
-                        </Badge>
-                        <h3 className="text-4xl font-black text-slate-800 uppercase tracking-tighter leading-[0.9] group-hover:text-blue-600 transition-colors">
-                          {course.nombre}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 group-hover:text-slate-600 transition-colors">
-                        <span>Ingeniería Curricular</span>
-                        <span className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> Real-Time</span>
-                      </div>
-                      <Button 
-                        onClick={() => setLocation(`/institucional-editor/${course.id}`)}
-                        className="w-full h-16 rounded-[2rem] bg-slate-900 hover:bg-blue-600 text-white font-black uppercase text-[11px] tracking-[0.2em] transition-all shadow-xl shadow-slate-900/10 hover:shadow-blue-500/30 flex items-center justify-center gap-3 group/btn"
+            <motion.div key="sectores" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-[70vh] space-y-10">
+              {drilledDownCourse ? (
+                <InstitutionalCurriculumExplorer
+                  sections={sections}
+                  courseName={drilledDownCourse.nombre}
+                  onClose={() => {
+                    setDrilledDownCourse(null);
+                    setDrilledDownModule(null);
+                    setInitialModuleId(null);
+                  }}
+                  onToggleVisibility={handleToggleModuleVisibility}
+                  onToggleSectionVisibility={handleToggleSectionVisibility}
+                  onUpdateContent={handleUpdateModuleContent}
+                  onReorderModules={handleReorderModules}
+                  onReorderSections={handleReorderSections}
+                  updating={updating}
+                  initialModuleId={initialModuleId}
+                />
+              ) : (
+                /* ── LEVEL 1: Course Cards ── */
+                <div className="space-y-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {courses.map((course, idx) => (
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.06 }}
+                        onClick={() => {
+                          setDrilledDownModule(null);
+                          setInitialModuleId(null);
+                          setGlobalSearchTerm('');
+                          setSelectedCourseId(course.id);
+                          setDrilledDownCourse(course);
+                          fetchCurriculum(course.id);
+                        }}
+                        className="group bg-white rounded-[3.5rem] p-12 border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-100 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between min-h-[360px]"
                       >
-                        Abrir Sectores
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                      </Button>
+                        <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
+                          <span className="text-[10rem] font-black leading-none tracking-tighter italic text-slate-900">{idx + 1}</span>
+                        </div>
+
+                        <div className="space-y-6 relative z-10">
+                          <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-300 text-xl shadow-inner group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
+                            {idx + 1}
+                          </div>
+                          <div className="space-y-3">
+                            <Badge className="bg-blue-50 text-blue-600 border-none text-[9px] font-black uppercase tracking-widest px-3 py-1">
+                              {getLevelName(course.nivel || 1)}
+                            </Badge>
+                            <h3 className="text-4xl font-black uppercase italic tracking-tighter text-slate-800 leading-none group-hover:text-blue-600 transition-colors">
+                              {course.nombre}
+                            </h3>
+                          </div>
+                        </div>
+
+                        <div className="relative z-10 mt-8">
+                          <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-slate-300 mb-6">
+                            <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-amber-400" /> Ingeniería Curricular</span>
+                            <span className={cn(
+                              "px-3 py-1 rounded-full",
+                              course.activo !== false ? "bg-emerald-50 text-emerald-500" : "bg-amber-50 text-amber-500"
+                            )}>
+                              {course.activo !== false ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </div>
+                          <div className="w-full h-14 rounded-[1.5rem] bg-slate-900 group-hover:bg-blue-600 text-white flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-slate-900/10 group-hover:shadow-blue-500/30">
+                            Ingresar al Sector <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {courses.length === 0 && (
+                    <div className="py-32 text-center rounded-[4rem] border-4 border-dashed border-slate-100">
+                      <Layers className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                      <h3 className="text-2xl font-black text-slate-400 uppercase tracking-tighter">Sin Sectores Asignados</h3>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-              {courses.length === 0 && (
-                <div className="py-32 text-center rounded-[4rem] border-4 border-dashed border-slate-100 bg-white shadow-inner">
-                  <Layers className="w-16 h-16 text-slate-200 mx-auto mb-6 opacity-50" />
-                  <h3 className="text-2xl font-black text-slate-400 uppercase tracking-tighter">Sin Sectores Asignados</h3>
-                  <p className="text-slate-300 font-bold text-sm mt-2 uppercase tracking-widest">Su perfil no tiene vinculación con cursos de la institución.</p>
+                  )}
                 </div>
               )}
+
             </motion.div>
           )}
 

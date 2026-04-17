@@ -3,7 +3,7 @@ import { InstitutionalCloningService } from './institutional-cloning.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('institutional-cloning')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class InstitutionalCloningController {
   constructor(private readonly cloningService: InstitutionalCloningService) {}
 
