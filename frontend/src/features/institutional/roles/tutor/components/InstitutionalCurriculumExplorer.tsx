@@ -225,7 +225,7 @@ const CarouselView = ({
   };
 
   return (
-    <div className={cn("relative flex h-[100dvh] md:h-[calc(100vh-80px)] w-full flex-col overflow-hidden m-0 md:m-4 rounded-none md:rounded-[2.5rem] border-0 md:border border-slate-200/50 shadow-2xl transition-colors duration-1000",
+    <div className={cn("relative flex h-full flex-1 w-full flex-col overflow-hidden m-0 rounded-none border-none transition-colors duration-1000",
       isTeacher ? 'bg-amber-950/40' : (isFocusMode ? 'bg-slate-950' : 'bg-[#e2e8f0]/40') // Dynamic aesthetic base
     )}>
       {/* Immersive Backgrounds */}
@@ -328,7 +328,7 @@ const CarouselView = ({
             animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
             exit={{ opacity: 0, scale: 1.05, y: -30, rotateX: 5 }}
             transition={{ type: "spring", stiffness: 260, damping: 25 }}
-            className="relative flex w-full max-w-7xl flex-col items-center text-center perspective-[1000px] gap-8 px-2 md:px-0"
+            className="relative flex w-full max-w-[120rem] flex-col items-center text-center perspective-[1000px] gap-8 px-4 md:px-8 lg:px-16"
           >
             {/* Context Badge */}
             <h2 className="mb-2 w-max max-w-full truncate rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1.5 md:px-6 md:py-2 flex items-center justify-center text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 shadow-sm backdrop-blur-md">
@@ -1063,7 +1063,7 @@ export const InstitutionalCurriculumExplorer = ({
                     isFocusMode && 'fixed inset-0 z-[500] bg-slate-950'
                   )}
                 >
-                  <div className="h-full w-full overflow-y-auto">
+                  <div className="h-full w-full">
                     {isFocusMode && (
                       <div className="fixed top-4 md:top-8 right-4 md:right-8 z-[100] flex gap-2 flex-wrap justify-end">
                         <Button
