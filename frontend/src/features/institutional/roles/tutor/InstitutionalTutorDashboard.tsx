@@ -271,8 +271,8 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
       <div className="absolute inset-0 z-0 construction-grid opacity-30" />
 
       <div className={cn(
-        "relative z-10 mx-auto px-6 lg:px-10 py-10 transition-all duration-700",
-        drilledDownCourse ? "max-w-none w-full px-0 py-0" : "max-w-7xl space-y-12"
+        "relative z-10 mx-auto transition-all duration-700",
+        drilledDownCourse ? "max-w-none w-full p-0 flex flex-col h-screen" : "max-w-7xl px-6 lg:px-10 py-10 space-y-12"
       )}>
 
         {/* ── Page Header ── */}

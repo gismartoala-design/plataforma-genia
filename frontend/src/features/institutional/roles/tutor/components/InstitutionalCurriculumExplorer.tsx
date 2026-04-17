@@ -320,7 +320,7 @@ const CarouselView = ({
       {/* Scrollable Wrap for Main Canvas and Navigator */}
       <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center">
         {/* Main Canvas Area */}
-        <div className="flex flex-1 flex-col items-center justify-center p-6 md:p-12 w-full pt-12 md:pt-16 min-h-max pl-4 md:pl-12">
+        <div className="flex flex-1 flex-col items-center justify-center w-full min-h-max pt-12 md:pt-16 pb-6 pl-5 md:pl-10 pr-2 md:pr-6">
           <AnimatePresence mode="wait">
           <motion.div
             key={idx}
@@ -328,7 +328,7 @@ const CarouselView = ({
             animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
             exit={{ opacity: 0, scale: 1.05, y: -30, rotateX: 5 }}
             transition={{ type: "spring", stiffness: 260, damping: 25 }}
-            className="relative flex w-full max-w-[120rem] flex-col items-center text-center perspective-[1000px] gap-8 px-4 md:px-8 lg:px-16"
+            className="relative flex w-full max-w-full flex-col items-center text-center perspective-[1000px] gap-6 md:gap-8 px-0"
           >
             {/* Context Badge */}
             <h2 className="mb-2 w-max max-w-full truncate rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1.5 md:px-6 md:py-2 flex items-center justify-center text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 shadow-sm backdrop-blur-md">
@@ -344,8 +344,8 @@ const CarouselView = ({
             {/* Central Content Canvas */}
             <div className="relative w-full">
               {/* Glass Modal for Content */}
-              <div className={cn("relative z-20 w-full rounded-[2.5rem] border border-white/40 bg-white/60 p-6 md:p-14 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] backdrop-blur-2xl transition-all flex flex-col h-auto", isFocusMode && 'bg-white/10 border-white/10 text-white')}>
-                <div className="md:pr-6 flex-1 w-full text-left md:text-center pb-8 min-h-[35vh] flex flex-col justify-center">
+              <div className={cn("relative z-20 w-full rounded-[1.5rem] md:rounded-[2.5rem] border border-white/40 bg-white/60 p-4 md:px-12 md:py-14 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] backdrop-blur-2xl transition-all flex flex-col h-auto", isFocusMode && 'bg-white/10 border-white/10 text-white')}>
+                <div className="md:pr-2 flex-1 w-full text-left md:text-center pb-8 min-h-[35vh] flex flex-col justify-center">
                   
                   {isInteractive && !isRevealed ? (
                     <motion.div 
@@ -861,7 +861,7 @@ export const InstitutionalCurriculumExplorer = ({
   const showModuleEmptyState = Boolean(selectedSectionId && visibleModules.length === 0);
 
   return (
-    <div className="tutor-density-90 min-h-[100dvh] w-full flex flex-col overflow-x-hidden overflow-y-auto animate-in fade-in duration-700 bg-slate-50 relative">
+    <div className="tutor-density-90 h-full flex-1 w-full flex flex-col overflow-x-hidden overflow-y-auto animate-in fade-in duration-700 bg-slate-50 relative">
       <div className="absolute inset-0 construction-grid opacity-5 pointer-events-none" />
 
       <div
