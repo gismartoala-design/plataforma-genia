@@ -148,32 +148,27 @@ const CarouselView = ({
     return slides;
   }, [levels]);
 
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 14 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] },
-    },
-  };
-
   const [idx, setIdx] = useState(0);
+  const [activeHotspot, setActiveHotspot] = useState<string | null>(null);
+  const [isRevealed, setIsRevealed] = useState(false);
 
   useEffect(() => {
-    if (idx >= allSlides.length) {
-      setIdx(Math.max(0, allSlides.length - 1));
-    }
+    if (idx >= allSlides.length) setIdx(Math.max(0, allSlides.length - 1));
+    setActiveHotspot(null); // Reset hotspot on slide change
+    setIsRevealed(false); // Reset interaction
   }, [allSlides.length, idx]);
 
   const currentSlide = allSlides[idx];
-
   const next = () => setIdx((prev) => (prev + 1) % allSlides.length);
   const prev = () => setIdx((prev) => (prev - 1 + allSlides.length) % allSlides.length);
 
   if (levels.length === 0 || !currentSlide) {
     return (
-      <div className="p-16 text-center text-slate-300 font-black uppercase tracking-widest">
-        Cargando estación...
+      <div className="flex h-full w-full items-center justify-center p-16">
+        <div className="flex flex-col items-center gap-4 text-slate-300">
+          <Loader2 className="h-10 w-10 animate-spin opacity-50" />
+          <span className="font-black uppercase tracking-widest text-[10px]">Construyendo Escenario...</span>
+        </div>
       </div>
     );
   }
@@ -188,28 +183,17 @@ const CarouselView = ({
     blockCount: level.parsedBlocks.length,
   }));
   const rawBlock = currentSlide.raw?.content || currentSlide.raw || {};
-  const contextText =
-    getBlockText(rawBlock.context) ||
-    getBlockText(rawBlock.content?.context) ||
-    getBlockText(currentMoment?.student?.context);
-  const instructionText =
-    getBlockText(rawBlock.instruction) ||
-    getBlockText(rawBlock.content?.instruction) ||
-    getBlockText(currentMoment?.student?.instruction);
-  const questionText =
-    getBlockText(rawBlock.question) ||
-    getBlockText(rawBlock.content?.question) ||
-    getBlockText(currentMoment?.student?.question);
-  const conceptText =
-    getBlockText(rawBlock.concept) ||
-    getBlockText(rawBlock.content?.concept) ||
-    getBlockText(currentMoment?.student?.concept);
-  const teacherObservation =
-    getBlockText(currentMoment?.teacher?.observation) ||
-    getBlockText(currentMoment?.teacher?.intention);
-  const teacherPedagogy = Array.isArray(currentMoment?.teacher?.pedagogy)
-    ? currentMoment.teacher.pedagogy.filter(Boolean)
-    : [];
+  
+  const textBlocks = {
+    contexto: getBlockText(rawBlock.context) || getBlockText(rawBlock.content?.context) || getBlockText(currentMoment?.student?.context),
+    instrucción: getBlockText(rawBlock.instruction) || getBlockText(rawBlock.content?.instruction) || getBlockText(currentMoment?.student?.instruction),
+    pregunta: getBlockText(rawBlock.question) || getBlockText(rawBlock.content?.question) || getBlockText(currentMoment?.student?.question),
+    concepto: getBlockText(rawBlock.concept) || getBlockText(rawBlock.content?.concept) || getBlockText(currentMoment?.student?.concept)
+  };
+
+  const teacherObservation = getBlockText(currentMoment?.teacher?.observation) || getBlockText(currentMoment?.teacher?.intention);
+  const teacherPedagogy = Array.isArray(currentMoment?.teacher?.pedagogy) ? currentMoment.teacher.pedagogy.filter(Boolean) : [];
+  
   const currentMomentLabel = currentMoment?.title || currentSlide.momentTitle;
   const currentBlockNumber = currentSlide.blockIdx + 1;
   const isTeacher = currentSlide.audience === 'teacher';
@@ -221,347 +205,337 @@ const CarouselView = ({
     currentSlide.type === 'quiz' ||
     (currentSlide.options?.length ?? 0) > 0 ||
     (currentSlide.raw?.content?.options?.length ?? 0) > 0;
+  
   const options = currentSlide.options || currentSlide.raw?.content?.options || [];
 
-  if (isTeacher && !showTeacherNotes) {
-    return (
-      <div className="h-full min-h-[420px] px-4 md:px-6 xl:px-8 py-4 md:py-5">
-        <div className="mx-auto max-w-5xl h-full rounded-[1.5rem] border-4 border-dashed border-amber-100 bg-amber-50/50 flex flex-col items-center justify-center text-center p-8">
-          <Lock className="w-14 h-14 text-amber-300 mb-5" />
-          <h4 className="text-amber-800 font-black uppercase tracking-[0.24em] text-base mb-3">
-            Cápsula Docente
-          </h4>
-          <p className="text-amber-600 text-sm md:text-base italic max-w-md">
-            Esta diapositiva está reservada para el tutor. Activa las notas para verla.
-          </p>
-        </div>
-      </div>
-    );
-  }
+
+
+  const hotspotIcons = {
+    contexto: <Layers className="w-4 h-4" />,
+    instrucción: <Target className="w-4 h-4" />,
+    pregunta: <ArrowRight className="w-4 h-4" />,
+    concepto: <Lightbulb className="w-4 h-4" />
+  };
+
+  const hotspotColors = {
+    contexto: 'bg-blue-500 shadow-blue-500/50',
+    instrucción: 'bg-indigo-500 shadow-indigo-500/50',
+    pregunta: 'bg-amber-500 shadow-amber-500/50',
+    concepto: 'bg-emerald-500 shadow-emerald-500/50'
+  };
 
   return (
-    <div
-      className={cn(
-        'relative w-full h-full min-h-0 flex flex-col',
-        isFocusMode ? 'bg-slate-950' : 'bg-slate-50/60'
+    <div className={cn("relative flex h-[100dvh] md:h-[calc(100vh-80px)] w-full flex-col overflow-hidden m-0 md:m-4 rounded-none md:rounded-[2.5rem] border-0 md:border border-slate-200/50 shadow-2xl transition-colors duration-1000",
+      isTeacher ? 'bg-amber-950/40' : (isFocusMode ? 'bg-slate-950' : 'bg-[#e2e8f0]/40') // Dynamic aesthetic base
+    )}>
+      {/* Immersive Backgrounds */}
+      <div className={cn("absolute inset-0 z-0 bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_10%,transparent_100%)] pointer-events-none transition-colors duration-1000",
+        isTeacher ? "bg-[linear-gradient(rgba(245,158,11,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.08)_1px,transparent_1px)]" : "bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)]")} />
+      <div className={cn("absolute top-[-20%] left-[-10%] h-[60%] w-[50%] rounded-full mix-blend-screen blur-[120px] pointer-events-none animate-pulse duration-[8s] transition-colors",
+        isTeacher ? "bg-amber-500/20" : "bg-blue-400/20")} />
+      <div className={cn("absolute bottom-[-10%] right-[-10%] h-[50%] w-[40%] rounded-full mix-blend-screen blur-[120px] pointer-events-none animate-pulse duration-[10s] transition-colors",
+        isTeacher ? "bg-rose-500/10" : "bg-purple-400/20")} />
+
+      {/* Editor Controls HUD (Floating Top Right) */}
+      {isEditing && (
+        <div className="absolute right-6 top-6 z-[100] flex gap-2 rounded-[1.2rem] border border-white/20 bg-white/10 p-1.5 backdrop-blur-xl shadow-2xl">
+          <Button onClick={() => onMove(currentSlide.momentIdx, currentSlide.momentIdx - 1)} disabled={currentSlide.momentIdx === 0} variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-700 hover:bg-white/80 hover:text-blue-600 dark:text-slate-200 disabled:opacity-20"><ArrowUp className="w-4 h-4" /></Button>
+          <Button onClick={() => onMove(currentSlide.momentIdx, currentSlide.momentIdx + 1)} disabled={currentSlide.momentIdx === levels.length - 1} variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-700 hover:bg-white/80 hover:text-blue-600 dark:text-slate-200 disabled:opacity-20"><ArrowDown className="w-4 h-4" /></Button>
+          <Button onClick={() => onToggleVisibility(currentSlide.momentIdx)} variant="ghost" size="icon" className={cn("h-9 w-9 rounded-xl transition-all", currentSlide.momentIsVisible ? 'text-emerald-500 hover:bg-emerald-50 dark:text-emerald-400' : 'text-amber-500 hover:bg-amber-50 dark:text-amber-400')}>{currentSlide.momentIsVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}</Button>
+        </div>
       )}
-    >
-      <div className="px-3 pt-3 sm:px-4 md:px-6 xl:px-8">
-        <div className="mx-auto max-w-6xl space-y-2.5">
-          <div className="rounded-[1.25rem] border border-slate-200 bg-white px-3 py-2.5 sm:px-4 flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-blue-600">
-                {moduleTitle}
-              </p>
-              <h3 className="max-w-full break-words text-sm sm:text-base font-black text-slate-900 leading-tight">
-                {currentMomentLabel}
-              </h3>
-            </div>
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <Badge className="bg-blue-600 text-white border-none px-2.5 py-1 rounded-lg font-black text-[8px] tracking-[0.16em]">
-                {isTeacher ? 'DOCENTE' : 'ESTUDIANTE'}
-              </Badge>
-              {isInteractive && (
-                <Badge className="bg-amber-500 text-white border-none px-2.5 py-1 rounded-lg font-black text-[8px] tracking-[0.16em]">
-                  INTERACTIVA
-                </Badge>
-              )}
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
-                Fase {currentMomentIndex + 1}/{levels.length}
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
-                Bloque {currentBlockNumber}/{currentSlide.totalBlocksInMoment}
-              </div>
+
+      {/* Edge Hover Navigation (Left Menu) */}
+      <div className="absolute left-0 top-16 bottom-16 w-6 md:w-8 hover:w-64 md:hover:w-80 z-[150] transition-all duration-500 group flex items-center">
+        {/* Invisible trigger area */}
+        <div className="absolute inset-0 bg-transparent cursor-e-resize" />
+        
+        <div className="absolute left-0 h-full w-full max-w-0 group-hover:max-w-[16rem] md:group-hover:max-w-[20rem] overflow-hidden transition-all duration-500 bg-white/95 backdrop-blur-3xl rounded-r-[2.5rem] border-y border-r border-slate-200/60 shadow-[20px_0_40px_-15px_rgba(0,0,0,0.15)] flex flex-col">
+          <div className="p-5 bg-blue-50 border-b border-blue-100 flex items-center gap-3 w-64 md:w-80 shrink-0">
+            <Layers className="w-5 h-5 text-blue-600" />
+            <div className="flex flex-col">
+              <h3 className="font-black text-[10px] md:text-xs uppercase tracking-[0.2em] text-blue-700">Explorador</h3>
+              <p className="text-[9px] font-bold text-slate-500">Separado por Fases</p>
             </div>
           </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
-            {momentSummary.map((moment, index) => {
-              const isActive = index === currentMomentIndex;
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4 w-64 md:w-80 pb-10">
+            {levels.map((level, levelIndex) => {
+              const slidesInLevel = allSlides.filter(s => s.momentIdx === levelIndex);
+              if (slidesInLevel.length === 0) return null;
+              const hasCurrentSlide = slidesInLevel.some((_, i) => allSlides.indexOf(slidesInLevel[i]) === idx);
+              
               return (
-                <button
-                  key={moment.id}
-                  onClick={() => setIdx(moment.slideIndex)}
-                  className={cn(
-                    'min-w-[122px] md:min-w-[150px] rounded-[1rem] border px-2.5 py-2 text-left transition-all duration-300 shrink-0',
-                    isActive
-                      ? 'border-blue-500 bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-slate-900'
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[8px] font-black uppercase tracking-[0.16em]">
-                      Fase {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span className={cn('text-[8px] font-black uppercase', isActive ? 'text-white/80' : moment.isVisible ? 'text-emerald-600' : 'text-amber-600')}>
-                      {moment.isVisible ? 'Visible' : 'Oculta'}
-                    </span>
-                  </div>
-                  <p className={cn('mt-1 text-[11px] md:text-xs font-black leading-tight line-clamp-2', isActive ? 'text-white' : 'text-slate-900')}>
-                    {moment.title}
-                  </p>
-                  <p className={cn('mt-1 text-[8px] font-bold uppercase tracking-[0.14em]', isActive ? 'text-white/70' : 'text-slate-400')}>
-                    {moment.blockCount} bloques
-                  </p>
-                </button>
+                 <div key={level.id || levelIndex} className={cn("p-3 rounded-[1.5rem] bg-slate-50 border transition-all duration-500", hasCurrentSlide ? "border-blue-300 shadow-md bg-white" : "border-slate-200")}>
+                   <h4 className="text-[10px] uppercase font-black tracking-widest text-slate-500 mb-3 px-1 flex items-center gap-2">
+                     <span className={cn("w-5 h-5 flex items-center justify-center rounded-full text-white font-black text-[8px]", hasCurrentSlide ? "bg-blue-600" : "bg-slate-300")}>{levelIndex + 1}</span>
+                     <span className="truncate text-slate-800">{level.title || level.data?.titulo || `Fase ${levelIndex + 1}`}</span>
+                   </h4>
+                   <div className="space-y-1.5 pl-2.5 border-l-2 border-slate-200 ml-2.5">
+                     {slidesInLevel.map((slide, i) => {
+                       const slideIndex = allSlides.indexOf(slide);
+                       const isCurrent = slideIndex === idx;
+                       const isTargetTeacher = slide.audience === 'teacher';
+                       return (
+                        <button
+                          key={`${slide.id}-${slideIndex}`}
+                          onClick={() => setIdx(slideIndex)}
+                          className={cn(
+                            "w-full text-left flex flex-col gap-1 p-2 rounded-xl transition-all duration-300 relative",
+                            isCurrent ? "bg-blue-600 text-white shadow-md" : "hover:bg-slate-200/50 text-slate-600"
+                          )}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className={cn("text-[8px] font-black uppercase tracking-widest", isCurrent ? 'text-white/80' : 'text-slate-400')}>
+                              Bloque {i + 1}
+                            </span>
+                            <span className={cn(
+                              "text-[8px] font-black uppercase px-2 py-0.5 rounded-lg tracking-tight",
+                              isCurrent && isTargetTeacher ? "bg-amber-500 text-white" : "",
+                              isCurrent && !isTargetTeacher ? "bg-emerald-500 text-white" : "",
+                              !isCurrent && isTargetTeacher ? "bg-amber-100 text-amber-600" : "",
+                              !isCurrent && !isTargetTeacher ? "bg-emerald-100 text-emerald-600" : ""
+                            )}>
+                              {isTargetTeacher ? 'DOC.' : 'EST.'}
+                            </span>
+                          </div>
+                          <p className={cn("text-[10px] md:text-[11px] font-bold truncate pr-1 leading-tight mt-0.5", isCurrent ? "text-white" : "text-slate-700")}>
+                            {slide.momentTitle}
+                          </p>
+                        </button>
+                       );
+                     })}
+                   </div>
+                 </div>
               );
             })}
           </div>
         </div>
-      </div>
-
-      <div className="flex-1 min-h-0 px-3 py-3 sm:px-4 md:px-6 xl:px-8">
-        <div className="mx-auto max-w-6xl h-full flex flex-col gap-3 md:gap-4">
-          {isEditing && (
-            <div className="self-end flex items-center gap-2 p-2 bg-slate-900 border border-slate-800 rounded-xl shadow-lg">
-              <Button
-                onClick={() => onMove(currentSlide.momentIdx, currentSlide.momentIdx - 1)}
-                disabled={currentSlide.momentIdx === 0}
-                variant="ghost"
-                size="icon"
-                className="w-9 h-9 rounded-xl text-white hover:bg-blue-600 disabled:opacity-30"
-              >
-                <ArrowUp className="w-4 h-4" />
-              </Button>
-              <Button
-                onClick={() => onMove(currentSlide.momentIdx, currentSlide.momentIdx + 1)}
-                disabled={currentSlide.momentIdx === levels.length - 1}
-                variant="ghost"
-                size="icon"
-                className="w-9 h-9 rounded-xl text-white hover:bg-blue-600 disabled:opacity-30"
-              >
-                <ArrowDown className="w-4 h-4" />
-              </Button>
-              <Button
-                onClick={() => onToggleVisibility(currentSlide.momentIdx)}
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  'w-9 h-9 rounded-xl transition-all',
-                  currentSlide.momentIsVisible ? 'text-emerald-400 hover:bg-emerald-500/20' : 'text-amber-400 hover:bg-amber-500/20'
-                )}
-              >
-                {currentSlide.momentIsVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </Button>
-            </div>
-          )}
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={idx}
-              variants={itemVariants}
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              className="flex-1 min-h-0 grid gap-3 md:gap-4 xl:grid-cols-[minmax(0,1fr)_260px] xl:items-start"
-            >
-              <div className="w-full min-h-0 rounded-[1.5rem] border border-blue-100 bg-white p-3 md:p-4 lg:p-5 shadow-[0_24px_60px_-28px_rgba(37,99,235,0.16)] flex flex-col gap-3 overflow-hidden">
-                {(contextText || instructionText || questionText || conceptText) && (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {contextText && (
-                      <div className="rounded-[1rem] border border-blue-100 bg-blue-50/85 p-2.5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-500">Contexto</p>
-                        <p className="mt-1 text-[11px] md:text-xs font-semibold text-slate-700 whitespace-pre-wrap break-words">
-                          {contextText}
-                        </p>
-                      </div>
-                    )}
-                    {instructionText && (
-                      <div className="rounded-[1rem] border border-sky-100 bg-sky-50/85 p-2.5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-indigo-500">Instrucción</p>
-                        <p className="mt-1 text-[11px] md:text-xs font-semibold text-slate-700 whitespace-pre-wrap break-words">
-                          {instructionText}
-                        </p>
-                      </div>
-                    )}
-                    {questionText && (
-                      <div className="rounded-[1rem] border border-amber-100 bg-amber-50/85 p-2.5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500">Pregunta</p>
-                        <p className="mt-1 text-[11px] md:text-xs font-semibold text-slate-700 whitespace-pre-wrap break-words">
-                          {questionText}
-                        </p>
-                      </div>
-                    )}
-                    {conceptText && (
-                      <div className="rounded-[1rem] border border-emerald-100 bg-emerald-50/85 p-2.5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-500">Concepto Clave</p>
-                        <p className="mt-1 text-[11px] md:text-xs font-semibold text-slate-700 whitespace-pre-wrap break-words">
-                          {conceptText}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="rounded-[1rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/45 to-slate-50 px-4 py-3">
-                  <h3
-                    className={cn(
-                      'text-base md:text-lg xl:text-xl font-black leading-tight tracking-tight whitespace-pre-wrap break-words',
-                      isTeacher ? 'text-amber-900' : 'text-slate-900'
-                    )}
-                  >
-                    {currentSlide.content}
-                  </h3>
-                </div>
-
-                {isInteractive ? (
-                  options.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2.5 overflow-y-auto pr-1 custom-scrollbar lg:grid-cols-2">
-                      {options.map((opt: any, i: number) => {
-                        const isCorrect =
-                          opt?.isCorrect ||
-                          currentSlide.raw?.content?.answer === opt?.text ||
-                          opt?.correctIndex !== undefined;
-
-                        return (
-                          <div
-                            key={`${currentSlide.id}-${i}`}
-                            className="rounded-[1rem] border border-blue-100 bg-blue-50/45 p-3 md:p-3.5 flex items-start gap-2.5 min-w-0"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-white border border-blue-100 flex items-center justify-center font-black text-blue-600 shrink-0">
-                              {String.fromCharCode(65 + i)}
-                            </div>
-                            <div className="flex-1 min-w-0 space-y-1.5">
-                              <p className="text-[13px] md:text-sm font-bold text-slate-800 break-words leading-relaxed">
-                                {getOptionText(opt)}
-                              </p>
-                              {typeof opt?.feedback === 'string' && opt.feedback.trim().length > 0 && (
-                                <p className="text-[10px] md:text-[11px] text-slate-500 break-words">
-                                  {opt.feedback}
-                                </p>
-                              )}
-                            </div>
-                            {isCorrect && showTeacherNotes && (
-                              <Badge className="bg-emerald-500 text-white border-none px-2 py-1 rounded-lg text-[8px] font-black shrink-0">
-                                CLAVE
-                              </Badge>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex-1 min-h-[180px] rounded-[1rem] border-2 border-dashed border-blue-100 bg-blue-50/35 flex flex-col items-center justify-center text-center p-6">
-                      <Code2 className="w-10 h-10 text-blue-200 mb-3" />
-                      <p className="text-slate-500 font-black uppercase tracking-[0.18em] text-[11px]">
-                        Simulador de Interacción
-                      </p>
-                    </div>
-                  )
-                ) : (
-                  <div className="flex-1 min-h-[180px] rounded-[1rem] border border-blue-100 bg-blue-50/35 p-4 md:p-5 flex items-center">
-                    <p
-                      className={cn(
-                        'text-base md:text-lg xl:text-xl font-black leading-[1.2] tracking-tight whitespace-pre-wrap break-words',
-                        isTeacher ? 'text-amber-900' : 'text-slate-900'
-                      )}
-                    >
-                      {currentSlide.content}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="w-full grid gap-3 xl:grid-cols-1">
-                <div className="rounded-[1.25rem] border border-blue-100 bg-white p-3 shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-blue-600">Panel Tutor</p>
-                  <h4 className="mt-1.5 text-[13px] md:text-sm font-black text-slate-900 break-words">
-                    {currentMomentLabel}
-                  </h4>
-                  <div className="mt-2.5 space-y-2">
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Módulo</p>
-                      <p className="mt-1 text-[11px] font-black text-slate-700 break-words">{moduleTitle}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Bloque</p>
-                        <p className="mt-1 text-[11px] font-black text-slate-700">
-                          {currentBlockNumber}/{currentSlide.totalBlocksInMoment}
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Fase</p>
-                        <p className="mt-1 text-[11px] font-black text-slate-700">
-                          {currentMomentIndex + 1}/{levels.length}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Visibilidad</p>
-                      <Badge
-                        className={cn(
-                          'mt-1 border-none px-2 py-1 rounded-lg text-[8px] font-black',
-                          currentSlide.momentIsVisible ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                        )}
-                      >
-                        {currentSlide.momentIsVisible ? 'Visible' : 'Oculta'}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {showTeacherNotes && (teacherObservation || teacherPedagogy.length > 0) && (
-                  <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50/80 p-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">Guía Docente</p>
-                    {teacherObservation && (
-                      <p className="mt-1.5 text-[11px] md:text-xs font-medium text-amber-900 whitespace-pre-wrap break-words leading-relaxed">
-                        {teacherObservation}
-                      </p>
-                    )}
-                    {teacherPedagogy.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {teacherPedagogy.map((item: string) => (
-                          <Badge
-                            key={item}
-                            className="bg-white text-amber-700 border border-amber-200 px-2 py-1 rounded-lg text-[8px] font-black uppercase"
-                          >
-                            {item}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
+        
+        {/* Edge glowing indicator */}
+        <div className="h-48 w-2 md:w-3 bg-gradient-to-b from-blue-400/0 via-blue-500/80 to-blue-400/0 group-hover:via-blue-500 rounded-r-xl transition-colors absolute left-0 flex items-center justify-center opacity-80 group-hover:opacity-100 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+          <ChevronRight className="w-6 h-6 text-white drop-shadow-md opacity-50 group-hover:opacity-100 transition-all duration-500 absolute -right-4 pointer-events-none group-hover:translate-x-2" />
         </div>
       </div>
 
-      <div className="px-3 pb-3 sm:px-4 md:px-6 md:pb-6 xl:px-8">
-        <div className="mx-auto max-w-6xl rounded-[1.25rem] border border-blue-100 bg-white px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button
-              onClick={prev}
-              variant="ghost"
-              className="h-11 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.18em] text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex-1 md:flex-none"
-            >
-              Anterior
-            </Button>
-            <Button
-              onClick={next}
-              variant="ghost"
-              className="h-11 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.18em] text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex-1 md:flex-none"
-            >
-              Siguiente
-            </Button>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
+      {/* Scrollable Wrap for Main Canvas and Navigator */}
+      <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center">
+        {/* Main Canvas Area */}
+        <div className="flex flex-1 flex-col items-center justify-center p-6 md:p-12 w-full pt-12 md:pt-16 min-h-max pl-4 md:pl-12">
+          <AnimatePresence mode="wait">
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, scale: 0.95, y: 30, rotateX: -5 }}
+            animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+            exit={{ opacity: 0, scale: 1.05, y: -30, rotateX: 5 }}
+            transition={{ type: "spring", stiffness: 260, damping: 25 }}
+            className="relative flex w-full max-w-7xl flex-col items-center text-center perspective-[1000px] gap-8 px-2 md:px-0"
+          >
+            {/* Context Badge */}
+            <h2 className="mb-2 w-max max-w-full truncate rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1.5 md:px-6 md:py-2 flex items-center justify-center text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 shadow-sm backdrop-blur-md">
+              <span className="hidden md:inline">Fase {currentMomentIndex + 1}</span>
+              <span className="hidden md:inline mx-3 opacity-30">|</span>
+              <span className="truncate max-w-[200px] md:max-w-xs">{currentMomentLabel}</span>
+              <span className="mx-3 opacity-30">|</span>
+              <span className={cn("px-3 py-1 rounded-[0.8rem] text-[8px] md:text-[9px] font-black tracking-widest ml-1 text-white shadow-lg transition-all", isTeacher ? "bg-amber-500 shadow-amber-500/40" : "bg-emerald-500 shadow-emerald-500/40")}>
+                {isTeacher ? "Vista Docente" : "Vista Estudiante"}
+              </span>
+            </h2>
+
+            {/* Central Content Canvas */}
+            <div className="relative w-full">
+              {/* Glass Modal for Content */}
+              <div className={cn("relative z-20 w-full rounded-[2.5rem] border border-white/40 bg-white/60 p-6 md:p-14 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] backdrop-blur-2xl transition-all flex flex-col h-auto", isFocusMode && 'bg-white/10 border-white/10 text-white')}>
+                <div className="md:pr-6 flex-1 w-full text-left md:text-center pb-8 min-h-[35vh] flex flex-col justify-center">
+                  
+                  {isInteractive && !isRevealed ? (
+                    <motion.div 
+                      className="flex flex-col items-center justify-center cursor-pointer group py-10"
+                      onClick={() => setIsRevealed(true)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className={cn(
+                        "w-28 h-28 md:w-36 md:h-36 rounded-[2.5rem] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-colors duration-500 mb-6 relative group-hover:rotate-6",
+                        isTeacher ? "bg-amber-500 shadow-amber-500/40" : "bg-emerald-500 shadow-emerald-500/40"
+                      )}>
+                        <div className="absolute inset-0 rounded-[2.5rem] animate-ping opacity-30 bg-inherit" />
+                        {isTeacher ? <Code2 className="w-14 h-14 md:w-16 md:h-16 text-white" /> : <Lightbulb className="w-14 h-14 md:w-16 md:h-16 text-white" />}
+                      </div>
+                      <h3 className={cn("text-sm md:text-base font-black uppercase tracking-[0.3em] transition-colors", isTeacher ? "text-amber-600" : "text-emerald-600")}>
+                        {isTeacher ? "Instrucción Práctica" : "Misión Interactiva"}
+                      </h3>
+                      <p className="mt-2 text-[10px] font-black text-slate-400 group-hover:text-slate-600 uppercase tracking-widest transition-colors animate-pulse">
+                        ( Haz clic para descubrir el objetivo )
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 flex flex-col justify-center">
+                      <p className={cn("text-2xl md:text-4xl lg:text-[2.75rem] font-black leading-[1.2] tracking-tight whitespace-pre-wrap break-words h-max pb-4 px-2", isTeacher ? 'text-amber-900 dark:text-amber-100' : (isFocusMode ? 'text-white' : 'text-slate-900'))}>
+                        {currentSlide.content}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {isInteractive && (
+                    <div className="mt-8 md:mt-12 w-full pt-4 border-t border-slate-200/50 shrink-0">
+                      {options.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                          {options.map((opt: any, i: number) => {
+                            const isCorrect = opt?.isCorrect || currentSlide.raw?.content?.answer === opt?.text || opt?.correctIndex !== undefined;
+                            return (
+                              <motion.div whileHover={{ scale: 1.02 }} key={`opt-${i}`} className={cn("relative overflow-hidden flex items-start gap-4 rounded-[1.5rem] border border-white/60 p-5 backdrop-blur-md transition-all cursor-pointer shadow-sm hover:shadow-xl", isFocusMode ? 'bg-white/5 hover:bg-white/10' : 'bg-white/60 hover:bg-white')}>
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-sm font-black text-blue-600 shadow-inner">
+                                  {String.fromCharCode(65 + i)}
+                                </div>
+                                <div className="space-y-1 pt-1 flex-1">
+                                  <p className={cn("text-sm font-bold leading-snug", isFocusMode ? 'text-slate-200' : 'text-slate-800')}>{getOptionText(opt)}</p>
+                                  {opt.feedback && <p className="text-[11px] font-medium text-slate-500/80 italic line-clamp-2">{opt.feedback}</p>}
+                                </div>
+                                {isCorrect && showTeacherNotes && (
+                                  <div className="absolute right-4 top-4 rounded-full bg-emerald-500/20 px-3 py-1 text-[8px] font-black tracking-widest text-emerald-600 ring-1 ring-emerald-500/30 font-mono">OK</div>
+                                )}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="flex h-[450px] w-full flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-blue-500/30 bg-white/40 backdrop-blur-md overflow-hidden relative shadow-inner">
+                           {currentSlide?.raw?.content?.url || currentSlide?.raw?.url ? (
+                             <iframe src={currentSlide?.raw?.content?.url || currentSlide?.raw?.url} className="w-full h-full border-0 absolute inset-0 z-10 bg-white" title="Interactividad" />
+                           ) : (
+                             <>
+                              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.1)_0%,transparent_70%)] pointer-events-none" />
+                              <Code2 className="mb-4 h-14 w-14 text-blue-500 opacity-80 animate-bounce relative z-10" />
+                              <span className="text-sm font-black uppercase tracking-[0.3em] text-blue-600/80 relative z-10">
+                                Renderizador Interactivo
+                              </span>
+                              <p className="text-[11px] mt-3 text-slate-500 font-bold tracking-widest max-w-sm text-center px-4 relative z-10">
+                                Componente del alumno tipo: <span className="text-blue-500">[{currentSlide.type}]</span>. El simulador, iFrame o lógica visual se inyectará en esta caja en la aplicación de consumo real.
+                              </p>
+                             </>
+                           )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Floating Hotspots for extra context (Genially style) */}
+              <div className="pointer-events-none absolute inset-x-0 -bottom-8 -top-8 z-30 flex items-center justify-around xl:-left-12 xl:-right-12">
+                {Object.entries(textBlocks).map(([key, text], idx) => {
+                  if (!text) return null;
+                  const isActive = activeHotspot === key;
+                  return (
+                    <div key={key} className="pointer-events-auto relative group">
+                      <motion.button
+                        onHoverStart={() => setActiveHotspot(key)}
+                        onClick={() => setActiveHotspot(isActive ? null : key)}
+                        whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
+                        className={cn(
+                          "relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-300 z-40 outline-none ring-4 ring-white/30 backdrop-blur-md",
+                          hotspotColors[key as keyof typeof hotspotColors],
+                          isActive && "ring-8 ring-white/50"
+                        )}
+                      >
+                        <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {hotspotIcons[key as keyof typeof hotspotIcons]}
+                        <span className="absolute -bottom-6 w-max opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-black uppercase tracking-widest text-slate-500 drop-shadow-md">
+                          {key}
+                        </span>
+                      </motion.button>
+
+                      {/* Glass Popover for Hotspot Content */}
+                      <AnimatePresence>
+                        {isActive && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="absolute bottom-[calc(100%+1.5rem)] left-1/2 -translate-x-1/2 w-64 md:w-80 z-50 rounded-[1.5rem] border border-white/50 bg-white/80 p-5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] backdrop-blur-2xl text-left"
+                          >
+                            <div className="absolute -bottom-2 left-1/2 -ml-2 border-x-8 border-t-8 border-x-transparent border-t-white/80" />
+                            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{key}</p>
+                            <p className="text-sm font-medium leading-relaxed text-slate-800 whitespace-pre-wrap">{text}</p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+        </div> {/* End Main Canvas Center */}
+
+        {/* Floating Bottom Navigator (Pushed below if content is tall) */}
+        <div className="relative z-50 mb-12 mt-4 flex w-full justify-center px-4 shrink-0 pointer-events-auto">
+        <div className="flex h-16 w-full max-w-lg items-center justify-between rounded-[2rem] border border-white/30 bg-white/40 p-2 shadow-2xl backdrop-blur-xl">
+          <Button onClick={prev} variant="ghost" className="h-full rounded-[1.5rem] px-4 font-black uppercase text-[9px] tracking-widest text-slate-600 hover:bg-white hover:text-blue-600 transition-all">
+            <ChevronLeft className="mr-1 h-4 w-4" /> Anterior
+          </Button>
+          
+          <div className="flex items-center gap-1.5 px-4 overflow-hidden mask-edges">
             {allSlides.map((slide, slideIndex) => (
               <button
                 key={`${slide.id}-${slideIndex}`}
                 onClick={() => setIdx(slideIndex)}
                 className={cn(
-                  'rounded-full transition-all duration-300',
-                  slideIndex === idx ? 'w-7 h-2 bg-blue-600' : 'w-2 h-2 bg-slate-200 hover:bg-slate-300'
+                  'h-2 rounded-full transition-all duration-500 flex-shrink-0',
+                  slideIndex === idx ? 'w-8 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]' : 'w-2 bg-slate-400/30 hover:bg-slate-500/50 hover:w-4'
                 )}
-                aria-label={`Ir al bloque ${slideIndex + 1}`}
               />
             ))}
           </div>
+
+          <Button onClick={next} variant="ghost" className="h-full rounded-[1.5rem] px-4 font-black uppercase text-[9px] tracking-widest text-slate-600 hover:bg-white hover:text-blue-600 transition-all">
+            Siguiente <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
         </div>
       </div>
+      </div> {/* CLOSING SCROLLABLE WRAPPER */}
+
+      {/* Side Slide-out Drawer for Teacher Notes */}
+      {showTeacherNotes && (teacherObservation || teacherPedagogy.length > 0) && (
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="absolute bottom-6 right-6 top-6 z-[200] flex w-80 flex-col overflow-hidden rounded-[2.5rem] border border-amber-200/50 bg-amber-50/90 shadow-2xl backdrop-blur-2xl"
+        >
+          <div className="flex bg-amber-100/50 p-6 pb-4">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[1rem] bg-amber-500 text-white shadow-xl shadow-amber-500/20">
+              <UserCheck className="h-5 w-5" />
+            </div>
+            <div className="ml-4 flex flex-col justify-center">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Privado</span>
+              <h3 className="text-sm font-black italic tracking-tight text-amber-900">Guía Docente</h3>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+            {teacherObservation && (
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/80 mb-2">Observaciones</p>
+                <div className="rounded-[1.5rem] border border-amber-200/40 bg-white/50 p-4 font-medium leading-relaxed text-amber-900 shadow-sm text-sm">
+                  {teacherObservation}
+                </div>
+              </div>
+            )}
+            {teacherPedagogy.length > 0 && (
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/80 mb-2">Metodología</p>
+                <div className="flex flex-wrap gap-2">
+                  {teacherPedagogy.map((item: string) => (
+                    <span key={item} className="rounded-full border border-amber-300/40 bg-amber-100/50 px-3 py-1.5 text-[10px] font-black tracking-widest uppercase text-amber-700">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
@@ -654,10 +628,12 @@ export const InstitutionalCurriculumExplorer = ({
       (interactionType &&
         !['auto_display', 'open_response', 'content_plus_question'].includes(interactionType));
 
+    const blockAudience = studentBlockData?.audience || lvl.audience || (interactionType?.includes('teacher') ? 'teacher' : 'student');
+
     if (studentContent || isInteractive) {
       allBlocks.push({
-        id: `block-s-${lvl.id || 'gen'}-1`,
-        audience: 'student',
+        id: `block-${blockAudience === 'teacher' ? 't' : 's'}-${lvl.id || 'gen'}-1`,
+        audience: blockAudience,
         type: interactionType || 'text',
         options: studentOptions,
         raw: lvl,
@@ -666,7 +642,7 @@ export const InstitutionalCurriculumExplorer = ({
     }
 
     if (lvl.teacher) {
-      const teacherContent = getContent(lvl.teacher);
+      const teacherContent = getContent(lvl.teacher) || lvl.teacher?.intention || lvl.teacher?.observation;
       if (teacherContent) {
         allBlocks.push({
           id: `block-t-${lvl.id || 'gen'}-1`,
@@ -974,46 +950,21 @@ export const InstitutionalCurriculumExplorer = ({
               ? 'flex flex-col items-stretch gap-2 xl:items-end'
               : 'flex items-center gap-3 flex-wrap xl:flex-nowrap justify-start xl:justify-end'
           )}>
-            <div className="relative group/search w-full md:w-auto xl:flex-none">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/search:text-blue-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Buscar componente..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                className="pl-11 h-10 md:h-11 w-full md:w-52 xl:w-56 bg-slate-50 border border-slate-200 rounded-2xl text-[9px] md:text-[10px] font-black uppercase text-slate-600 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none"
-              />
-            </div>
+            {!selectedModule && (
+              <div className="relative group/search w-full md:w-auto xl:flex-none">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/search:text-blue-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Buscar componente..."
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  className="pl-11 h-10 md:h-11 w-full md:w-52 xl:w-56 bg-slate-50 border border-slate-200 rounded-2xl text-[9px] md:text-[10px] font-black uppercase text-slate-600 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none"
+                />
+              </div>
+            )}
 
             {selectedModule && (
               <div className="flex w-full items-center gap-2 flex-wrap justify-start xl:justify-end">
-                <Button
-                  onClick={() => setIsEditingContent(!isEditingContent)}
-                  variant="outline"
-                  className={cn(
-                    'h-10 md:h-11 rounded-2xl font-black text-[8px] md:text-[9px] uppercase tracking-[0.16em] gap-2 transition-all px-3 md:px-4',
-                    isEditingContent
-                      ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-lg'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  )}
-                >
-                  {isEditingContent ? <Lock className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
-                  {isEditingContent ? 'Finalizar Edición' : 'Gestionar Fases'}
-                </Button>
-
-                {isEditingContent && (
-                  <Button
-                    onClick={handleSaveStructure}
-                    disabled={updating?.startsWith('content-')}
-                    className="h-10 md:h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-[8px] md:text-[9px] uppercase tracking-[0.16em] px-3 md:px-5 shadow-xl shadow-blue-500/20 gap-2"
-                  >
-                    {updating?.startsWith('content-') ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Sincronizar Estructura
-                  </Button>
-                )}
-
-                <div className="w-px h-7 bg-slate-100 mx-1 hidden xl:block" />
-
                 <div className="flex w-full xl:w-auto p-1 bg-slate-100 rounded-[1.25rem] border border-slate-200 shadow-inner shrink-0 flex-wrap">
                   <button
                     onClick={() => setShowTeacherNotes(!showTeacherNotes)}
@@ -1033,25 +984,6 @@ export const InstitutionalCurriculumExplorer = ({
                   >
                     {isFocusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                     {isFocusMode ? 'Salir Foco' : 'Enfocar'}
-                  </button>
-                  <div className="w-px h-5 bg-slate-200 mx-1 self-center hidden lg:block" />
-                  <button
-                    onClick={() => setDrillViewMode('linear')}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 md:px-3.5 py-2 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.14em] transition-all',
-                      drillViewMode === 'linear' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'
-                    )}
-                  >
-                    <LayoutList className="w-4 h-4" /> Estructura
-                  </button>
-                  <button
-                    onClick={() => setDrillViewMode('slides')}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 md:px-3.5 py-2 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.14em] transition-all',
-                      drillViewMode === 'slides' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'
-                    )}
-                  >
-                    <MonitorPlay className="w-4 h-4" /> Cinematic
                   </button>
                 </div>
               </div>
@@ -1238,23 +1170,27 @@ export const InstitutionalCurriculumExplorer = ({
               className="space-y-8 md:space-y-10 pb-8 md:pb-14 px-3 md:px-5 lg:px-6 pt-4 md:pt-6"
             >
               {selectedSectionId ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-5">
+                <div className="flex flex-wrap justify-center gap-6 md:gap-10 pt-8 pb-12 w-full relative before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)] before:pointer-events-none">
                   {visibleModules.map((mod, index) => (
                     <motion.div
                       key={mod.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
+                      initial={{ opacity: 0, scale: 0.8, y: index % 2 === 0 ? -20 : 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 20, delay: index * 0.05 }}
                       onClick={() => !isEditingGrid && setSelectedModule(mod)}
                       className={cn(
-                        'bg-white border p-4 md:p-4.5 rounded-[1.4rem] md:rounded-[1.6rem] shadow-sm hover:shadow-xl transition-all group relative overflow-hidden flex flex-col justify-between min-h-[210px] md:min-h-[230px]',
+                        'w-full sm:w-[280px] md:w-[320px] bg-white/80 backdrop-blur-xl border border-white/50 p-6 md:p-8 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_80px_-20px_rgba(59,130,246,0.15)] transition-all group relative overflow-visible flex flex-col justify-between min-h-[250px]',
+                        index % 2 === 0 ? 'lg:translate-y-6' : 'lg:-translate-y-6',
                         isEditingGrid
-                          ? 'border-blue-500 border-dashed border-4 bg-blue-50/5 scale-[0.98] cursor-default'
+                          ? 'border-blue-500 border-dashed border-4 scale-[0.98] cursor-default'
                           : mod.activo
-                            ? 'border-slate-100 cursor-pointer'
-                            : 'border-slate-100 opacity-60 cursor-pointer grayscale-[0.5]'
+                            ? 'cursor-pointer hover:-translate-y-2'
+                            : 'opacity-60 cursor-pointer grayscale-[0.5]'
                       )}
                     >
+                      <div className="absolute -top-4 -right-4 w-12 h-12 bg-white rounded-full flex xl:hidden items-center justify-center font-black text-sm shadow-xl z-30 border border-blue-100 group-hover:scale-110 transition-transform">
+                        {index + 1}
+                      </div>
                       {!mod.activo && !isEditingGrid && (
                         <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-[1px] z-20 flex items-center justify-center">
                           <Badge className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full">
@@ -1364,23 +1300,27 @@ export const InstitutionalCurriculumExplorer = ({
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+                <div className="flex flex-wrap justify-center gap-8 md:gap-14 pt-8 pb-12 w-full mt-4 relative before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.08)_0%,transparent_70%)] before:pointer-events-none">
                   {(isEditingGrid ? localSections : filteredSections).map((section, index) => (
                     <motion.div
                       key={section.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
+                      initial={{ opacity: 0, scale: 0.8, rotate: index % 2 === 0 ? -2 : 2 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 180, damping: 20, delay: index * 0.1 }}
                       onClick={() => !isEditingGrid && setSelectedSectionId(section.id)}
                       className={cn(
-                        'group bg-white border p-4 md:p-5 rounded-[1.5rem] md:rounded-[1.8rem] shadow-sm hover:shadow-xl transition-all relative overflow-hidden flex flex-col justify-between min-h-[220px] md:min-h-[245px]',
+                        'w-full sm:w-[320px] md:w-[360px] bg-white/70 backdrop-blur-2xl border border-white/60 p-6 md:p-10 rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_100px_-20px_rgba(59,130,246,0.2)] transition-all duration-500 group relative flex flex-col justify-between min-h-[280px]',
+                        index % 2 === 0 ? 'lg:translate-y-10 lg:hover:rotate-1' : 'lg:-translate-y-6 lg:hover:-rotate-1',
                         isEditingGrid
-                          ? 'border-blue-500 border-dashed border-4 bg-blue-50/5 scale-[0.98] cursor-default'
+                          ? 'border-blue-500 border-dashed border-4 scale-[0.98] cursor-default'
                           : section.activo
-                            ? 'border-slate-100 cursor-pointer'
-                            : 'border-slate-100 opacity-60 cursor-pointer grayscale-[0.5]'
+                            ? 'cursor-pointer hover:-translate-y-3'
+                            : 'opacity-60 cursor-pointer grayscale-[0.5]'
                       )}
                     >
+                      <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full flex lg:hidden items-center justify-center font-black text-sm shadow-xl z-30 group-hover:scale-110 transition-transform">
+                        {index + 1}
+                      </div>
                       {!section.activo && !isEditingGrid && (
                         <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-[1px] z-20 flex items-center justify-center">
                           <Badge className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full">
