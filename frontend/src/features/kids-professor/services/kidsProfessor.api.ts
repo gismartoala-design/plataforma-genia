@@ -27,11 +27,12 @@ const kidsProfessorApi = {
         return apiClient.get(`/api/modules/${moduleId}`);
     },
 
-    createModule: async (payload: { title: string, description: string, professorId: string, duracionDias?: number }): Promise<any> => {
+    createModule: async (payload: { title: string, description: string, professorId: string, duracionDias?: number, cursoId?: number }): Promise<any> => {
         return apiClient.post('/api/modules', {
             nombreModulo: payload.title,
             descripcion: payload.description,
             profesorId: Number(payload.professorId),
+            cursoId: payload.cursoId,
             duracionDias: payload.duracionDias || 0,
         });
     },

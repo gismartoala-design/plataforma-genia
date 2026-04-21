@@ -125,17 +125,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
 
     const kidsProfessorLinks = [
         { href: "/kids-teach", icon: LayoutDashboard, label: "Laboratorio Kids" },
-        ...kidsCourses.map(curso => ({
-            href: `/kids-teach`, // Redirige al dashboard principal ya que muestran abajo
-            icon: Users,
-            label: curso.nombre || "Curso Asignado"
-        })),
-        ...kidsModules.map(mod => ({
-            href: `/kids-teach/module/${mod.id}`,
-            icon: Rocket,
-            label: mod.nombreModulo || "Mundo Mágico"
-        })),
-        { href: "/profile", icon: Settings, label: "Opciones" }
+        { href: "/profile", icon: Settings, label: "Ajustes de Perfil" }
     ];
 
     const links = (isTutor || currentRole === "tutor") ? tutorLinks :

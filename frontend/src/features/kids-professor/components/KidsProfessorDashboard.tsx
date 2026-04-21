@@ -11,12 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 export function KidsProfessorDashboard({ user }: { user: any }) {
   const [, setLocation] = useLocation();
   const [modules, setModules] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newModTitle, setNewModTitle] = useState("");
   const [newModDesc, setNewModDesc] = useState("");
@@ -61,7 +64,8 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
         title: newModTitle,
         description: newModDesc || "Contenido para pequeños genios",
         duracionDias: Number(newModDuration) || 0,
-        professorId: user.id
+        professorId: user.id,
+        cursoId: selectedCourse ? selectedCourse.id : undefined
       });
       setModules([...modules, newModule]);
       toast({ title: "¡Módulo Creado!", description: "Ahora puedes añadir niveles y actividades." });
@@ -229,12 +233,79 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
 
         {/* Content Section */}
         <div className="space-y-8">
-          <div className="flex items-center gap-6">
-            <div className="w-14 h-14 bg-gradient-to-br from-fuchsia-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl rotate-3">
-              <Sparkles className="w-8 h-8" />
-            </div>
-            <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase underline decoration-indigo-200 decoration-8 underline-offset-8">Tus Galaxias de Aprendizaje</h2>
-          </div>
+          
+          {!selectedCourse ? (
+            // VISTA DE CURSOS
+            <>
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-xl rotate-3">
+                  <BookOpen className="w-8 h-8" />
+                </div>
+                <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase underline decoration-emerald-200 decoration-8 underline-offset-8">
+                  Tus Cursos Asignados
+                </h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {loading ? (
+                    <div className="col-span-full flex justify-center py-24"><p className="animate-pulse font-bold text-slate-500">Cargando...</p></div>
+                ) : courses.length === 0 ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-full py-24 text-center bg-white/60 rounded-[3rem] border-4 border-white shadow-sm">
+                        <p className="text-2xl font-black text-slate-400">Aún no tienes cursos asignados.</p>
+                    </motion.div>
+                ) : (
+                    courses.map((curso, idx) => (
+                        <motion.div
+                            key={curso.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            whileHover={{ scale: 1.03, y: -10 }}
+                            className="group cursor-pointer"
+                            onClick={() => setSelectedCourse(curso)}
+                        >
+                            <div className="relative bg-white p-8 rounded-[3.5rem] shadow-2xl h-[280px] flex flex-col justify-between border-x-4 border-t-4 border-b-[16px] border-emerald-50 hover:border-emerald-100 transition-all">
+                                <div className="absolute top-6 right-6 text-6xl opacity-20 drop-shadow-lg">
+                                  {['🎒', '🏫', '🖍️', '📚'][idx % 4]}
+                                </div>
+                                <div className="space-y-4 relative z-10">
+                                    <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 mb-2">
+                                        <Users className="w-8 h-8" />
+                                    </div>
+                                    <h3 className="text-3xl font-black leading-tight text-slate-800 drop-shadow-sm">{curso.nombre}</h3>
+                                </div>
+                                <div className="w-full bg-emerald-500 text-white h-14 rounded-2xl font-black text-lg flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all shadow-md">
+                                    Ver Mundos <Rocket className="w-5 h-5"/>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))
+                )}
+              </div>
+            </>
+          ) : (
+            // VISTA DE MÓDULOS DEL CURSO SELECCIONADO
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-md p-4 rounded-3xl border-2 border-white mb-6 shadow-sm">
+                <button 
+                  onClick={() => setSelectedCourse(null)}
+                  className="flex items-center gap-2 px-6 py-3 bg-white rounded-2xl text-slate-600 font-black tracking-widest hover:bg-slate-50 transition-all border-b-4 border-slate-200 active:border-b-0 active:translate-y-1 text-sm uppercase"
+                >
+                  ◀ Volver a Cursos
+                </button>
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm py-2 px-4 rounded-xl border-0 shadow-inner">
+                    Viendo: {selectedCourse.nombre}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-fuchsia-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl rotate-3">
+                  <Sparkles className="w-8 h-8" />
+                </div>
+                <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase underline decoration-indigo-200 decoration-8 underline-offset-8">Mundos de Aventura</h2>
+              </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {loading ? (
@@ -246,7 +317,7 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
                 >🍭</motion.div>
                 <p className="text-2xl font-black text-indigo-400 animate-pulse">Echando chispas mágicas...</p>
               </div>
-            ) : modules.length === 0 ? (
+            ) : modules.filter(m => m.cursoId === selectedCourse.id || (!m.cursoId && selectedCourse)).length === 0 ? (
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -254,12 +325,12 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
               >
                 <div className="text-9xl">✨</div>
                 <div>
-                  <h3 className="text-3xl font-black text-indigo-600">Aún no hay mundos...</h3>
-                  <p className="text-slate-500 font-bold text-xl mt-2 max-w-sm mx-auto">¡Es un lienzo en blanco! Usa el botón de arriba para crear tu primera aventura espacial.</p>
+                  <h3 className="text-3xl font-black text-indigo-600">Aún no hay mundos en este curso...</h3>
+                  <p className="text-slate-500 font-bold text-xl mt-2 max-w-sm mx-auto">¡Es un lienzo en blanco! Usa el botón de arriba para crear tu primera aventura espacial en este curso.</p>
                 </div>
               </motion.div>
             ) : (
-              modules.map((mod, idx) => {
+              modules.filter(m => m.cursoId === selectedCourse.id || (!m.cursoId && selectedCourse)).map((mod, idx) => {
                 const colors = [
                   'from-emerald-400 to-teal-500',
                   'from-orange-400 to-rose-500',
@@ -321,6 +392,8 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
               })
             )}
           </div>
+          </>
+          )}
         </div>
       </div>
 
