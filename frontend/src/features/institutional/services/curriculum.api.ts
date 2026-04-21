@@ -98,6 +98,10 @@ export const institutionalCurriculumApi = {
     return apiClient.get<ModuloInst[]>(`/api/institution-curriculum/modules/section/${sectionId}`);
   },
 
+  async getModule(id: number): Promise<ModuloInst> {
+    return apiClient.get<ModuloInst>(`/api/institution-curriculum/module/${id}`);
+  },
+
   async getModulesByCourse(courseId: number): Promise<ModuloInst[]> {
     return apiClient.get<ModuloInst[]>(`/api/institution-curriculum/modules/course/${courseId}`);
   },

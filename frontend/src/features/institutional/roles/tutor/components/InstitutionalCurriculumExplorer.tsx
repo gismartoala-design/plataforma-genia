@@ -27,12 +27,21 @@ import {
   Code2,
   Trophy,
   Timer as ClockIcon,
+  Video,
+  FileText,
+  HelpCircle,
+  ImageIcon,
+  Link2,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ModuloInst } from '../../../services/curriculum.api';
+import { KidsActivityViewer } from '@/features/kids/components/KidsActivityViewer';
+// CarouselView is defined locally in this file
 
 interface Section {
   id: number;
@@ -388,10 +397,10 @@ const CarouselView = ({
       </div>
 
       {/* Main Content Area Wrap */}
-      <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center justify-center px-4 md:px-12 pt-28 md:pt-32 pb-6">
+      <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center justify-start md:justify-center px-4 md:px-12 pt-24 md:pt-32 pb-10">
         
         {/* THE MISSION CARD */}
-        <div className="relative w-full max-w-6xl min-h-[500px] md:min-h-[600px] bg-[#f1f3f7] rounded-[3.5rem] shadow-sm flex flex-col items-center justify-center p-8 md:p-16 overflow-hidden">
+        <div className="relative w-full max-w-6xl min-h-[400px] md:min-h-[600px] bg-[#f1f3f7] rounded-[2rem] md:rounded-[3.5rem] shadow-sm flex flex-col items-center justify-center p-6 md:p-16 overflow-visible">
           
           {/* Decorative Corner Curves */}
           <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none opacity-20">
@@ -562,6 +571,7 @@ export const InstitutionalCurriculumExplorer = ({
   updating,
   initialModuleId,
 }: Props) => {
+  const user = null; // Defined local as placeholder for KidsActivityViewer
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'mission' | 'lab' | 'narrative'>('all');
   const [selectedModule, setSelectedModule] = useState<ModuloInst | null>(null);
@@ -877,6 +887,10 @@ export const InstitutionalCurriculumExplorer = ({
 
   const getFilteredModules = (modules: ModuloInst[]) => {
     return modules.filter((module) => {
+      // VISIBILITY LOGIC: Si el módulo está inactivo o bloqueado, se oculta completamente
+      // (a menos que estemos en modo edición, aunque el Explorer suele ser de consumo)
+      if (!module.activo || module.bloqueado) return false;
+
       const matchesSearch = module.titulo.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType =
         filterType === 'all' ||
@@ -889,14 +903,15 @@ export const InstitutionalCurriculumExplorer = ({
   };
 
   const filteredSections = sections
+    .filter(section => section.activo !== false) // Strict visibility filter
     .map((section) => ({
       ...section,
       modules: getFilteredModules(section.modules),
     }))
     .filter(
       (section) =>
-        section.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        section.modules.length > 0
+        (section.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        section.modules.length > 0)
     );
 
   const selectedSection = selectedSectionId
@@ -1154,62 +1169,94 @@ export const InstitutionalCurriculumExplorer = ({
                       </div>
                     </div>
 
-                    {/* BRICK WALL VIEW - PHASES ARRAY */}
+                     {/* BRICK WALL VIEW - PHASES ARRAY OR KIDS MILESTONES */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full">
-                      {localLevels.map((level, lIdx) => (
-                        <motion.button
-                          key={level.id || lIdx}
-                          onClick={() => {
-                            const slideIdx = allSlides.findIndex(s => s.momentIdx === lIdx);
-                            setInitialSlideIndex(slideIdx);
-                            setSessionStarted(true);
-                          }}
-                          initial={{ opacity: 0, scale: 0.8, y: 30 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{ delay: 1.4 + (lIdx * 0.1), type: "spring" }}
-                          className="group relative text-left outline-none"
-                        >
-                          <div className="aspect-[4/3] rounded-[2.5rem] border-b-[10px] border-r-[10px] border-blue-900/20 bg-white p-6 md:p-8 flex flex-col justify-between shadow-xl transition-all group-hover:-translate-y-4 group-hover:-translate-x-2 group-hover:shadow-[24px_24px_0_rgba(29,78,216,0.1)] cursor-pointer overflow-hidden ring-4 ring-transparent group-hover:ring-blue-500/10">
-                            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity group-hover:scale-125 duration-500 translate-x-4 -translate-y-4">
-                              <Layers className="w-24 h-24 text-blue-600 -rotate-12" />
-                            </div>
-                            
-                            <div className="flex items-start justify-between relative z-10">
-                              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black group-hover:bg-blue-600 group-hover:text-white transition-all text-xl shadow-sm rotate-[-4deg] group-hover:rotate-[4deg]">
-                                {lIdx + 1}
+                      {selectedModule?.tipo?.includes('kids') || selectedModule?.tipo === 'adventure' ? (
+                        <>
+                          {/* REQUIREMENTS FOR KIDS MODULES */}
+                          {(selectedModule.contenido?.requirements || selectedModule.contenido?.milestones || []).map((req: string, rIdx: number) => (
+                            <motion.div
+                              key={rIdx}
+                              initial={{ opacity: 0, scale: 0.8, y: 30 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              transition={{ delay: 1.4 + (rIdx * 0.1), type: "spring" }}
+                              className="group relative text-left outline-none"
+                            >
+                              <div className="aspect-[4/3] rounded-[2.5rem] border-b-[10px] border-r-[10px] border-indigo-900/10 bg-white p-6 md:p-8 flex flex-col justify-between shadow-xl transition-all group-hover:-translate-y-2 cursor-default overflow-hidden ring-4 ring-transparent border border-slate-100">
+                                <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                                  <CheckCircle2 className="w-24 h-24 text-indigo-600 -rotate-12" />
+                                </div>
+                                <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black transition-all text-sm">
+                                  {rIdx + 1}
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-bold uppercase italic tracking-tight text-slate-800 leading-none">REQUISITO</h4>
+                                  <p className="text-xs font-medium text-slate-500 leading-relaxed pr-4 line-clamp-3">
+                                    {req}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="flex flex-col items-end gap-1">
-                                <ClockIcon className="w-6 h-6 text-slate-200 group-hover:text-blue-500 transition-colors" />
-                                <span className="text-[10px] font-black text-slate-400 group-hover:text-blue-600 transition-colors tracking-tighter">
-                                  {level.time_minutes || 10}m
-                                </span>
+                            </motion.div>
+                          ))}
+                        </>
+                      ) : (
+                        localLevels.map((level, lIdx) => (
+                          <motion.button
+                            key={level.id || lIdx}
+                            onClick={() => {
+                              const slideIdx = allSlides.findIndex(s => s.momentIdx === lIdx);
+                              setInitialSlideIndex(slideIdx);
+                              setSessionStarted(true);
+                            }}
+                            initial={{ opacity: 0, scale: 0.8, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ delay: 1.4 + (lIdx * 0.1), type: "spring" }}
+                            className="group relative text-left outline-none"
+                          >
+                            <div className="aspect-[4/3] rounded-[2.5rem] border-b-[10px] border-r-[10px] border-blue-900/20 bg-white p-6 md:p-8 flex flex-col justify-between shadow-xl transition-all group-hover:-translate-y-4 group-hover:-translate-x-2 group-hover:shadow-[24px_24px_0_rgba(29,78,216,0.1)] cursor-pointer overflow-hidden ring-4 ring-transparent group-hover:ring-blue-500/10">
+                              <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity group-hover:scale-125 duration-500 translate-x-4 -translate-y-4">
+                                <Layers className="w-24 h-24 text-blue-600 -rotate-12" />
+                              </div>
+                              
+                              <div className="flex items-start justify-between relative z-10">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black group-hover:bg-blue-600 group-hover:text-white transition-all text-xl shadow-sm rotate-[-4deg] group-hover:rotate-[4deg]">
+                                  {lIdx + 1}
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                  <ClockIcon className="w-6 h-6 text-slate-200 group-hover:text-blue-500 transition-colors" />
+                                  <span className="text-[10px] font-black text-slate-400 group-hover:text-blue-600 transition-colors tracking-tighter">
+                                    {level.time_minutes || 10}m
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2 relative z-10">
+                                <div className="h-1.5 w-12 bg-slate-100 group-hover:bg-blue-200 rounded-full transition-colors" />
+                                <h4 className="text-lg font-black uppercase italic tracking-tight text-slate-950 leading-[1.1] pr-4 group-hover:text-blue-900">
+                                  {level.title || `Fase ${lIdx + 1}`}
+                                </h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-blue-400 animate-pulse" />
+                                  {level.parsedBlocks?.length || 0} Componentes
+                                </p>
+                              </div>
+
+                              <div className="absolute bottom-4 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                                 <span className="text-[9px] font-black uppercase text-blue-600 flex items-center gap-1">
+                                   Clic para entrar <ChevronRight className="w-3 h-3" />
+                                 </span>
                               </div>
                             </div>
-
-                            <div className="space-y-2 relative z-10">
-                              <div className="h-1.5 w-12 bg-slate-100 group-hover:bg-blue-200 rounded-full transition-colors" />
-                              <h4 className="text-lg font-black uppercase italic tracking-tight text-slate-950 leading-[1.1] pr-4 group-hover:text-blue-900">
-                                {level.title || `Fase ${lIdx + 1}`}
-                              </h4>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-blue-400 animate-pulse" />
-                                {level.parsedBlocks?.length || 0} Componentes
-                              </p>
-                            </div>
-
-                            <div className="absolute bottom-4 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                               <span className="text-[9px] font-black uppercase text-blue-600 flex items-center gap-1">
-                                 Clic para entrar <ChevronRight className="w-3 h-3" />
-                               </span>
-                            </div>
-                          </div>
-                        </motion.button>
-                      ))}
+                          </motion.button>
+                        ))
+                      )}
                       
                       {/* Meta Completion Brick */}
                       <div className="aspect-[4/3.2] rounded-[2rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center space-y-3 opacity-40 bg-slate-50/50">
                         <Trophy className="w-10 h-10 text-slate-400" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 italic max-w-[120px]">Proyecto Finalizado de la Unidad</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 italic max-w-[120px]">
+                          {selectedModule?.tipo?.includes('kids') ? 'Aventura Completada' : 'Proyecto Finalizado de la Unidad'}
+                        </span>
                       </div>
                     </div>
 
@@ -1289,20 +1336,39 @@ export const InstitutionalCurriculumExplorer = ({
                         </div>
                       )}
 
-                      <CarouselView
-                        levels={localLevels}
-                        isEditing={isEditingContent}
-                        showTeacherNotes={showTeacherNotes}
-                        isFocusMode={isFocusMode}
-                        moduleTitle={selectedModule.titulo}
-                        points={points}
-                        setPoints={setPoints}
-                        onMove={handleLevelMove}
-                        onToggleVisibility={handleLevelToggleVisibility}
-                        allSlides={allSlides}
-                        initialSlideIndex={initialSlideIndex}
-                        onBack={() => setSelectedModule(null)}
-                      />
+                       {selectedModule?.tipo?.includes('kids') || selectedModule?.tipo === 'adventure' ? (
+                        <div className="h-[calc(100vh-100px)] w-full">
+                           <KidsActivityViewer 
+                              user={user} 
+                              id={selectedModule.id} 
+                              tipo={selectedModule.tipo} 
+                              standalone={false}
+                              initialTemplate={{
+                                id: selectedModule.id,
+                                moduloInstId: selectedModule.id,
+                                titulo: selectedModule.titulo,
+                                tipo: selectedModule.tipo,
+                                actividades: selectedModule.contenido
+                              }}
+                              onBack={() => setSessionStarted(false)}
+                           />
+                        </div>
+                      ) : (
+                        <CarouselView
+                          levels={localLevels}
+                          isEditing={isEditingContent}
+                          showTeacherNotes={showTeacherNotes}
+                          isFocusMode={isFocusMode}
+                          moduleTitle={selectedModule.titulo}
+                          points={points}
+                          setPoints={setPoints}
+                          onMove={handleLevelMove}
+                          onToggleVisibility={handleLevelToggleVisibility}
+                          allSlides={allSlides}
+                          initialSlideIndex={initialSlideIndex}
+                          onBack={() => setSelectedModule(null)}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
@@ -1387,13 +1453,21 @@ export const InstitutionalCurriculumExplorer = ({
                       )}
 
                       <div className="space-y-5 relative z-10">
-                        <div
+                         <div
                           className={cn(
                             'w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm border border-white group-hover:rotate-6 group-hover:scale-110',
-                            mod.activo ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-300'
+                            mod.activo ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-300',
+                            mod.tipo === 'rag_kids' && mod.activo && 'bg-blue-500 shadow-blue-500/30',
+                            mod.tipo === 'ha_kids' && mod.activo && 'bg-emerald-500 shadow-emerald-500/30',
+                            mod.tipo === 'pim_kids' && mod.activo && 'bg-indigo-500 shadow-indigo-500/30',
+                             mod.tipo === 'adventure' && mod.activo && 'bg-amber-500 shadow-amber-500/30'
                           )}
                         >
-                          {mod.tipo === 'mission' ? <Rocket className="w-7 h-7" /> : <Wrench className="w-7 h-7" />}
+                          {mod.tipo === 'rag_kids' ? <Sparkles className="w-7 h-7" /> :
+                           mod.tipo === 'ha_kids' ? <Target className="w-7 h-7" /> :
+                           mod.tipo === 'pim_kids' ? <Rocket className="w-7 h-7" /> :
+                           mod.tipo === 'adventure' ? <Zap className="w-7 h-7" /> :
+                           mod.tipo === 'mission' ? <Rocket className="w-7 h-7" /> : <Wrench className="w-7 h-7" />}
                         </div>
                         <div className="space-y-2">
                           <Badge

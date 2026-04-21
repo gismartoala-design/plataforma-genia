@@ -249,7 +249,13 @@ export const studentApi = {
   /**
    * Registrar resultado de actividad Kids
    */
-  async submitKidsResult(data: { estudianteId: number; plantillaKidsId: number; resultados: any[]; calificacionNumerica: number }) {
+  async submitKidsResult(data: { 
+    estudianteId: number; 
+    plantillaKidsId: number; 
+    resultados: any[]; 
+    calificacionNumerica: number;
+    moduloInstId?: number;
+  }) {
     return apiClient.post('/api/kids/submit', data);
   }
 };

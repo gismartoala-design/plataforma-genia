@@ -47,7 +47,13 @@ import {
     EyeOff,
     LayoutDashboard,
     BookOpen,
-    ClipboardCheck
+    ClipboardCheck,
+    Lock,
+    Unlock,
+    Star,
+    Rocket,
+    Sword,
+    Zap
 } from 'lucide-react';
 import { MissionCinematicViewer } from '../student/MissionCinematicViewer';
 import { cn } from '@/lib/utils';
@@ -85,6 +91,10 @@ import { AutoEvaluationEditor } from '@/features/institutional/components/editor
 import { ActivityToolbox } from '@/features/institutional/components/editors/ActivityToolbox';
 import { InstitutionalClassBuilder } from '@/features/institutional/components/editors/InstitutionalClassBuilder';
 import { MissionEditor } from '@/features/institutional/components/editors/MissionEditor';
+import RagKidsEditor from '@/features/kids-professor/components/RagKidsEditor';
+import HaKidsEditor from '@/features/kids-professor/components/HaKidsEditor';
+import PimKidsEditor from '@/features/kids-professor/components/PimKidsEditor';
+import { KidsCourseEditor } from '@/features/kids-professor/components/KidsCourseEditor';
 import { toast } from 'sonner';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import '../../styles/ConstructionTheme.css';
@@ -291,6 +301,11 @@ const TYPE_CONFIG = {
     mission: { label: 'Misión', icon: Target, color: 'text-rose-500', bg: 'bg-rose-500/10' },
     maker_lab: { label: 'Laboratorio Maker', icon: Hammer, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
     auto_evaluation: { label: 'Evaluación Automática', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    // ─ Kids Modules ────────────────────────────────────────────────────
+    rag_kids:  { label: 'Misión RAC Kids',     icon: Rocket,    color: 'text-violet-400', bg: 'bg-violet-500/10' },
+    ha_kids:   { label: 'Reto HA Kids',         icon: Trophy,    color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    pim_kids:  { label: 'Proyecto PIM Kids',    icon: Lightbulb, color: 'text-amber-400',  bg: 'bg-amber-500/10' },
+    adventure: { label: 'Aventura Kids',        icon: Gamepad2,  color: 'text-pink-400',   bg: 'bg-pink-500/10' },
 };
 
 export const InstitutionalModuleEditor = () => {
@@ -398,6 +413,31 @@ export const InstitutionalModuleEditor = () => {
             });
         } catch (error) {
             console.error('Error fetching modules:', error);
+        }
+    };
+
+    const handleToggleSectionVisibility = async (sec: SectionInst) => {
+        if (isReadOnly) return;
+        try {
+            const newStatus = !sec.activo;
+            await institutionalCurriculumApi.updateSection(sec.id, { activo: newStatus });
+            setSections(prev => prev.map(s => s.id === sec.id ? { ...s, activo: newStatus } : s));
+            toast.success(newStatus ? "Unidad visibilizada" : "Unidad oculta para estudiantes");
+        } catch {
+            toast.error("Error al actualizar visibilidad");
+        }
+    };
+
+    const handleToggleModuleVisibility = async (mod: ModuloInst) => {
+        if (isReadOnly) return;
+        try {
+            const newStatus = !mod.activo;
+            await institutionalCurriculumApi.updateModule(mod.id, { activo: newStatus });
+            setModules(prev => prev.map(m => m.id === mod.id ? { ...m, activo: newStatus } : m));
+            setAllModules(prev => prev.map(m => m.id === mod.id ? { ...m, activo: newStatus } : m));
+            toast.success(newStatus ? "Nivel visible" : "Nivel oculto para estudiantes");
+        } catch {
+            toast.error("Error al actualizar visibilidad");
         }
     };
 
@@ -544,6 +584,8 @@ export const InstitutionalModuleEditor = () => {
 
         if (mod.tipo === 'modular_class' || mod.tipo === 'mission' || mod.tipo === 'maker_lab' || mod.tipo === 'auto_evaluation') {
             setSelectedLevel(mod);
+        } else if (['rag_kids', 'ha_kids', 'pim_kids', 'adventure'].includes(mod.tipo || '')) {
+            setSelectedLevel(mod);
         } else {
             setEditingActivity({ id: mod.id, tipo: mod.tipo, data: mod.contenido || {} });
         }
@@ -689,13 +731,22 @@ export const InstitutionalModuleEditor = () => {
                                                     <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border border-transparent", isLvlActive ? "bg-blue-600/20 border-blue-500/30" : config.bg)}>
                                                         <Icon className={cn("w-3 h-3", isLvlActive ? "text-blue-400" : config.color)} />
                                                     </div>
-                                                    <span className="text-[10px] font-black truncate tracking-tight uppercase flex-1 text-left">{mod.titulo}</span>
+                                                    <span className={cn("text-[10px] font-black truncate tracking-tight uppercase flex-1 text-left", !mod.activo && "text-white/10")}>{mod.titulo}</span>
                                                     {!isReadOnly && !isLvlActive && (
-                                                        <div 
-                                                            onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
-                                                            className="p-1.5 opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-opacity"
-                                                        >
-                                                            <Trash2 className="w-3 h-3" />
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div 
+                                                                onClick={(e) => { e.stopPropagation(); handleToggleModuleVisibility(mod); }}
+                                                                className={cn("p-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-md", mod.activo ? "text-emerald-400 hover:bg-emerald-500/10" : "text-white/20 hover:text-white")}
+                                                                title={mod.activo ? "Ocultar para Alumnos" : "Mostrar para Alumnos"}
+                                                            >
+                                                                {mod.activo ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                                                            </div>
+                                                            <div 
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }}
+                                                                className="p-1.5 opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-opacity"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </div>
                                                         </div>
                                                     )}
                                                     </div>
@@ -804,6 +855,32 @@ export const InstitutionalModuleEditor = () => {
                                     isReadOnly={isReadOnly} 
                                     onSave={(content) => handleLevelSave(selectedLevel.id, content)} 
                                 />
+                            ) : selectedLevel.tipo === 'rag_kids' ? (
+                                <RagKidsEditor
+                                    levelId={selectedLevel.id}
+                                    user={user}
+                                    onClose={() => setSelectedLevel(null)}
+                                    instModuleId={selectedLevel.id}
+                                />
+                            ) : selectedLevel.tipo === 'ha_kids' ? (
+                                <HaKidsEditor
+                                    levelId={selectedLevel.id}
+                                    user={user}
+                                    onClose={() => setSelectedLevel(null)}
+                                    instModuleId={selectedLevel.id}
+                                />
+                            ) : selectedLevel.tipo === 'pim_kids' ? (
+                                <PimKidsEditor
+                                    levelId={selectedLevel.id}
+                                    user={user}
+                                    onClose={() => setSelectedLevel(null)}
+                                    instModuleId={selectedLevel.id}
+                                />
+                            ) : selectedLevel.tipo === 'adventure' ? (
+                                <div className="flex items-center justify-center min-h-[60vh] text-slate-400 flex-col gap-4">
+                                    <Gamepad2 className="w-16 h-16 opacity-30" />
+                                    <p className="font-black uppercase tracking-widest text-sm">Editor de Aventura Kids — Próximamente</p>
+                                </div>
                             ) : (
                                 <InstitutionalClassBuilder
                                     module={selectedLevel}
@@ -870,21 +947,42 @@ export const InstitutionalModuleEditor = () => {
                                                         </div>
                                                         
                                                         {(!isReadOnly || user?.roleId === 13) && (
-                                                            <div
-                                                                role="button"
-                                                                onClick={async (e) => { 
-                                                                    e.stopPropagation(); 
-                                                                    try {
-                                                                        await institutionalCurriculumApi.updateModule(mod.id, { activo: !mod.activo });
-                                                                        toast.success("Visibilidad del componente modificada");
-                                                                        fetchModules(selectedSection.id);
-                                                                    } catch (err) {
-                                                                        toast.error("No se pudo actualizar");
-                                                                    }
-                                                                }}
-                                                                className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors", mod.activo ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" : "bg-slate-800 text-slate-500 hover:text-slate-300")}
-                                                            >
-                                                                {mod.activo ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div
+                                                                    role="button"
+                                                                    title={mod.activo ? "Ocultar para Estudiantes/Tutores" : "Mostrar para Estudiantes/Tutores"}
+                                                                    onClick={async (e) => { 
+                                                                        e.stopPropagation(); 
+                                                                        try {
+                                                                            await institutionalCurriculumApi.updateModule(mod.id, { activo: !mod.activo });
+                                                                            toast.success("Visibilidad del componente modificada");
+                                                                            fetchModules(selectedSection.id);
+                                                                        } catch (err) {
+                                                                            toast.error("No se pudo actualizar");
+                                                                        }
+                                                                    }}
+                                                                    className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm", mod.activo ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" : "bg-slate-800 text-slate-500 hover:text-slate-300")}
+                                                                >
+                                                                    {mod.activo ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                                                </div>
+
+                                                                <div
+                                                                    role="button"
+                                                                    title={mod.bloqueado ? "Desbloquear Misión" : "Bloquear Misión (Ocultar)"}
+                                                                    onClick={async (e) => { 
+                                                                        e.stopPropagation(); 
+                                                                        try {
+                                                                            await institutionalCurriculumApi.updateModule(mod.id, { bloqueado: !mod.bloqueado });
+                                                                            toast.success(mod.bloqueado ? "Misión desbloqueada" : "Misión bloqueada y oculta");
+                                                                            fetchModules(selectedSection.id);
+                                                                        } catch (err) {
+                                                                            toast.error("No se pudo actualizar el estado de bloqueo");
+                                                                        }
+                                                                    }}
+                                                                    className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm", !mod.bloqueado ? "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20" : "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20")}
+                                                                >
+                                                                    {mod.bloqueado ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                                                                </div>
                                                             </div>
                                                         )}
 
@@ -995,8 +1093,24 @@ export const InstitutionalModuleEditor = () => {
                                             whileHover={{ y: -8, scale: 1.02 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: sIdx * 0.1 }}
-                                            className="bg-white rounded-[3.5rem] p-12 shadow-sm border border-slate-100/50 hover:shadow-2xl hover:border-blue-100 transition-all relative group overflow-hidden flex flex-col justify-between min-h-[420px]"
+                                            className={cn(
+                                                "bg-white rounded-[3.5rem] p-12 shadow-sm border border-slate-100/50 hover:shadow-2xl hover:border-blue-100 transition-all relative group overflow-hidden flex flex-col justify-between min-h-[420px]",
+                                                !sec.activo && "opacity-60 bg-slate-50/50 grayscale-[0.3]"
+                                            )}
                                         >
+                                            {/* Visibility Toggle Overlay */}
+                                            {!isReadOnly && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleToggleSectionVisibility(sec); }}
+                                                    className={cn(
+                                                        "absolute top-8 right-8 w-12 h-12 rounded-2xl flex items-center justify-center transition-all z-20",
+                                                        sec.activo ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-200 text-slate-500 hover:bg-slate-300"
+                                                    )}
+                                                    title={sec.activo ? "Ocultar Unidad" : "Mostrar Unidad"}
+                                                >
+                                                    {sec.activo ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                                                </button>
+                                            )}
                                             {/* Decorative Number */}
                                             <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
                                                 <span className="text-[12rem] font-black leading-none tracking-tighter italic">{sIdx + 1}</span>

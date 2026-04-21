@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, Gamepad2, Activity, BookOpen, Settings, Pencil, Eye, EyeOff } from 'lucide-react';
+import { Plus, Users, Gamepad2, Activity, BookOpen, Settings, Pencil, Eye, EyeOff, Star, Rocket, Sparkles, Map, Trophy, LogOut } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { motion, AnimatePresence } from 'framer-motion';
 import kidsProfessorApi from '../services/kidsProfessor.api';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,196 +100,271 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("edu_token");
+    localStorage.removeItem("edu_user");
+    window.location.href = "/login-kids";
+  };
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border shadow-sm">
-         <div>
-             <h1 className="text-3xl font-black text-slate-800 tracking-tight">Panel de Profesor Kids</h1>
-             <p className="text-slate-500 font-medium">Gestiona y crea mundos de aprendizaje para los más pequeños.</p>
-         </div>
-         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-                <Button className="rounded-2xl h-14 px-8 font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all hover:scale-[1.02]">
-                    <Plus className="w-6 h-6 mr-2" /> CREAR NUEVO MÓDULO
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2rem] border-4 border-indigo-50">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl font-black text-slate-800">Nueva Aventura Kids</DialogTitle>
-                </DialogHeader>
-                <div className="py-6 space-y-6">
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700">Nombre del Módulo</Label>
-                        <Input 
-                            value={newModTitle} 
-                            onChange={e => setNewModTitle(e.target.value)} 
-                            placeholder="Ej: Exploradores del Código"
-                            className="rounded-xl h-12 border-2 focus:border-indigo-400 font-bold"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700">Descripción Corta</Label>
-                        <Input 
-                            value={newModDesc} 
-                            onChange={e => setNewModDesc(e.target.value)} 
-                            placeholder="¿De qué trata este módulo?"
-                            className="rounded-xl h-12"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700">Duración (Días)</Label>
-                        <Input 
-                            type="number"
-                            value={newModDuration} 
-                            onChange={e => setNewModDuration(e.target.value)} 
-                            placeholder="Ej: 30"
-                            className="rounded-xl h-12 w-32"
-                        />
-                    </div>
-                </div>
-                <DialogFooter className="gap-2">
-                    <Button variant="outline" onClick={() => setShowAddDialog(false)} className="rounded-xl font-bold h-12">Cancelar</Button>
-                    <Button onClick={addModule} className="rounded-xl font-black h-12 px-8 bg-indigo-600">¡CREAR AHORA!</Button>
-                </DialogFooter>
-            </DialogContent>
-         </Dialog>
+    <div className="min-h-screen relative overflow-x-hidden font-sans" style={{ background: 'linear-gradient(145deg, #f0f9ff 0%, #faf5ff 50%, #fffbeb 100%)' }}>
+      {/* Animated floating blobs (Kids Aesthetic) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full opacity-10"
+            style={{
+              width: `${150 + i * 70}px`, height: `${150 + i * 70}px`,
+              background: [`#818cf8`,`#34d399`,`#fb923c`,`#a78bfa`,`#38bdf8`,`#f472b6`][i],
+              top: `${[10, 70, 30, 80, 50, 20][i]}%`,
+              left: `${[5, 85, 40, 20, 95, 60][i]}%`,
+            }}
+            animate={{ y: [0, -40, 0], x: [0, 20, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 5 + i * 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.8 }}
+          />
+        ))}
+      </div>
 
-         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-            <DialogContent className="rounded-[2rem] border-4 border-indigo-50">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl font-black text-slate-800">Editar Aventura Kids</DialogTitle>
-                </DialogHeader>
-                <div className="py-6 space-y-6">
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700">Nombre del Módulo</Label>
-                        <Input 
-                            value={editModTitle} 
-                            onChange={e => setEditModTitle(e.target.value)} 
-                            className="rounded-xl h-12 border-2 focus:border-indigo-400 font-bold"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700">Descripción Corta</Label>
-                        <Input 
-                            value={editModDesc} 
-                            onChange={e => setEditModDesc(e.target.value)} 
-                            className="rounded-xl h-12"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700">Duración (Días)</Label>
-                        <Input 
-                            type="number"
-                            value={editModDuration} 
-                            onChange={e => setEditModDuration(e.target.value)} 
-                            className="rounded-xl h-12 w-32"
-                        />
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
-                        <div>
-                            <Label className="font-black text-slate-800 text-lg flex items-center gap-2">
-                                {editModBlocked ? <EyeOff className="text-red-500" /> : <Eye className="text-emerald-500" />}
-                                VISIBILIDAD
-                            </Label>
-                            <p className="text-xs text-slate-500 font-bold uppercase">{editModBlocked ? 'Oculto para los estudiantes' : 'Visible para los estudiantes'}</p>
+      <div className="max-w-6xl mx-auto relative z-10 px-6 py-10 md:px-10 space-y-10">
+        {/* Header Section */}
+        <motion.header
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex flex-wrap justify-between items-center bg-white/80 backdrop-blur-2xl p-8 rounded-[3rem] shadow-2xl border-4 border-white gap-6"
+        >
+          <div className="flex items-center gap-6">
+            <motion.div 
+              whileHover={{ rotate: [0, -10, 10, 0] }}
+              className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-5xl shadow-xl border-4 border-white"
+            >
+              🧑‍🏫
+            </motion.div>
+            <div className="space-y-1">
+              <h1 className="text-4xl font-black text-slate-800 tracking-tighter leading-none">
+                Laboratorio del <span className="text-indigo-600">Profesor Kids</span>
+              </h1>
+              <p className="text-slate-500 font-bold text-lg">¡Bienvenido, <span className="text-fuchsia-500">{user?.name?.split(' ')[0]}</span>! Prepárate para crear magia. ✨</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <DialogTrigger asChild>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-gradient-to-br from-indigo-500 to-indigo-700 h-16 px-10 rounded-[2rem] text-white font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-indigo-300/40 border-x-4 border-t-4 border-b-8 border-indigo-900 active:border-b-4 active:translate-y-1 transition-all"
+                    >
+                        <Rocket className="w-6 h-6" /> CREAR NUEVA AVENTURA
+                    </motion.button>
+                </DialogTrigger>
+                <DialogContent className="rounded-[3rem] border-[8px] border-indigo-50 p-10">
+                    <DialogHeader>
+                        <DialogTitle className="text-4xl font-black text-slate-800 text-center mb-4">Nueva Aventura Kids 🚀</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-6 space-y-8">
+                        <div className="space-y-3">
+                            <Label className="text-lg font-black text-indigo-600 ml-2">Nombre del Mundo Mágico</Label>
+                            <Input 
+                                value={newModTitle} 
+                                onChange={e => setNewModTitle(e.target.value)} 
+                                placeholder="Ej: Islas de los Algoritmos"
+                                className="rounded-[2rem] h-16 border-4 border-indigo-50 focus:border-indigo-200 text-xl font-bold bg-slate-50/50 px-8"
+                            />
                         </div>
-                        <Button 
-                            variant={editModBlocked ? "destructive" : "outline"}
-                            onClick={() => setEditModBlocked(!editModBlocked)} 
-                            className="rounded-xl font-black h-12 px-6 shadow-sm transition-all"
-                        >
-                            {editModBlocked ? 'DESBLOQUEAR' : 'BLOQUEAR'}
-                        </Button>
+                        <div className="space-y-3">
+                            <Label className="text-lg font-black text-fuchsia-600 ml-2">Descripción de la Misión</Label>
+                            <Input 
+                                value={newModDesc} 
+                                onChange={e => setNewModDesc(e.target.value)} 
+                                placeholder="Explica de qué trata este viaje..."
+                                className="rounded-[2rem] h-16 border-4 border-fuchsia-50 focus:border-fuchsia-200 text-lg font-bold bg-slate-50/50 px-8"
+                            />
+                        </div>
                     </div>
-                </div>
-                <DialogFooter className="gap-2">
-                    <Button variant="outline" onClick={() => setShowEditDialog(false)} className="rounded-xl font-bold h-12">Cancelar</Button>
-                    <Button onClick={saveEditModule} className="rounded-xl font-black h-12 px-8 bg-indigo-600">GUARDAR CAMBIOS</Button>
-                </DialogFooter>
-            </DialogContent>
-         </Dialog>
-      </div>
+                    <div className="flex gap-4 pt-6">
+                        <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="h-14 rounded-2xl font-black text-slate-400">Cancelar</Button>
+                        <Button onClick={addModule} className="flex-1 h-16 rounded-[2rem] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg shadow-xl">¡CREAR MUNDO!</Button>
+                    </div>
+                </DialogContent>
+             </Dialog>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-6 group hover:border-indigo-200 transition-colors">
-           <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-               <Users className="w-8 h-8" />
-           </div>
-           <div>
-               <h3 className="font-bold text-slate-500 mb-1">Alumnos Kids</h3>
-               <p className="text-4xl font-black text-slate-800">24</p>
-           </div>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-6 group hover:border-purple-200 transition-colors">
-           <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-               <Gamepad2 className="w-8 h-8" />
-           </div>
-           <div>
-               <h3 className="font-bold text-slate-500 mb-1">Módulos Activos</h3>
-               <p className="text-4xl font-black text-slate-800">{modules.length}</p>
-           </div>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-6 group hover:border-emerald-200 transition-colors">
-           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-               <Activity className="w-8 h-8" />
-           </div>
-           <div>
-               <h3 className="font-bold text-slate-500 mb-1">Tasa de Completitud</h3>
-               <p className="text-4xl font-black text-slate-800">92%</p>
-           </div>
-        </div>
-      </div>
+             <button 
+                onClick={handleLogout}
+                className="w-16 h-16 rounded-[1.5rem] bg-rose-500 text-white border-x-4 border-t-4 border-b-8 border-rose-700 shadow-lg flex items-center justify-center active:border-b-4 active:translate-y-1 transition-all"
+             >
+                <LogOut className="w-7 h-7" />
+             </button>
+          </div>
+        </motion.header>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-black text-slate-800">Tus Módulos de Enseñanza</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <p>Cargando aventuras...</p>
-          ) : modules.length === 0 ? (
-            <Card className="col-span-full border-dashed border-2 p-12 text-center bg-slate-50">
-              <p className="text-slate-400 font-medium">Aún no has creado ningún módulo. ¡Comienza uno nuevo!</p>
-            </Card>
-          ) : (
-            modules.map((mod) => (
-              <Card 
-                key={mod.id} 
-                className="border-2 border-slate-100 hover:border-indigo-100 transition-all cursor-pointer overflow-hidden group shadow-sm hover:shadow-md"
-                onClick={() => setLocation(`/kids-teach/module/${mod.id}`)}
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { icon: Users, label: 'Pequeños Exploradores', val: '24', color: 'from-sky-400 to-blue-500', shadow: 'shadow-sky-200' },
+            { icon: Map, label: 'Mundos Creados', val: modules.length.toString(), color: 'from-amber-400 to-orange-500', shadow: 'shadow-amber-200' },
+            { icon: Trophy, label: 'Promedio de Logros', val: '92%', color: 'from-emerald-400 to-teal-500', shadow: 'shadow-emerald-200' },
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ y: -5 }}
+              className={`bg-white/90 backdrop-blur-xl p-8 rounded-[3.5rem] border-4 border-white shadow-xl flex items-center gap-6 ${stat.shadow}`}
+            >
+              <div className={`w-20 h-20 bg-gradient-to-br ${stat.color} rounded-[2rem] flex items-center justify-center text-white shadow-lg`}>
+                <stat.icon className="w-10 h-10" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-4xl font-black text-slate-800 tracking-tighter">{stat.val}</p>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Content Section */}
+        <div className="space-y-8">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 bg-gradient-to-br from-fuchsia-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl rotate-3">
+              <Sparkles className="w-8 h-8" />
+            </div>
+            <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase underline decoration-indigo-200 decoration-8 underline-offset-8">Tus Galaxias de Aprendizaje</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {loading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-24 gap-6">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="text-7xl"
+                >🍭</motion.div>
+                <p className="text-2xl font-black text-indigo-400 animate-pulse">Echando chispas mágicas...</p>
+              </div>
+            ) : modules.length === 0 ? (
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="col-span-full p-20 text-center bg-white/60 backdrop-blur-xl rounded-[4rem] border-8 border-dashed border-white shadow-inner flex flex-col items-center gap-6"
               >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-xl transition-colors ${mod.bloqueado ? 'bg-slate-200 text-slate-400' : 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'}`}>
-                        {mod.bloqueado ? <EyeOff className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
+                <div className="text-9xl">✨</div>
+                <div>
+                  <h3 className="text-3xl font-black text-indigo-600">Aún no hay mundos...</h3>
+                  <p className="text-slate-500 font-bold text-xl mt-2 max-w-sm mx-auto">¡Es un lienzo en blanco! Usa el botón de arriba para crear tu primera aventura espacial.</p>
+                </div>
+              </motion.div>
+            ) : (
+              modules.map((mod, idx) => {
+                const colors = [
+                  'from-emerald-400 to-teal-500',
+                  'from-orange-400 to-rose-500',
+                  'from-violet-500 to-fuchsia-500',
+                  'from-amber-400 to-yellow-500',
+                  'from-sky-400 to-indigo-500'
+                ][idx % 5];
+                
+                return (
+                  <motion.div
+                    key={mod.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ scale: 1.03, y: -10 }}
+                    className="group"
+                  >
+                    <div className={`relative bg-gradient-to-br ${colors} p-8 rounded-[3.5rem] text-white shadow-2xl h-[360px] flex flex-col justify-between border-x-4 border-t-4 border-b-[16px] border-black/20 overflow-hidden cursor-pointer active:translate-y-2 active:border-b-4 transition-all`}
+                         onClick={() => setLocation(`/kids-teach/module/${mod.id}`)}>
+                      
+                      {/* Floating Decoration */}
+                      <motion.div 
+                        animate={{ y: [0, -15, 0], rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute top-6 right-6 text-6xl opacity-40 drop-shadow-lg"
+                      >
+                        {['🪐', '⭐', '🎈', '🎨', '🚀'][idx % 5]}
+                      </motion.div>
+
+                      <div className="space-y-4">
+                        <div className="flex gap-2">
+                          <span className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/30">
+                            {mod.bloqueado ? '🔒 Oculto' : '✨ Visible'}
+                          </span>
+                        </div>
+                        <h3 className="text-4xl font-black leading-tight drop-shadow-xl">{mod.nombreModulo}</h3>
+                        <p className="text-white/80 font-bold line-clamp-3 text-lg drop-shadow-md">
+                          {mod.descripcion || "¡Una increíble aventura para aprender cosas asombrosas!"}
+                        </p>
                       </div>
-                      <CardTitle className={`text-lg font-bold ${mod.bloqueado ? 'text-slate-400' : ''}`}>
-                        {mod.nombreModulo}
-                        {mod.bloqueado && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">OCULTO</span>}
-                      </CardTitle>
+
+                      <div className="flex items-center justify-between gap-4">
+                        <button 
+                          className="flex-1 bg-white text-indigo-600 h-16 rounded-[2rem] font-black text-lg shadow-xl shadow-black/10 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all border-b-6 border-slate-200 active:border-b-0"
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/kids-teach/module/${mod.id}`); }}
+                        >
+                          <Pencil className="w-5 h-5" /> GESTIONAR
+                        </button>
+                        <button 
+                          onClick={(e) => openEditDialog(e, mod)}
+                          className="w-16 h-16 bg-white/20 hover:bg-white/30 rounded-[1.5rem] flex items-center justify-center backdrop-blur-md border-2 border-white/30 transition-all"
+                        >
+                          <Settings className="w-8 h-8 text-white" />
+                        </button>
+                      </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={(e) => openEditDialog(e, mod)} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Pencil className="w-4 h-4 text-slate-400 hover:text-indigo-600" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">
-                    {mod.descripcion || "Módulo interactivo para el aprendizaje de tecnología y algoritmos."}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                       {mod.duracionDias ? `${mod.duracionDias} DÍAS` : "DURACIÓN LIBRE"}
-                    </span>
-                    <Button variant="ghost" size="sm" className="text-indigo-600 font-bold hover:bg-indigo-50">
-                       Gestionar <Plus className="w-3 h-3 ml-1" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
+
+      <AnimatePresence>
+         {showEditDialog && (
+            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+                <DialogContent className="rounded-[3rem] border-[8px] border-indigo-50 p-10 max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="text-3xl font-black text-slate-800 text-center mb-4">Ajustar Mundo 🛠️</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-6 space-y-6">
+                        <div className="space-y-2">
+                            <Label className="text-lg font-black text-slate-700 ml-2">Nombre del Mundo</Label>
+                            <Input 
+                                value={editModTitle} 
+                                onChange={e => setEditModTitle(e.target.value)} 
+                                className="rounded-[2rem] h-14 border-4 border-slate-50 focus:border-indigo-200 text-xl font-bold bg-white px-8"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-lg font-black text-slate-700 ml-2">Descripción</Label>
+                            <Input 
+                                value={editModDesc} 
+                                onChange={e => setEditModDesc(e.target.value)} 
+                                className="rounded-[2rem] h-14 border-4 border-slate-50 focus:border-indigo-200 font-bold bg-white px-8"
+                            />
+                        </div>
+                        
+                        <button 
+                            onClick={(e) => { e.preventDefault(); setEditModBlocked(!editModBlocked); }}
+                            className={`w-full h-16 rounded-[2rem] flex items-center justify-between px-8 border-4 transition-all ${editModBlocked ? 'bg-red-50 border-red-100 text-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                {editModBlocked ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                                <span className="font-black text-lg uppercase tracking-tight">{editModBlocked ? 'OCULTO AL GRUPO' : 'VISIBLE PARA TODOS'}</span>
+                            </div>
+                            <div className={`w-12 h-6 rounded-full relative transition-all ${editModBlocked ? 'bg-red-500' : 'bg-emerald-500'}`}>
+                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${editModBlocked ? 'left-1' : 'right-1'}`} />
+                            </div>
+                        </button>
+                    </div>
+                    <div className="flex gap-4 pt-6">
+                        <Button variant="ghost" onClick={() => setShowEditDialog(false)} className="h-14 rounded-2xl font-black text-slate-400">Cancelar</Button>
+                        <Button onClick={saveEditModule} className="flex-1 h-16 rounded-[2rem] bg-indigo-600 text-white font-black text-lg">GUARDAR MAGIA</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+         )}
+      </AnimatePresence>
     </div>
   );
 }

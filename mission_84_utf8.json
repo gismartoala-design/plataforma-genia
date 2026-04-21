@@ -1,0 +1,435 @@
+﻿{
+  "id": 84,
+  "titulo": "Misi├│n 1",
+  "tipo": "mission",
+  "contenido": {
+    "engine": {
+      "kpi_dynamic": true,
+      "track_attempts": true,
+      "auto_hint_system": true,
+      "role_based_views": true,
+      "progression_system": true
+    },
+    "mission": {
+      "id": "mision_twfjo",
+      "type": [
+        "activacion"
+      ],
+      "level": "6to EGB",
+      "title": "Mision 1",
+      "domain": "Pensamiento Computacional",
+      "module": "M├│dulo Base",
+      "system_context": {
+        "name": "Entorno Base",
+        "status": "normal",
+        "initial_kpi": 0
+      },
+      "duration_minutes": 45
+    },
+    "moments": [
+      {
+        "id": "momento_1",
+        "title": "1. Activaci├│n",
+        "blocks": [
+          {
+            "id": "block_1776217560261",
+            "type": "student_context",
+            "content": {
+              "text": "Bienvenido, Agente de Innovaci├│n.\nHoy has sido asignado al sistema de movilidad de la ciudad.\nLos sem├íforos inteligentes funcionan autom├íticamente para organizar el tr├ífico.\nPero algo sali├│ mal.\n≡ƒÜ¿ El sistema est├í ejecutando una secuencia incorrecta.\nEsto est├í provocando:\nautos que frenan de forma inesperada\nconductores confundidos\nriesgo de accidentes\nTu misi├│n es identificar el problema y restaurar el sistema.\n"
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776217604133",
+            "type": "teacher_intent",
+            "content": {
+              "text": "Activar la noci├│n de orden en acciones cotidianas para conectar con l├│gica computacional.\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776217658893",
+            "type": "teacher_pedagogy",
+            "content": {
+              "text": "Constructivismo. Aprendizaje significativo. Activaci├│n de esquemas previos."
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776217684468",
+            "type": "teacher_script",
+            "content": {
+              "text": "ΓÇ£Antes de hablar de tecnolog├¡aΓÇª pensemos en algo muy simple.ΓÇ¥\nΓÇ£Imaginen que se levantan ma├▒anaΓÇªΓÇ¥\nΓÇ£┬┐Qu├⌐ hacen primero?ΓÇ¥\n(Pausa y escucha)\nΓÇ£┬┐Y despu├⌐s?ΓÇ¥\n(Pausa)\nΓÇ£Ahora piensen estoΓÇªΓÇ¥\nΓÇ£┬┐Qu├⌐ pasar├¡a si hicieran todo en desorden?ΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776217706740",
+            "type": "teacher_observe",
+            "content": {
+              "text": "Si el estudiante identifica secuencias\nSi reconoce dependencia entre acciones\nSi responde sin orden l├│gico\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776217723260",
+            "type": "teacher_errors",
+            "content": {
+              "text": "ΓÇ£No importa el ordenΓÇ¥\nΓÇ£Todo se puede hacer igualΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776217820787",
+            "type": "teacher_intervene",
+            "content": {
+              "text": "ΓÇ£┬┐Puedes decir exactamente qu├⌐ haces primero?ΓÇ¥\nΓÇ£┬┐Podr├¡as vestirte antes de levantarte?ΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776221521874",
+            "type": "student_activity",
+            "content": {
+              "text": "PIENSA Y RESPONDE\n┬┐Qu├⌐ haces primero al salir de casa?\n┬┐Qu├⌐ haces despu├⌐s?\n┬┐Qu├⌐ pasar├¡a si cambiaras el orden?\n"
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776221557314",
+            "type": "interaction_open",
+            "content": {
+              "question": "┬┐Por qu├⌐ es importante que se sigan las secuencias de manera adecuada?"
+            },
+            "visibleToStudent": true
+          }
+        ],
+        "time_minutes": 8
+      },
+      {
+        "id": "momento_2",
+        "title": "2. Conflicto Cognitivo",
+        "blocks": [
+          {
+            "id": "block_1776221632266",
+            "type": "teacher_intent",
+            "content": {
+              "text": "Provocar error consciente para generar necesidad de soluci├│n.\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776221653921",
+            "type": "teacher_script",
+            "content": {
+              "text": "ΓÇ£Vamos a ver qu├⌐ est├í pasando en la ciudad.ΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776221672017",
+            "type": "interaction_sequence",
+            "content": {
+              "items": [
+                {
+                  "text": "Se enciende el led rojo"
+                },
+                {
+                  "text": "Se apaga el led rojo"
+                },
+                {
+                  "text": "Se enciende el led amarillo "
+                },
+                {
+                  "text": "Se apaga el led amarillo"
+                },
+                {
+                  "text": "Se enciende led verde "
+                },
+                {
+                  "text": "Se apaga el led verde"
+                }
+              ]
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776224196263",
+            "type": "interaction_truefalse",
+            "content": {
+              "statement": "Un veh├¡culo avanza con luz verde. De repente cambia a rojo sin advertencia. Luego aparece amarillo.┬┐Este sistema es seguro?",
+              "correct_answer": false
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776224236246",
+            "type": "kpi_feedback",
+            "content": {
+              "kpi_incorrect": -5,
+              "feedback_correct": "Correcto. El sistema es peligroso",
+              "feedback_incorrect": "Observa el orden nuevamente."
+            },
+            "visibleToStudent": false
+          }
+        ],
+        "time_minutes": 7
+      },
+      {
+        "id": "momento_3",
+        "title": "3. Construcci├│n",
+        "blocks": [
+          {
+            "id": "block_1776224075080",
+            "type": "teacher_intent",
+            "content": {
+              "text": "Permitir que el estudiante construya la soluci├│n desde su l├│gica.\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224370678",
+            "type": "teacher_script",
+            "content": {
+              "text": "ΓÇ£Si el problema es el ordenΓÇª\nentonces ustedes deben reorganizarlo.ΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224389550",
+            "type": "interaction_sequence",
+            "content": {
+              "items": [
+                {
+                  "text": "Rojo"
+                },
+                {
+                  "text": "Amarillo"
+                },
+                {
+                  "text": "Verde"
+                }
+              ]
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776224427229",
+            "type": "kpi_feedback",
+            "content": {
+              "kpi_correct": 25,
+              "kpi_incorrect": -5,
+              "feedback_correct": "ΓÇ£El sistema comienza a estabilizarseΓÇ¥",
+              "feedback_incorrect": "ΓÇ£El sistema sigue fallando. Intenta nuevamente.ΓÇ¥"
+            },
+            "visibleToStudent": false
+          }
+        ],
+        "time_minutes": 10
+      },
+      {
+        "id": "momento_4",
+        "title": "4. Conceptualizaci├│n",
+        "blocks": [
+          {
+            "id": "block_1776224528165",
+            "type": "teacher_intent",
+            "content": {
+              "text": "Formalizar el conocimiento construido.\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224532397",
+            "type": "teacher_script",
+            "content": {
+              "text": "ΓÇ£Lo que acaban de hacer tiene un nombre en tecnolog├¡a.ΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224545196",
+            "type": "student_concept",
+            "content": {
+              "text": "Un algoritmo es una secuencia de pasos ordenados que permite que algo funcione correctamente.\nEJEMPLO\nUn sem├íforo\nUn robot\nUn videojuego\n"
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776224585956",
+            "type": "interaction_choice",
+            "content": {
+              "options": [
+                {
+                  "text": " Acciones desordenadas"
+                },
+                {
+                  "text": "Acciones en orden"
+                },
+                {
+                  "text": "Acciones en orden aleatorio"
+                }
+              ],
+              "question": "┬┐Qu├⌐ es un algoritmo?",
+              "correct_answer": 1
+            },
+            "visibleToStudent": true
+          }
+        ],
+        "time_minutes": 8
+      },
+      {
+        "id": "momento_5",
+        "title": "5. Aplicaci├│n Tecnol├│gica",
+        "blocks": [
+          {
+            "id": "block_1776224675283",
+            "type": "teacher_intent",
+            "content": {
+              "text": "Transferir el concepto a un sistema digital.\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224677692",
+            "type": "teacher_script",
+            "content": {
+              "text": "ΓÇ£Ahora no es un sem├íforoΓÇª es un robot.ΓÇ¥\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224698403",
+            "type": "interaction_sequence",
+            "content": {
+              "items": [
+                {
+                  "text": "Encender"
+                },
+                {
+                  "text": "Caminar"
+                },
+                {
+                  "text": "Girar"
+                },
+                {
+                  "text": "Caminar"
+                },
+                {
+                  "text": "Llegar"
+                }
+              ]
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776224745675",
+            "type": "kpi_feedback",
+            "content": {
+              "kpi_correct": 30,
+              "kpi_incorrect": -5,
+              "feedback_correct": "Robot operativo",
+              "feedback_incorrect": "Error en ejecuci├│n. Reintenta"
+            },
+            "visibleToStudent": false
+          }
+        ],
+        "time_minutes": 12
+      },
+      {
+        "id": "momento_6",
+        "title": "6. Reflexi├│n",
+        "blocks": [
+          {
+            "id": "block_1776224809322",
+            "type": "teacher_intent",
+            "content": {
+              "text": "Consolidar aprendizaje y hacer transferencia conceptual.\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224812075",
+            "type": "interaction_open",
+            "content": {
+              "question": "┬┐Qu├⌐ causaba el error?\n┬┐Qu├⌐ lo solucion├│?\n┬┐D├│nde ves esto en la vida real?\n"
+            },
+            "visibleToStudent": true
+          },
+          {
+            "id": "block_1776224835986",
+            "type": "interaction_open",
+            "content": {
+              "question": "┬┐Por qu├⌐ fallaba el sistema?\n┬┐Qu├⌐ aprendiste hoy?\n"
+            },
+            "visibleToStudent": true
+          }
+        ],
+        "time_minutes": 5
+      },
+      {
+        "id": "momento_7",
+        "title": "7. Cierre e Impacto",
+        "blocks": [
+          {
+            "id": "block_1776224865595",
+            "type": "kpi_feedback",
+            "content": {
+              "feedback_correct": "Sistema Actualizado"
+            },
+            "visibleToStudent": false
+          }
+        ],
+        "time_minutes": 3
+      },
+      {
+        "id": "momento_8",
+        "title": "8. Evidencia",
+        "blocks": [
+          {
+            "id": "block_1776224906939",
+            "type": "teacher_observe",
+            "content": {
+              "text": "l├│gica\ncomprensi├│n\nparticipaci├│n\n"
+            },
+            "visibleToStudent": false
+          },
+          {
+            "id": "block_1776224929546",
+            "type": "interaction_upload",
+            "content": {
+              "format_hint": "JPG,PNG,PDF",
+              "instruction": "Toma una foto de tu trabajo y subela aqu├¡ "
+            },
+            "visibleToStudent": true
+          }
+        ],
+        "time_minutes": 3
+      }
+    ],
+    "platform": {
+      "name": "Misiones Avanzadas",
+      "levels": []
+    },
+    "visibility": {
+      "student": {
+        "show_kpi": true,
+        "show_context": true,
+        "show_feedback": true,
+        "show_questions": true,
+        "show_interaction": true,
+        "show_achievements": true,
+        "show_evidence_upload": true
+      },
+      "teacher": {
+        "show_script": true,
+        "show_pedagogy": true,
+        "show_intention": true,
+        "show_evaluation": true,
+        "show_observation": true,
+        "show_intervention": true,
+        "show_common_errors": true
+      }
+    }
+  }
+}

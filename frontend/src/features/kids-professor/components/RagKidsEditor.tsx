@@ -7,11 +7,15 @@ import { Label } from "@/components/ui/label";
 import {
     Plus, Trash2, Save, ArrowLeft, Star, ChevronDown, ChevronUp,
     Video, Image as ImageIcon, Move, Zap, Award, Sparkles, CheckCircle2,
-    Hand, RotateCcw, Palette
+    Hand, RotateCcw, Palette, Rocket, Layout, Target, BookOpen, Layers
 } from "lucide-react";
 import kidsProfessorApi from "../services/kidsProfessor.api";
-import { toast } from "@/hooks/use-toast";
+import { institutionalCurriculumApi } from "@/features/institutional/services/curriculum.api";
+import { toast } from "sonner";
 import { ImageUploadInput } from "./ImageUploadInput";
+import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type ScreenType =
@@ -33,6 +37,7 @@ interface RagKidsProps {
     levelId: number;
     onClose: () => void;
     user?: any;
+    instModuleId?: number; // Added for institutional sync
 }
 
 // ── Screen Definitions ─────────────────────────────────────────────────────
@@ -44,15 +49,16 @@ const SCREEN_DEFS: {
     color: string;
     bg: string;
     border: string;
+    icon: any;
 }[] = [
-        { type: 'welcome', label: 'Bienvenida a la Misión', emoji: '🌟', description: 'Ilustración + personaje + audio + botón iniciar', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200' },
-        { type: 'video', label: 'Video Explicativo', emoji: '🎬', description: 'Video YouTube o MP4 del tema (Roblox Studio, etc.)', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
-        { type: 'image_choice', label: 'Selección Visual', emoji: '🖼️', description: 'El alumno toca la imagen correcta entre varias opciones', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
-        { type: 'drag_drop', label: 'Arrastra y Suelta', emoji: '✋', description: 'Arrastrar objetos hacia su lugar correcto', color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200' },
-        { type: 'animation_interaction', label: 'Juego de Lógica', emoji: '🤖', description: 'Minijuego de bloques. Secuencias direccionales en cuadrícula', color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-200' },
-        { type: 'creative_choice', label: 'Reto Creativo', emoji: '🎨', description: 'El alumno elige qué construir: casa, castillo, torre...', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-        { type: 'celebration', label: 'Celebración Final', emoji: '🏆', description: 'Confeti, estrella e insignia de logro', color: 'text-pink-700', bg: 'bg-pink-50', border: 'border-pink-200' },
-    ];
+    { type: 'welcome', label: 'Bienvenida', emoji: '🌟', description: 'Ilustración + personaje + audio', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: Sparkles },
+    { type: 'video', label: 'Video', emoji: '🎬', description: 'Video YouTube o MP4 tematizado', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', icon: Video },
+    { type: 'image_choice', label: 'Misión Visual', emoji: '🖼️', description: 'Selección de imagen correcta', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', icon: ImageIcon },
+    { type: 'drag_drop', label: 'Construcción', emoji: '✋', description: 'Arrastrar objetos al destino', color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-200', icon: Hand },
+    { type: 'animation_interaction', label: 'Lógica RAC', emoji: '🤖', description: 'Minijuego de bloques y rutas', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', icon: Zap },
+    { type: 'creative_choice', label: 'Reto Creativo', emoji: '🎨', description: 'Elección de qué construir hoy', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: Palette },
+    { type: 'celebration', label: 'Cierre', emoji: '🏆', description: 'Confeti e insignia de logro', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', icon: Award },
+];
 
 function defaultData(type: ScreenType): Record<string, any> {
     switch (type) {
@@ -384,32 +390,56 @@ function ScreenBlock({ screen, idx, total, onChange, onDelete, onMove }: {
 }) {
     const def = SCREEN_DEFS.find(s => s.type === screen.type)!;
     const [collapsed, setCollapsed] = useState(false);
+    const Icon = def.icon;
 
     return (
-        <Card className={`rounded-3xl border-2 ${def.border} overflow-hidden`}>
+        <Card className={cn(
+            "rounded-[2rem] border-2 overflow-hidden transition-all duration-500 shadow-sm hover:shadow-xl",
+            collapsed ? "opacity-90" : "bg-white",
+            def.border
+        )}>
             {/* Header */}
-            <div className={`${def.bg} px-5 py-3.5 flex items-center justify-between`}>
-                <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl ${def.bg} border-2 ${def.border} flex items-center justify-center font-black text-lg`}>
-                        {def.emoji}
+            <div className={cn(
+                "px-8 py-5 flex items-center justify-between border-b-2",
+                def.bg, def.border
+            )}>
+                <div className="flex items-center gap-5">
+                    <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-black/5",
+                        def.bg.replace('bg-', 'bg-').replace('-50', '-500') // Dynamic primary for icon
+                    ).replace('bg-indigo-500', 'bg-indigo-600').replace('bg-blue-500', 'bg-blue-600').replace('bg-rose-500', 'bg-rose-600').replace('bg-sky-500', 'bg-sky-600').replace('bg-violet-500', 'bg-violet-600').replace('bg-emerald-500', 'bg-emerald-600').replace('bg-amber-500', 'bg-amber-600')}>
+                        <Icon className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className={`font-black text-sm ${def.color}`}>{def.label}</p>
-                        <p className="text-xs text-slate-400 font-medium">Pantalla {idx + 1}</p>
+                        <p className={cn("font-black text-xs uppercase tracking-[0.2em]", def.color)}>
+                            ESTACIÓN {idx + 1}: {def.label}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                            {def.emoji} Configuración de Interacción
+                        </p>
                     </div>
                 </div>
-                <div className="flex gap-1 items-center">
-                    <Button variant="ghost" size="icon" disabled={idx === 0} onClick={() => onMove('up')} className="h-8 w-8 opacity-60"><ChevronUp className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" disabled={idx === total - 1} onClick={() => onMove('down')} className="h-8 w-8 opacity-60"><ChevronDown className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)} className="h-8 w-8 opacity-60">
-                        {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                <div className="flex gap-2 items-center">
+                    <div className="flex rounded-xl bg-white/50 p-1 border border-white/80 mr-4">
+                        <Button variant="ghost" size="icon" disabled={idx === 0} onClick={() => onMove('up')} className="h-8 w-8 text-slate-400 hover:text-blue-600"><ChevronUp className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" disabled={idx === total - 1} onClick={() => onMove('down')} className="h-8 w-8 text-slate-400 hover:text-blue-600"><ChevronDown className="w-4 h-4" /></Button>
+                    </div>
+                    
+                    <button 
+                        onClick={() => setCollapsed(!collapsed)} 
+                        className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest bg-white border border-slate-100 text-slate-500 hover:bg-slate-50 transition-colors"
+                    >
+                        {collapsed ? 'EDITAR ESTACIÓN' : 'MINIMIZAR'}
+                    </button>
+
+                    <Button variant="ghost" size="icon" onClick={onDelete} className="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+                        <Trash2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></Button>
                 </div>
             </div>
             {/* Content */}
             {!collapsed && (
-                <CardContent className="p-5">
+                <CardContent className="p-10 bg-white/50 backdrop-blur-sm">
                     {screen.type === 'welcome' && <WelcomeEditor data={screen.data} onChange={onChange} />}
                     {screen.type === 'video' && <VideoEditor data={screen.data} onChange={onChange} />}
                     {screen.type === 'image_choice' && <ImageChoiceEditor data={screen.data} onChange={onChange} />}
@@ -424,20 +454,31 @@ function ScreenBlock({ screen, idx, total, onChange, onDelete, onMove }: {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
-export default function RagKidsEditor({ levelId, onClose, user }: RagKidsProps) {
+export default function RagKidsEditor({ levelId, onClose, user, instModuleId }: RagKidsProps) {
     const [title, setTitle] = useState("");
     const [screens, setScreens] = useState<MissionScreen[]>([]);
     const [loading, setLoading] = useState(false);
     const [showAddMenu, setShowAddMenu] = useState(false);
 
     useEffect(() => {
-        kidsProfessorApi.getTemplateByType(levelId, 'rag_kids').then(data => {
-            if (data) {
-                setTitle(data.titulo);
-                setScreens(data.actividades?.steps || data.actividades?.screens || []);
-            }
-        });
-    }, [levelId]);
+        if (instModuleId) {
+            // Load from institutional API if we have the module ID
+            institutionalCurriculumApi.getModule(instModuleId).then(mod => {
+                if (mod && mod.contenido) {
+                    setTitle(mod.titulo);
+                    setScreens(mod.contenido.steps || mod.contenido.screens || []);
+                }
+            });
+        } else {
+            // Fallback load
+            kidsProfessorApi.getTemplateByType(levelId, 'rag_kids').then(data => {
+                if (data) {
+                    setTitle(data.titulo);
+                    setScreens(data.actividades?.steps || data.actividades?.screens || []);
+                }
+            });
+        }
+    }, [levelId, instModuleId]);
 
     const addScreen = (type: ScreenType) => {
         setScreens([...screens, { id: crypto.randomUUID(), type, data: defaultData(type) }]);
@@ -461,104 +502,183 @@ export default function RagKidsEditor({ levelId, onClose, user }: RagKidsProps) 
     };
 
     const handleSave = async () => {
-        if (!title) { toast({ title: "Falta el título de la misión", variant: "destructive" }); return; }
+        if (!title) { toast.error("Falta el título de la misión"); return; }
         setLoading(true);
         try {
+            const activitiesData = { steps: screens };
+            
+            // 1. Always save to legacy kids templates for compatibility
             await kidsProfessorApi.saveTypedTemplate(levelId, 'rag_kids', {
                 titulo: title,
                 tipo: 'rag_kids',
-                actividades: { steps: screens },
-                configuracion: { primaryColor: '#f59e0b' }
+                actividades: activitiesData,
+                configuracion: { primaryColor: '#2563eb' } // Blue-600
             });
-            toast({ title: "¡Misión Guardada! 🚀", description: "Tu RAC está listo para los alumnos." });
+
+            // 2. If institutional, also update the module content
+            if (instModuleId) {
+                await institutionalCurriculumApi.updateModule(instModuleId, {
+                    titulo: title,
+                    contenido: activitiesData
+                });
+            }
+
+            toast.success("¡Misión RAC Guardada con éxito! 🚀");
             onClose();
         } catch {
-            toast({ title: "Error al guardar", variant: "destructive" });
+            toast.error("Error al guardar la misión");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-50 z-50 flex flex-col overflow-hidden">
-            {/* Top Bar */}
-            <header className="bg-white border-b-4 border-amber-300 px-6 py-4 flex items-center justify-between shadow-sm flex-shrink-0">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-amber-100">
-                        <ArrowLeft className="w-6 h-6 text-amber-600" />
-                    </Button>
+        <div className="fixed inset-0 bg-[#F8FAFC] z-[100] flex flex-col overflow-hidden animate-in fade-in duration-300">
+            {/* Top Bar - Genia Blue Engineering Style */}
+            <header className="bg-white border-b-[6px] border-blue-600 px-8 py-5 flex items-center justify-between shadow-xl z-20 shrink-0">
+                <div className="flex items-center gap-6">
+                    <button 
+                        onClick={onClose} 
+                        className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm group"
+                    >
+                        <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+                    </button>
                     <div>
-                        <h1 className="text-2xl font-black text-amber-800 flex items-center gap-2">
-                            <Star className="w-7 h-7 fill-amber-400 text-amber-400" /> Editor de Misión RAC
+                        <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none text-slate-900">
+                            MAPA DE <span className="text-blue-600">MISIÓN RAC</span> KIDS
                         </h1>
-                        <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">{screens.length} pantalla{screens.length !== 1 ? 's' : ''} · Ruta de aprendizaje Kids</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2 flex items-center gap-2">
+                             <Rocket className="w-3 h-3 text-blue-500" /> {screens.length} ESTACIONES EN LA RUTA · INGENIERÍA KIDS
+                        </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                     {/* Screen count pills */}
-                    <div className="hidden lg:flex gap-1">
+                    <div className="hidden xl:flex items-center bg-slate-50 p-2 rounded-2xl border-2 border-slate-100 gap-1.5 shadow-inner">
                         {screens.map((s, i) => {
                             const def = SCREEN_DEFS.find(d => d.type === s.type);
                             return (
-                                <div key={i} title={def?.label} className={`w-8 h-8 rounded-xl flex items-center justify-center text-lg border-2 ${def?.border} ${def?.bg}`}>
+                                <div key={i} title={def?.label} className={cn(
+                                    "w-9 h-9 rounded-xl flex items-center justify-center text-lg border-2 transition-all shadow-sm",
+                                    def?.border, def?.bg
+                                )}>
                                     {def?.emoji}
                                 </div>
                             );
                         })}
                     </div>
-                    <Button variant="outline" onClick={onClose} className="rounded-2xl border-2 font-bold">Cancelar</Button>
-                    <Button onClick={handleSave} disabled={loading} className="rounded-2xl bg-amber-500 hover:bg-amber-600 font-black px-8 h-11">
-                        <Save className="w-5 h-5 mr-2" /> {loading ? 'Guardando...' : '¡GUARDAR MISIÓN!'}
+                    <div className="w-px h-10 bg-slate-200 mx-2 hidden xl:block" />
+                    <Button variant="outline" onClick={onClose} className="rounded-2xl border-2 border-slate-200 font-black uppercase text-[10px] tracking-widest h-12 px-6">
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleSave} disabled={loading} className="rounded-2xl bg-[#0F172A] hover:bg-blue-600 text-white font-black uppercase text-[10px] tracking-widest h-12 px-10 shadow-lg shadow-blue-500/20 group">
+                        {loading ? <RotateCcw className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />}
+                        {loading ? 'Sincronizando...' : 'Finalizar Diseño'}
                     </Button>
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto">
-                <div className="max-w-4xl mx-auto p-6 space-y-5">
-                    {/* Mission Title */}
-                    <Card className="rounded-3xl border-4 border-amber-200">
-                        <CardContent className="p-5">
-                            <Label className="text-xs font-black uppercase text-amber-600 tracking-wider">Nombre de la Misión</Label>
+            <div className="flex-1 overflow-y-auto bg-grid-slate-100/50">
+                <div className="max-w-4xl mx-auto p-12 space-y-8 pb-32">
+                    {/* Mission Identity Header Card */}
+                    <Card className="rounded-[2.5rem] border-0 shadow-2xl shadow-blue-900/5 overflow-hidden">
+                        <div className="h-2 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500" />
+                        <CardContent className="p-10 bg-white">
+                            <div className="flex items-center gap-4 mb-4">
+                                <Badge className="bg-blue-600 text-white border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full">
+                                    Identidad de Misión
+                                </Badge>
+                            </div>
+                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Título del Proyecto RAC</Label>
                             <Input value={title} onChange={e => setTitle(e.target.value)}
-                                placeholder="Ej: ¡Construye tu primera casa en Roblox!"
-                                className="rounded-2xl h-14 text-xl border-2 border-amber-200 focus:border-amber-400 font-black mt-2" />
+                                placeholder="Ej: ¡CONSTRUYE TU PRIMERA CIUDAD EN ROBLOX!"
+                                className="rounded-2xl h-16 text-2xl border-2 border-slate-100 focus:border-blue-500 focus:ring-blue-100 font-black mt-3 transition-all placeholder:text-slate-200" />
+                            <p className="mt-4 text-[11px] text-slate-400 font-medium flex items-center gap-2">
+                                <Sparkles className="w-3 h-3 text-blue-400" /> Este título será lo primero que el estudiante vea al iniciar la aventura.
+                            </p>
                         </CardContent>
                     </Card>
 
-                    {/* Screens */}
-                    {screens.map((screen, idx) => (
-                        <ScreenBlock
-                            key={screen.id}
-                            screen={screen}
-                            idx={idx}
-                            total={screens.length}
-                            onChange={d => updateScreen(idx, d)}
-                            onDelete={() => deleteScreen(idx)}
-                            onMove={d => moveScreen(idx, d)}
-                        />
-                    ))}
-
-                    {/* Add Screen Menu */}
-                    <div className="relative">
-                        <Button onClick={() => setShowAddMenu(!showAddMenu)}
-                            className={`w-full h-16 rounded-3xl font-black text-base transition-all border-2 border-dashed ${showAddMenu ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-600 border-amber-300 hover:bg-amber-50'}`}>
-                            <Plus className="w-6 h-6 mr-2" />
-                            {showAddMenu ? 'ELIGE UNA PANTALLA ▲' : 'AÑADIR PANTALLA DE MISIÓN ▼'}
-                        </Button>
-                        {showAddMenu && (
-                            <div className="mt-2 bg-white rounded-3xl border-2 border-amber-100 shadow-2xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {SCREEN_DEFS.map(sd => (
-                                    <button key={sd.type} onClick={() => addScreen(sd.type)}
-                                        className={`${sd.bg} border-2 ${sd.border} rounded-2xl p-4 flex flex-col items-center gap-2 hover:scale-105 transition-transform text-center`}>
-                                        <span className="text-3xl">{sd.emoji}</span>
-                                        <span className={`font-black text-xs ${sd.color}`}>{sd.label}</span>
-                                        <span className="text-[10px] text-slate-400 leading-tight">{sd.description}</span>
-                                    </button>
-                                ))}
+                    {/* Progress line indicator (vertical) */}
+                    <div className="relative pl-10 space-y-10">
+                        <div className="absolute left-[19px] top-6 bottom-6 w-1 bg-gradient-to-b from-blue-200 via-indigo-100 to-transparent rounded-full" />
+                        
+                        {screens.map((screen, idx) => (
+                            <div key={screen.id} className="relative group">
+                                {/* Connector Dot */}
+                                <div className="absolute -left-[51px] top-8 w-6 h-6 rounded-full bg-white border-4 border-blue-600 z-10 shadow-lg group-hover:scale-125 transition-transform" />
+                                
+                                <ScreenBlock
+                                    screen={screen}
+                                    idx={idx}
+                                    total={screens.length}
+                                    onChange={d => updateScreen(idx, d)}
+                                    onDelete={() => deleteScreen(idx)}
+                                    onMove={d => moveScreen(idx, d)}
+                                />
                             </div>
-                        )}
+                        ))}
+
+                        {/* Add Screen Interface */}
+                        <div className="relative group">
+                            <div className="absolute -left-[51px] top-8 w-6 h-6 rounded-full bg-slate-200 border-4 border-white z-10" />
+                            
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowAddMenu(!showAddMenu)}
+                                    className={cn(
+                                        "w-full h-24 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] transition-all border-4 border-dashed flex flex-col items-center justify-center gap-2",
+                                        showAddMenu 
+                                            ? "bg-blue-600 text-white border-blue-600 shadow-2xl shadow-blue-500/40" 
+                                            : "bg-white text-blue-600 border-blue-100 hover:border-blue-300 hover:bg-blue-50 shadow-sm"
+                                    )}
+                                >
+                                    <Plus className={cn("w-7 h-7 transition-transform duration-500", showAddMenu && "rotate-45")} />
+                                    {showAddMenu ? 'CANCELAR SELECCIÓN' : 'INYECTAR NUEVA ESTACIÓN'}
+                                </button>
+
+                                <AnimatePresence>
+                                {showAddMenu && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                                        className="mt-6 bg-slate-900 rounded-[3rem] border-0 shadow-2xl p-10 grid grid-cols-2 md:grid-cols-4 gap-4 z-10"
+                                    >
+                                        {SCREEN_DEFS.map(sd => {
+                                            const Icon = sd.icon;
+                                            return (
+                                                <button 
+                                                    key={sd.type} 
+                                                    onClick={() => addScreen(sd.type)}
+                                                    className="group/btn bg-white/5 hover:bg-blue-600 border border-white/10 rounded-3xl p-6 flex flex-col items-center gap-3 transition-all transform hover:-translate-y-2"
+                                                >
+                                                    <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center group-hover/btn:bg-white/20 transition-colors">
+                                                        <Icon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="font-black text-[10px] uppercase tracking-widest text-white mb-1">{sd.label}</p>
+                                                        <p className="text-[8px] text-slate-400 font-bold leading-tight group-hover/btn:text-blue-100">{sd.description}</p>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </motion.div>
+                                )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Backdrop footer decoration */}
+            <div className="h-6 bg-[#0F172A] w-full flex items-center justify-center px-10 gap-8 overflow-hidden opacity-50 shrink-0">
+                {Array.from({length: 10}).map((_, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[8px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                        <Layers className="w-3 h-3" /> GENIA KIDS ENGINEERING SYSTEM 2.0
+                    </div>
+                ))}
             </div>
         </div>
     );

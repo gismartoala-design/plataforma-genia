@@ -9,7 +9,7 @@ import {
     UploadCloud, FileText, ListVideo,
     BookOpen, Lightbulb, HelpCircle, List,
     ToggleLeft, ArrowUpDown, FileUp, Zap,
-    GripVertical
+    GripVertical, AlertTriangle, Car, Users, TrafficCone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -591,12 +591,12 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                                 </div>
                                                 
                                                 <div className="flex-1 w-full space-y-4 sm:space-y-6">
-                                                    {narBlocks.length > 0 ? narBlocks.map((block: any) => {
+                                                    {narBlocks.length > 0 ? (
+                                                        narBlocks.map((block: any) => {
                                                         const Icon = getBlockIcon(block.type);
                                                         const color = getBlockColor(block.type);
                                                         const text = getBlockText(block);
                                                         if (!text) return null;
-
                                                         return (
                                                             <motion.div 
                                                                 key={block.id} 
@@ -616,35 +616,93 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                                                     color === 'blue' ? 'bg-blue-500' : color === 'indigo' ? 'bg-indigo-500' : color === 'amber' ? 'bg-amber-500' : 'bg-slate-400'
                                                                 )} />
                                                                 
-                                                                <div className="flex items-start gap-6 relative z-10">
-                                                                    <div className={cn(
-                                                                        "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border transition-all shadow-md backdrop-blur-sm",
-                                                                        color === 'blue' ? 'bg-white/80 border-blue-200 text-blue-600' : 
-                                                                        color === 'indigo' ? 'bg-white/80 border-indigo-200 text-indigo-600' : 
-                                                                        color === 'amber' ? 'bg-white/80 border-amber-200 text-amber-600' : 
-                                                                        'bg-slate-50 border-slate-100 text-slate-400'
-                                                                    )}>
-                                                                        <Icon className="w-7 h-7" />
-                                                                    </div>
-                                                                    <div className="flex-1 space-y-2">
-                                                                        <p className={cn(
-                                                                            "text-[10px] font-black uppercase tracking-[0.3em]",
-                                                                            color === 'blue' ? 'text-blue-500/80' : 
-                                                                            color === 'indigo' ? 'text-indigo-500/80' : 
-                                                                            color === 'amber' ? 'text-amber-600/80' : 'text-slate-400'
+                                                                <div className="flex flex-col gap-6 relative z-10">
+                                                                    <div className="flex items-start gap-6">
+                                                                        <div className={cn(
+                                                                            "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border transition-all shadow-md backdrop-blur-sm",
+                                                                            color === 'blue' ? 'bg-white/80 border-blue-200 text-blue-600' : 
+                                                                            color === 'indigo' ? 'bg-white/80 border-indigo-200 text-indigo-600' : 
+                                                                            color === 'amber' ? 'bg-white/80 border-amber-200 text-amber-600' : 
+                                                                            'bg-slate-50 border-slate-100 text-slate-400'
                                                                         )}>
-                                                                            {block.type === 'student_context' ? 'Contexto Narrativo' : 
-                                                                             block.type === 'student_concept' ? 'Marco Teórico' : 
-                                                                             block.type === 'student_activity' ? 'Consigna de Fase' : 'Información Técnica'}
-                                                                        </p>
-                                                                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800 leading-[1.4] italic tracking-tight whitespace-pre-wrap">
-                                                                            {text}
-                                                                        </p>
+                                                                            <Icon className="w-7 h-7" />
+                                                                        </div>
+                                                                        <div className="flex-1 space-y-2">
+                                                                            <p className={cn(
+                                                                                "text-[10px] font-black uppercase tracking-[0.3em]",
+                                                                                color === 'blue' ? 'text-blue-500/80' : 
+                                                                                color === 'indigo' ? 'text-indigo-500/80' : 
+                                                                                color === 'amber' ? 'text-amber-600/80' : 'text-slate-400'
+                                                                            )}>
+                                                                                {block.type === 'student_context' ? 'Contexto Narrativo' : 
+                                                                                 block.type === 'student_concept' ? 'Marco Teórico' : 
+                                                                                 block.type === 'student_activity' ? 'Consigna de Fase' : 'Información Técnica'}
+                                                                            </p>
+                                                                            <p className="text-lg sm:text-xl font-bold text-slate-800 leading-[1.4] italic tracking-tight whitespace-pre-wrap">
+                                                                                {text.split(/•\s*|\-\s*|(?=\d+\.\s*)/).filter(s => s.trim().length > 1).length <= 1 && text}
+                                                                            </p>
+                                                                        </div>
                                                                     </div>
+
+                                                                    {/* Enhanced Interactive Scenario Grid */}
+                                                                    {text.split(/•\s*|\-\s*|(?=\d+\.\s*)/).filter(s => s.trim().length > 1).length > 1 && (
+                                                                        <div className="grid grid-cols-1 gap-4 mt-2">
+                                                                            {text.split(/•\s*|\-\s*|(?=\d+\.\s*)/)
+                                                                                .filter(s => s.trim().length > 1)
+                                                                                .map((item, i) => {
+                                                                                    const cleanItem = item.replace(/^\d+\.\s*/, '').trim();
+                                                                                    const lower = cleanItem.toLowerCase();
+                                                                                    
+                                                                                    // Keyword-based iconography
+                                                                                    let ScenarioIcon = AlertTriangle;
+                                                                                    let scenarioColor = "text-amber-500 bg-amber-50";
+                                                                                    
+                                                                                    if (lower.includes('auto') || lower.includes('vehículo') || lower.includes('carro')) {
+                                                                                        ScenarioIcon = Car;
+                                                                                        scenarioColor = "text-blue-500 bg-blue-50";
+                                                                                    } else if (lower.includes('peatón') || lower.includes('gente') || lower.includes('persona') || lower.includes('niño')) {
+                                                                                        ScenarioIcon = Users;
+                                                                                        scenarioColor = "text-emerald-500 bg-emerald-50";
+                                                                                    } else if (lower.includes('caos') || lower.includes('problema') || lower.includes('falla') || lower.includes('error')) {
+                                                                                        ScenarioIcon = Zap;
+                                                                                        scenarioColor = "text-rose-500 bg-rose-50";
+                                                                                    } else if (lower.includes('tráfico') || lower.includes('semáforo') || lower.includes('calle')) {
+                                                                                        ScenarioIcon = TrafficCone;
+                                                                                        scenarioColor = "text-orange-500 bg-orange-50";
+                                                                                    }
+
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={i}
+                                                                                            initial={{ opacity: 0, y: 20 }}
+                                                                                            animate={{ opacity: 1, y: 0 }}
+                                                                                            transition={{ delay: 0.2 + (i * 0.15) }}
+                                                                                            className="group/item relative p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all cursor-default"
+                                                                                        >
+                                                                                            <div className="flex items-center gap-5">
+                                                                                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm group-hover/item:scale-110 transition-transform", scenarioColor)}>
+                                                                                                    <ScenarioIcon className="w-6 h-6" />
+                                                                                                </div>
+                                                                                                <p className="text-sm sm:text-base font-bold text-slate-700 leading-snug">
+                                                                                                    {cleanItem}
+                                                                                                </p>
+                                                                                                <div className="ml-auto opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                                                                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+                                                                                                        <CheckCircle2 className="w-4 h-4" />
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                })
+                                                                            }
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </motion.div>
                                                         );
-                                                    }) : (
+                                                    })
+                                                ) : (
                                                         (() => {
                                                             const st = currentMoment?.student || {};
                                                             const tc = currentMoment?.teacher || {};
@@ -655,16 +713,60 @@ export const MissionCinematicViewer = ({ module, onClose, isReadOnly = false }: 
                                                                 <div className={cn("relative p-6 sm:p-8 rounded-[2.5rem] bg-white border border-slate-200 shadow-sm overflow-hidden group")}>
                                                                     <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-gradient-to-br from-indigo-50/20 to-transparent" />
                                                                     <div className="absolute top-0 left-0 w-2 h-full bg-blue-500" />
-                                                                    <div className="flex items-start gap-5 relative z-10">
-                                                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-500 flex items-center justify-center shrink-0 shadow-sm">
-                                                                            <BookOpen className="w-6 h-6" />
+                                                                    <div className="flex flex-col gap-6 relative z-10">
+                                                                        <div className="flex items-start gap-5">
+                                                                            <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-500 flex items-center justify-center shrink-0 shadow-sm">
+                                                                                <BookOpen className="w-6 h-6" />
+                                                                            </div>
+                                                                            <div className="flex-1 space-y-1">
+                                                                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Instrucciones de Sincronización</p>
+                                                                                <p className="text-base sm:text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
+                                                                                    {legacyText.split(/•\s*|\-\s*|(?=\d+\.\s*)/).filter(s => s.trim().length > 1).length <= 1 && `"${legacyText}"`}
+                                                                                </p>
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="flex-1 space-y-1">
-                                                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Instrucciones de Sincronización</p>
-                                                                            <p className="text-base sm:text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic tracking-tight whitespace-pre-wrap">
-                                                                                "{legacyText}"
-                                                                            </p>
-                                                                        </div>
+
+                                                                        {/* Legacy Interactive Scenario Grid */}
+                                                                        {legacyText.split(/•\s*|\-\s*|(?=\d+\.\s*)/).filter(s => s.trim().length > 1).length > 1 && (
+                                                                            <div className="grid grid-cols-1 gap-4 mt-2">
+                                                                                {legacyText.split(/•\s*|\-\s*|(?=\d+\.\s*)/)
+                                                                                    .filter(s => s.trim().length > 1)
+                                                                                    .map((item, i) => {
+                                                                                        const cleanItem = item.replace(/^\d+\.\s*/, '').trim();
+                                                                                        const lower = cleanItem.toLowerCase();
+                                                                                        
+                                                                                        let ScenarioIcon = AlertTriangle;
+                                                                                        let scenarioColor = "text-amber-500 bg-amber-50";
+                                                                                        
+                                                                                        if (lower.includes('auto') || lower.includes('vehículo') || lower.includes('carro')) {
+                                                                                            ScenarioIcon = Car;
+                                                                                            scenarioColor = "text-blue-500 bg-blue-50";
+                                                                                        } else if (lower.includes('peatón') || lower.includes('gente') || lower.includes('persona')) {
+                                                                                            ScenarioIcon = Users;
+                                                                                            scenarioColor = "text-emerald-500 bg-emerald-50";
+                                                                                        } else if (lower.includes('caos') || lower.includes('falla') || lower.includes('error')) {
+                                                                                            ScenarioIcon = Zap;
+                                                                                            scenarioColor = "text-rose-500 bg-rose-50";
+                                                                                        }
+
+                                                                                        return (
+                                                                                            <motion.div
+                                                                                                key={i}
+                                                                                                initial={{ opacity: 0, y: 15 }}
+                                                                                                animate={{ opacity: 1, y: 0 }}
+                                                                                                transition={{ delay: 0.1 + (i * 0.12) }}
+                                                                                                className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4 group/item hover:bg-white hover:border-blue-200 transition-all font-bold text-slate-600 hover:text-slate-900"
+                                                                                            >
+                                                                                                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs group-hover/item:scale-110 transition-transform", scenarioColor)}>
+                                                                                                    <ScenarioIcon className="w-5 h-5" />
+                                                                                                </div>
+                                                                                                {cleanItem}
+                                                                                            </motion.div>
+                                                                                        );
+                                                                                    })
+                                                                                }
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             );

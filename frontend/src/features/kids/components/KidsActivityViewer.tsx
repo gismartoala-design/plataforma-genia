@@ -40,9 +40,9 @@ function extractSteps(actividades: any): any[] {
 }
 
 export function KidsActivityViewer({
-  user, id: nivelId, tipo, standalone = true
+  user, id: nivelId, tipo, standalone = true, initialTemplate, onBack
 }: {
-  user: any; id: number; tipo?: string; standalone?: boolean;
+  user: any; id: number; tipo?: string; standalone?: boolean; initialTemplate?: any; onBack?: () => void;
 }) {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(0);
@@ -51,10 +51,15 @@ export function KidsActivityViewer({
   const [results, setResults] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchBestTemplate();
+    if (initialTemplate) {
+        setTemplate(initialTemplate);
+        setLoading(false);
+    } else {
+        fetchBestTemplate();
+    }
     setCurrentStep(0);
     setResults([]);
-  }, [nivelId]);
+  }, [nivelId, initialTemplate]);
 
   /**
    * Tries to load rag_kids first, then falls back to other types.
@@ -159,10 +164,12 @@ export function KidsActivityViewer({
           plantillaKidsId: template.id,
           resultados: newResults,
           calificacionNumerica: 100,
+          moduloInstId: template.moduloInstId // Optional link
         });
       } catch { /* ignore */ }
       toast({ title: '🎉 ¡Misión completada!', description: '¡Has terminado esta aventura exitosamente!' });
-      setLocation('/kids-dashboard');
+      if (onBack) onBack();
+      else setLocation('/kids-dashboard');
     }
   };
 
@@ -240,7 +247,7 @@ export function KidsActivityViewer({
       <div className="flex-shrink-0 px-6 pt-6 pb-4 flex justify-between items-center max-w-5xl mx-auto w-full gap-4">
         {standalone ? (
           <button
-            onClick={() => setLocation('/kids-dashboard')}
+            onClick={() => onBack ? onBack() : setLocation('/kids-dashboard')}
             className="flex items-center justify-center bg-rose-500 text-white hover:bg-rose-400 rounded-2xl h-14 px-6 font-black text-lg border-x-4 border-t-4 border-b-8 border-rose-700 shadow-xl transition-all active:border-b-4 active:translate-y-1"
           >
             <ArrowLeft className="w-5 h-5 mr-3" /> SALIR

@@ -873,14 +873,15 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                   {[
                     { id: 'all', label: 'TODOS' },
                     { id: '9_13', label: 'DOCENTES / TUTORES' },
-                    { id: '10', label: 'ESTUDIANTES' }
+                    { id: '10_11', label: 'ESTUDIANTES / KIDS' },
+                    { id: '7', label: 'EQUIPO KIDS' }
                   ].map(f => (
                     <button
                       key={f.id}
                       onClick={() => setUserFilter(f.id)}
                       className={cn(
                         "px-4 py-2 rounded-lg text-[9px] font-black tracking-widest transition-all",
-                        userFilter === f.id ? "bg-[var(--inst-blue-lt)] text-[var(--inst-blue)]" : "text-slate-400 hover:text-slate-600"
+                        (userFilter === f.id || (userFilter === '10_11' && (f.id === '10' || f.id === '11'))) ? "bg-[var(--inst-blue-lt)] text-[var(--inst-blue)]" : "text-slate-400 hover:text-slate-600"
                       )}
                     >
                       {f.label}
@@ -948,9 +949,14 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                             <Badge className={cn("border-none font-black uppercase text-[8px] tracking-widest px-3 h-6",
                               u.roleId === 9 ? "bg-emerald-50 text-emerald-600" : 
                               u.roleId === 13 ? "bg-purple-50 text-purple-600" :
+                              u.roleId === 7 ? "bg-cyan-50 text-cyan-600" :
+                              u.roleId === 11 ? "bg-pink-50 text-pink-600 shadow-[0_0_10px_rgba(244,114,182,0.2)]" :
                               "bg-blue-50 text-blue-600"
                             )}>
-                              {u.roleId === 9 ? 'DOCENTE' : u.roleId === 13 ? 'TUTOR' : 'ESTUDIANTE'}
+                              {u.roleId === 9 ? 'DOCENTE' : 
+                               u.roleId === 7 ? 'PROFE KIDS' : 
+                               u.roleId === 13 ? 'TUTOR' : 
+                               u.roleId === 11 ? 'ESTUDIANTE KIDS' : 'ESTUDIANTE'}
                             </Badge>
                           </td>
                           <td className="px-8 py-5">
@@ -1180,37 +1186,30 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
               </div>
 
               <form onSubmit={handleCreateUser} className="space-y-6">
-                <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-blue-50">
-                  <button
-                    type="button"
-                    onClick={() => setNewNodeRole('10')}
-                    className={cn(
-                      "flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      newNodeRole === '10' ? "bg-white text-[var(--inst-blue)] shadow-md" : "text-slate-400"
-                    )}
-                  >
-                    Estudiante
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewNodeRole('13')}
-                    className={cn(
-                      "flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      newNodeRole === '13' ? "bg-white text-[var(--inst-blue)] shadow-md" : "text-slate-400"
-                    )}
-                  >
-                    Tutor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewNodeRole('9')}
-                    className={cn(
-                      "flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      newNodeRole === '9' ? "bg-white text-[var(--inst-blue)] shadow-md" : "text-slate-400"
-                    )}
-                  >
-                    Docente
-                  </button>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-3xl border border-blue-50">
+                  {[
+                    { id: '10', label: 'Estudiante', icon: '📖' },
+                    { id: '11', label: 'Kid', icon: '🚀' },
+                    { id: '9', label: 'Docente', icon: '🎓' },
+                    { id: '7', label: 'Profe Kids', icon: '🧑‍🏫' },
+                    { id: '13', label: 'Tutor', icon: '🛡️' },
+                    { id: '2', label: 'Admin', icon: '⚙️' }
+                  ].map(role => (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => setNewNodeRole(role.id)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                        newNodeRole === role.id 
+                          ? "bg-white text-[var(--inst-blue)] shadow-md border-2 border-blue-100" 
+                          : "text-slate-400 hover:bg-white/50"
+                      )}
+                    >
+                      <span className="text-sm">{role.icon}</span>
+                      {role.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="space-y-4">
@@ -1307,22 +1306,27 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
 
                 <div className="space-y-2">
                   <label className="technical-label ml-1">Rol Académico</label>
-                  <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-blue-50">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 bg-slate-50 p-2 rounded-3xl border border-blue-50">
                     {[
-                      { id: '10', label: 'Estudiante' },
-                      { id: '13', label: 'Tutor' },
-                      { id: '9', label: 'Docente' },
-                      { id: '1', label: 'Administrador' }
+                      { id: '10', label: 'Estudiante', icon: '📖' },
+                      { id: '11', label: 'Kid', icon: '🚀' },
+                      { id: '13', label: 'Tutor', icon: '🛡️' },
+                      { id: '9', label: 'Docente', icon: '🎓' },
+                      { id: '7', label: 'Profe Kids', icon: '🧑‍🏫' },
+                      { id: '1', label: 'Admin', icon: '⚙️' }
                     ].map(r => (
                       <button
                         key={r.id}
                         type="button"
                         onClick={() => setEditingUser({...editingUser, roleId: r.id})}
                         className={cn(
-                          "flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                          editingUser.roleId === r.id ? "bg-white text-[var(--inst-blue)] shadow-md" : "text-slate-400 hover:text-slate-600"
+                          "flex items-center gap-2 px-3 h-11 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                          editingUser.roleId === r.id 
+                            ? "bg-white text-[var(--inst-blue)] shadow-md border-2 border-blue-100" 
+                            : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
                         )}
                       >
+                        <span className="text-xs">{r.icon}</span>
                         {r.label}
                       </button>
                     ))}
