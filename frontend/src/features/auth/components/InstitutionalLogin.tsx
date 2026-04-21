@@ -318,7 +318,13 @@ export const InstitutionalLogin = ({ onLogin, onSwitchToNormal }: {
     try {
       const data = await authApi.login({ email, password }) as any;
       const user = data.user;
-      const roleMap: Record<number, string> = { 8: 'institutional_admin', 9: 'institutional_professor', 10: 'student', 13: 'profesor_vista' };
+      const roleMap: Record<number, string> = { 
+        7: 'kids_professor',
+        8: 'institutional_admin', 
+        9: 'institutional_professor', 
+        10: 'student', 
+        13: 'profesor_vista' 
+      };
       const role = roleMap[user.roleId];
       if (!role) { setError('Acceso reservado para instituciones educativas.'); setIsLoading(false); return; }
       const u = user as any;
@@ -337,7 +343,9 @@ export const InstitutionalLogin = ({ onLogin, onSwitchToNormal }: {
     onLogin(role, u.nombre || '', String(u.id), u.planId || 0, token, u.institucionId, u.roleId, u.cursoId);
     
     // Redirect based on role and institution
-    if (role === 'institutional_admin') {
+    if (role === 'kids_professor') {
+      setLocation('/kids-teach');
+    } else if (role === 'institutional_admin') {
       setLocation('/institucional-dashboard');
     } else if (role === 'institutional_professor' || role === 'profesor_vista') {
       setLocation('/institucional-teach');

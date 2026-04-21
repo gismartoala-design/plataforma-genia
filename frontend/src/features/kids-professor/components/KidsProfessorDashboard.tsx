@@ -4,6 +4,7 @@ import { Plus, Users, Gamepad2, Activity, BookOpen, Settings, Pencil, Eye, EyeOf
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import kidsProfessorApi from '../services/kidsProfessor.api';
+import { professorApi } from '@/features/professor/services/professor.api';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,6 +15,7 @@ import { Label } from '@/components/ui/label';
 export function KidsProfessorDashboard({ user }: { user: any }) {
   const [, setLocation] = useLocation();
   const [modules, setModules] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newModTitle, setNewModTitle] = useState("");
@@ -38,9 +40,12 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
       setLoading(true);
       const data = await kidsProfessorApi.getModules(user.id);
       setModules(data);
+      
+      const coursesData = await professorApi.getProfessorCourses(user.id);
+      setCourses(coursesData);
     } catch (error) {
-      console.error("Error fetching modules:", error);
-      toast({ title: "Error", description: "No se pudieron cargar los módulos.", variant: "destructive" });
+      console.error("Error fetching data:", error);
+      toast({ title: "Error", description: "No se pudieron cargar los datos.", variant: "destructive" });
     } finally {
       setLoading(false);
     }

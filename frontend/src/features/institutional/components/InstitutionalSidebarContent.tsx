@@ -21,9 +21,10 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { institutionApi } from "@/services/institution.api";
+import kidsProfessorApi from "@/features/kids-professor/services/kidsProfessor.api";
 
 interface InstitutionalSidebarContentProps {
-    currentRole: "institutional_admin" | "institutional_professor" | "profesor_vista" | any;
+    currentRole: "institutional_admin" | "institutional_professor" | "profesor_vista" | "kids_professor" | any;
     onLogout: () => void;
     onClose?: () => void;
 }
@@ -34,14 +35,36 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
     const [instName, setInstName] = useState<string | null>(null);
     const [isTutor, setIsTutor] = useState(false);
     const [currentSearch, setCurrentSearch] = useState(window.location.search);
+    const [kidsModules, setKidsModules] = useState<any[]>([]);
+    const [kidsCourses, setKidsCourses] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (currentRole === "kids_professor") {
+            const userStr = localStorage.getItem("edu_user");
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user.id) {
+                    kidsProfessorApi.getModules(user.id).then(data => {
+                        setKidsModules(data);
+                    }).catch(err => console.error("Error fetching kids modules for sidebar", err));
+
+                    import("@/features/professor/services/professor.api").then(({ professorApi }) => {
+                        professorApi.getProfessorCourses(user.id).then(data => {
+                            setKidsCourses(data || []);
+                        });
+                    }).catch(err => console.error("Error fetching kids courses for sidebar", err));
+                }
+            }
+        }
+    }, [currentRole]);
 
     useEffect(() => {
         const handleNav = () => setCurrentSearch(window.location.search);
         window.addEventListener('tutor-navigate', handleNav);
         window.addEventListener('popstate', handleNav);
         return () => {
-             window.removeEventListener('tutor-navigate', handleNav);
-             window.removeEventListener('popstate', handleNav);
+            window.removeEventListener('tutor-navigate', handleNav);
+            window.removeEventListener('popstate', handleNav);
         };
     }, []);
 
@@ -100,10 +123,26 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
         { href: "/profile", icon: Settings, label: "Mi Perfil" },
     ];
 
-    const links = (isTutor || currentRole === "tutor") ? tutorLinks : 
-                  currentRole === "institutional_admin" ? adminLinks :
-                  (currentRole === "institutional_professor" || currentRole === "profesor_vista") ? professorLinks :
-                  studentLinks;
+    const kidsProfessorLinks = [
+        { href: "/kids-teach", icon: LayoutDashboard, label: "Laboratorio Kids" },
+        ...kidsCourses.map(curso => ({
+            href: `/kids-teach`, // Redirige al dashboard principal ya que muestran abajo
+            icon: Users,
+            label: curso.nombre || "Curso Asignado"
+        })),
+        ...kidsModules.map(mod => ({
+            href: `/kids-teach/module/${mod.id}`,
+            icon: Rocket,
+            label: mod.nombreModulo || "Mundo Mágico"
+        })),
+        { href: "/profile", icon: Settings, label: "Opciones" }
+    ];
+
+    const links = (isTutor || currentRole === "tutor") ? tutorLinks :
+        currentRole === "institutional_admin" ? adminLinks :
+            (currentRole === "institutional_professor" || currentRole === "profesor_vista") ? professorLinks :
+                currentRole === "kids_professor" ? kidsProfessorLinks :
+                    studentLinks;
 
     return (
         <div className="flex flex-col h-full bg-transparent text-white border-r border-white/5 relative z-10">
@@ -140,7 +179,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
                     const isTutorLink = (isTutor || currentRole === 'tutor') && link.href.includes('institucional-tutor');
                     const isActive = isTutorLink
                         ? (window.location.pathname + currentSearch) === link.href ||
-                          (link.href === '/institucional-tutor' && !currentSearch && window.location.pathname === '/institucional-tutor')
+                        (link.href === '/institucional-tutor' && !currentSearch && window.location.pathname === '/institucional-tutor')
                         : location === link.href;
 
                     const handleTutorNav = (e: React.MouseEvent) => {
@@ -198,7 +237,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
                 })}
 
                 {/* Lab Hub Section */}
-                {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista" || isTutor || currentRole === "tutor") && (
+                {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista" || isTutor || currentRole === "tutor" || currentRole === "kids_professor") && (
                     <>
                         <div className="pt-8 px-3 mb-4">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Laboratorios</span>
@@ -231,7 +270,7 @@ export function InstitutionalSidebarContent({ currentRole, onLogout, onClose }: 
             </nav>
 
             {/* Assistant Control */}
-            {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista" || isTutor || currentRole === "tutor") && (
+            {!(currentRole === "institutional_admin" || currentRole === "institutional_professor" || currentRole === "profesor_vista" || isTutor || currentRole === "tutor" || currentRole === "kids_professor") && (
                 <div className="px-5 py-4 space-y-2 border-t border-white/5">
                     <button
                         onClick={() => {
