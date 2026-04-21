@@ -347,6 +347,12 @@ export const InstitutionalModuleEditor = () => {
     const [renamingModuleId, setRenamingModuleId] = useState<number | null>(null);
     const [renameValue, setRenameValue] = useState('');
 
+    // Section management states
+    const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
+    const [newSectionName, setNewSectionName] = useState('');
+    const [renameSectionValue, setRenameSectionValue] = useState('');
+    const [isEditingSectionId, setIsEditingSectionId] = useState<number | null>(null);
+
     const MISSION_GRADES = [
         "4to EGB", "5to EGB", "6to EGB", "7mo EGB", "8vo EGB", "9no EGB", "10mo EGB",
         "1ro Bachillerato", "2do Bachillerato", "3ro Bachillerato"
@@ -441,22 +447,50 @@ export const InstitutionalModuleEditor = () => {
         }
     };
 
-    const handleAddSection = async () => {
+    const handleAddSection = () => {
         if (isReadOnly) return;
+        setNewSectionName(`NUEVA UNIDAD ${sections.length + 1}`);
+        setIsCreateSectionOpen(true);
+    };
+
+    const handleConfirmAddSection = async () => {
+        if (!newSectionName.trim() || isReadOnly) return;
         setSaving(true);
         try {
             const newSection = await institutionalCurriculumApi.createSection({
                 cursoId: courseId,
-                nombre: `NUEVA UNIDAD ${sections.length + 1}`,
+                nombre: newSectionName.trim(),
                 orden: sections.length + 1
             });
             setSections([...sections, newSection]);
             setSelectedSection(newSection);
             toast.success("Nueva unidad académica añadida");
+            setIsCreateSectionOpen(false);
+            setNewSectionName('');
         } catch (error) {
             toast.error("Error al crear unidad");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleRenameSection = async (sectionId: number) => {
+        if (!renameSectionValue.trim() || isReadOnly) {
+            setIsEditingSectionId(null);
+            return;
+        }
+        try {
+            await institutionalCurriculumApi.updateSection(sectionId, { nombre: renameSectionValue.trim() });
+            setSections(prev => prev.map(s => s.id === sectionId ? { ...s, nombre: renameSectionValue.trim() } : s));
+            if (selectedSection?.id === sectionId) {
+                setSelectedSection(prev => prev ? { ...prev, nombre: renameSectionValue.trim() } : null);
+            }
+            toast.success("Nombre de unidad actualizado");
+        } catch {
+            toast.error("Error al renombrar unidad");
+        } finally {
+            setIsEditingSectionId(null);
+            setRenameSectionValue('');
         }
     };
 
@@ -689,23 +723,37 @@ export const InstitutionalModuleEditor = () => {
                                         </div>
                                         
                                         {(!isReadOnly || user?.roleId === 13) && (
-                                            <div
-                                                role="button"
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    try {
-                                                        await institutionalCurriculumApi.updateSection(sec.id, { activo: !sec.activo });
-                                                        toast.success("Estado de visibilidad modificado");
-                                                        fetchSections();
-                                                    } catch (err) {
-                                                        toast.error("No se pudo actualizar la unidad");
-                                                    }
-                                                }}
-                                                className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100", 
-                                                    sec.activo ? "text-emerald-400 hover:bg-emerald-500/10" : "text-slate-500 hover:bg-slate-700"
-                                                )}
-                                            >
-                                                {sec.activo ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                <div
+                                                    role="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setIsEditingSectionId(sec.id);
+                                                        setRenameSectionValue(sec.nombre);
+                                                    }}
+                                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                                                    title="Renombrar Unidad"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                </div>
+                                                <div
+                                                    role="button"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        try {
+                                                            await institutionalCurriculumApi.updateSection(sec.id, { activo: !sec.activo });
+                                                            toast.success("Estado de visibilidad modificado");
+                                                            fetchSections();
+                                                        } catch (err) {
+                                                            toast.error("No se pudo actualizar la unidad");
+                                                        }
+                                                    }}
+                                                    className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all", 
+                                                        sec.activo ? "text-emerald-400 hover:bg-emerald-500/10" : "text-slate-500 hover:bg-slate-700"
+                                                    )}
+                                                >
+                                                    {sec.activo ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                                </div>
                                             </div>
                                         )}
                                         <ChevronRight className={cn("w-3.5 h-3.5 text-white/10 transition-transform", isSelected && "rotate-90 text-blue-400")} />
@@ -898,9 +946,22 @@ export const InstitutionalModuleEditor = () => {
                                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-[0.3em] mb-4">
                                     <Layers className="w-3 h-3" /> Unidad Activa
                                 </div>
-                                <h2 className="text-5xl font-black text-slate-800 tracking-tighter leading-none">
-                                    {selectedSection.nombre}
-                                </h2>
+                                <div className="flex items-center gap-4 group/title">
+                                    <h2 className="text-5xl font-black text-slate-800 tracking-tighter leading-none">
+                                        {selectedSection.nombre}
+                                    </h2>
+                                    {!isReadOnly && (
+                                        <button 
+                                            onClick={() => {
+                                                setIsEditingSectionId(selectedSection.id);
+                                                setRenameSectionValue(selectedSection.nombre);
+                                            }}
+                                            className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-400 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center opacity-0 group-hover/title:opacity-100"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
                                 <p className="text-slate-400 font-medium mt-3">Niveles y lecciones disponibles en esta unidad.</p>
                             </div>
 
@@ -1120,9 +1181,23 @@ export const InstitutionalModuleEditor = () => {
                                                 <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 border shadow-inner flex items-center justify-center font-black text-slate-300 mb-10 text-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-500">
                                                     {sIdx + 1}
                                                 </div>
-                                                <h3 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-[0.9] mb-6 line-clamp-3 group-hover:text-blue-600 transition-colors">
-                                                    {sec.nombre}
-                                                </h3>
+                                                <div className="flex items-start justify-between gap-4 group/card-title">
+                                                    <h3 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-[0.9] mb-6 line-clamp-3 group-hover:text-blue-600 transition-colors">
+                                                        {sec.nombre}
+                                                    </h3>
+                                                    {!isReadOnly && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsEditingSectionId(sec.id);
+                                                                setRenameSectionValue(sec.nombre);
+                                                            }}
+                                                            className="w-8 h-8 rounded-xl bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center opacity-0 group-hover/card-title:opacity-100"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div className="mt-auto">
@@ -1346,6 +1421,103 @@ export const InstitutionalModuleEditor = () => {
                     </div>
                 </SheetContent>
             </Sheet>
+
+            {isCreateSectionOpen && (
+                <div className="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6">
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+                        animate={{ scale: 1, opacity: 1, y: 0 }} 
+                        className="bg-white w-full max-w-md rounded-[3.5rem] p-12 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] border-none"
+                    >
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 rounded-[2.5rem] bg-blue-50 flex items-center justify-center mx-auto mb-6">
+                                <Layers className="w-10 h-10 text-blue-600" />
+                            </div>
+                            <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Nueva Unidad</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Configuración Estructural de Obra</p>
+                        </div>
+                        
+                        <div className="space-y-6 mb-10">
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4">Nombre de la Unidad Académica</label>
+                                <Input
+                                    autoFocus
+                                    placeholder="Ej: Fundamentos de Robótica..."
+                                    className="h-16 bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-3xl px-6 font-black text-sm uppercase tracking-tight transition-all"
+                                    value={newSectionName}
+                                    onChange={(e) => setNewSectionName(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleConfirmAddSection()}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <Button 
+                                onClick={handleConfirmAddSection} 
+                                disabled={saving || !newSectionName.trim()} 
+                                className="w-full h-16 rounded-[2rem] bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                            >
+                                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar e Incorporar'}
+                            </Button>
+                            <Button 
+                                onClick={() => setIsCreateSectionOpen(false)} 
+                                variant="ghost" 
+                                className="w-full h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {isEditingSectionId && !isCreateSectionOpen && (
+                <div className="fixed inset-0 z-[110] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6">
+                    <motion.div 
+                        initial={{ scale: 0.95, opacity: 0 }} 
+                        animate={{ scale: 1, opacity: 1 }} 
+                        className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-3xl text-slate-800"
+                    >
+                        <div className="flex items-center justify-between border-b pb-6 mb-8 border-slate-100">
+                            <div>
+                                <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">Renombrar Unidad</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ajuste de Identidad Estructural</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+                                <Edit2 className="w-6 h-6 text-blue-600" />
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2 mb-8">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Nuevo Título</label>
+                            <Input
+                                autoFocus
+                                value={renameSectionValue}
+                                onChange={(e) => setRenameSectionValue(e.target.value)}
+                                className="h-14 bg-slate-50 border-none rounded-2xl font-black text-sm uppercase"
+                                onKeyDown={e => e.key === 'Enter' && handleRenameSection(isEditingSectionId)}
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <Button 
+                                onClick={() => handleRenameSection(isEditingSectionId)} 
+                                disabled={saving || !renameSectionValue.trim()} 
+                                className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest"
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Actualizar'}
+                            </Button>
+                            <Button 
+                                onClick={() => setIsEditingSectionId(null)} 
+                                variant="ghost" 
+                                className="h-14 px-8 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-400"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
 
             {isPreviewOpen && previewModule && (
                 <MissionCinematicViewer 
