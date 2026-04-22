@@ -489,6 +489,18 @@ export const InstitutionalLogin = ({ onLogin, onSwitchToNormal }: {
                 <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
                 Volver al acceso estudiantil
               </button>
+              <div className="flex items-center gap-6 mt-1">
+                <button 
+                  onClick={() => setLocation('/ayuda')}
+                  className="text-[9px] font-black uppercase tracking-widest text-[var(--inst-blue)]/50 hover:text-[var(--inst-blue)] transition-all"
+                >
+                  Soporte Técnico
+                </button>
+                <div className="w-1 h-1 rounded-full bg-slate-200" />
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 italic">
+                  Registro por Invitación
+                </p>
+              </div>
               <div className="w-full h-px bg-[var(--inst-mauve)]/10" />
               <div className="flex items-center gap-2">
                 <Wifi className="w-2.5 h-2.5 text-[var(--inst-rose)] animate-pulse" />

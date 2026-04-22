@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and, inArray, sql } from 'drizzle-orm';
+import { eq, ilike, or, and, inArray, sql } from 'drizzle-orm';
 
 @Injectable()
 export class InstitutionService {
@@ -147,6 +147,100 @@ export class InstitutionService {
             promedio: r.promedio ? r.promedio.toFixed(2) : '0.00',
             entregas: r.entregas || 0,
         }));
+    }
+
+    async registerStudentFromParent(token: string | undefined, studentData: any) {
+        // 1. If token provided, validate and get info
+        let preSetInfo: any = {};
+        if (token) {
+            const inv = await this.getInvitation(token);
+            if (!inv) throw new Error('Invitación inválida o ya utilizada');
+            preSetInfo = {
+                institucionId: inv.institucionId,
+                cursoId: inv.cursoId
+            };
+        }
+
+        // 2. Generate Credentials
+        const password = studentData.roleId === 10 ? 
+            Math.floor(1000 + Math.random() * 9000).toString() : // 4 digits for Kids
+            Math.random().toString(36).substring(2, 8); // alphanumeric for others
+
+        // 3. Create User
+        const [user] = await this.db.insert(schema.usuarios).values({
+            nombre: studentData.nombre,
+            email: studentData.email || `${studentData.nombre.toLowerCase().replace(/ /g, '')}@genia.edu`,
+            password,
+            roleId: studentData.roleId || 10,
+            institucionId: studentData.institucionId || preSetInfo.institucionId,
+            cursoId: studentData.cursoId || preSetInfo.cursoId,
+            nombrePadre: studentData.nombrePadre,
+            emailPadre: studentData.emailPadre,
+            celularPadre: studentData.celularPadre,
+            trabajoPadre: studentData.trabajoPadre,
+            activo: true
+        }).returning();
+
+        // 4. Mark invitation as used if applicable
+        if (token) {
+            await this.markInvitationUsed(token);
+        }
+
+        return {
+            user,
+            rawPassword: password
+        };
+    }
+
+    async createMassiveUsers(data: { students: any[], institucionId: number, cursoId: number }) {
+        const results = [];
+        for (const student of data.students) {
+            const password = student.roleId === 6 
+                ? `${Math.floor(Math.random() * 9) + 1}-${Math.floor(Math.random() * 9) + 1}-${Math.floor(Math.random() * 9) + 1}-${Math.floor(Math.random() * 9) + 1}`
+                : Math.random().toString(36).substring(2, 8).toUpperCase();
+
+            const [user] = await this.db.insert(schema.usuarios).values({
+                nombre: student.nombre,
+                email: student.email || `${student.nombre.toLowerCase().replace(/\s+/g, '.')}@edu.com`,
+                password: password,
+                roleId: student.roleId || 10,
+                institucionId: data.institucionId,
+                cursoId: data.cursoId,
+                activo: true,
+                onboardingCompleted: true,
+            }).returning();
+            
+            results.push({ ...user, password });
+        }
+        return results;
+    }
+
+    async generateInvitations(data: { quantity: number, institucionId: number, cursoId?: number | null }) {
+        const results = [];
+        for (let i = 0; i < data.quantity; i++) {
+            const token = Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + (i + 1);
+            const [inv] = await this.db.insert(schema.invitaciones).values({
+                token,
+                institucionId: data.institucionId,
+                cursoId: data.cursoId || null,
+                usada: false,
+            }).returning();
+            results.push(inv);
+        }
+        return results;
+    }
+
+    async getInvitation(token: string) {
+        const [inv] = await this.db.select().from(schema.invitaciones)
+            .where(and(eq(schema.invitaciones.token, token), eq(schema.invitaciones.usada, false)))
+            .limit(1);
+        return inv;
+    }
+
+    async markInvitationUsed(token: string) {
+        await this.db.update(schema.invitaciones)
+            .set({ usada: true })
+            .where(eq(schema.invitaciones.token, token));
     }
 
     async updateInstitutionLogo(id: number, logoUrl: string) {

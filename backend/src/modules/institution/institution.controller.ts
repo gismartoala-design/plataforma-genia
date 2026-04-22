@@ -67,6 +67,17 @@ export class InstitutionController {
         return this.institutionService.createUser(data);
     }
 
+    @Post('usuarios/masivo')
+    async createMassive(@Body() data: any) {
+        return this.institutionService.createMassiveUsers(data);
+    }
+
+    @Post('invitaciones')
+    async generateInvites(@Body() data: any) {
+        return this.institutionService.generateInvitations(data);
+    }
+
+
     @Put('usuarios/:id')
     async updateUser(@Param('id') id: string, @Body() data: any) {
         return this.institutionService.updateUser(parseInt(id), data);

@@ -24,7 +24,12 @@ import {
   Copy,
   Sparkles,
   Upload,
-  Image as ImageIcon
+  Eye,
+  EyeOff,
+  Image as ImageIcon,
+  Ticket,
+  ClipboardCheck,
+  QrCode
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -35,6 +40,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { institutionApi } from '@/services/institution.api';
 import { toast } from '@/hooks/use-toast';
+import { Toaster } from "@/components/ui/toaster";
 import '../../styles/ConstructionTheme.css';
 
 const LEVEL_NAMES: Record<string, string> = {
@@ -131,6 +137,110 @@ function ActivityRow({ mod, professors, onRefresh, onDelete }: { mod: any; profe
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
+      {/* INVITE BATCH MODAL */}
+      <AnimatePresence>
+        {showInviteModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-2xl">
+              <div className="p-10 space-y-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
+                      <QrCode className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-tighter text-slate-800">Generar Lote de Invitaciones</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Crear links únicos para padres</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" onClick={() => setShowInviteModal(false)} className="rounded-full">Cerrar</Button>
+                </div>
+
+                {generatedInvites.length === 0 ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cantidad</label>
+                        <Input 
+                          type="number" 
+                          value={inviteQuantity} 
+                          onChange={(e) => setInviteQuantity(Number(e.target.value))}
+                          className="h-14 rounded-2xl border-slate-100 font-bold"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Grado / Curso</label>
+                        <select 
+                          value={inviteCourseId}
+                          onChange={(e) => setInviteCourseId(e.target.value)}
+                          className="w-full h-14 rounded-2xl border border-slate-100 bg-white px-4 font-bold text-sm outline-none"
+                        >
+                          <option value="">Seleccionar...</option>
+                          {courses.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={async () => {
+                        if (!inviteCourseId) { toast({ title: 'Error', description: 'Seleccione un curso' }); return; }
+                        setIsProcessingMassive(true);
+                        try {
+                          const res = await institutionApi.generateInvitations({
+                            quantity: inviteQuantity,
+                            institucionId: user.institucionId!,
+                            cursoId: Number(inviteCourseId)
+                          }) as any[];
+                          setGeneratedInvites(res);
+                        } finally {
+                          setIsProcessingMassive(false);
+                        }
+                      }}
+                      disabled={isProcessingMassive}
+                      className="w-full h-16 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase tracking-widest"
+                    >
+                      {isProcessingMassive ? 'Generando...' : `Generar ${inviteQuantity} Invitaciones`}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 max-h-[300px] overflow-y-auto space-y-3 custom-scrollbar">
+                      {generatedInvites.map((inv, idx) => {
+                        const url = `${window.location.origin}/institucional/registro/${user.institucionId}?token=${inv.token}`;
+                        return (
+                          <div key={inv.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
+                            <span className="text-[10px] font-mono text-slate-500">{idx + 1}. {inv.token}</span>
+                            <Button 
+                              size="sm" variant="ghost" 
+                              onClick={() => {
+                                navigator.clipboard.writeText(url);
+                                toast({ title: 'Link Copiado' });
+                              }}
+                              className="h-8 text-[9px] font-black uppercase text-purple-600"
+                            >
+                              Copiar Link
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        const allLinks = generatedInvites.map((inv, idx) => `${idx + 1}. ${window.location.origin}/institucional/registro/${user.institucionId}?token=${inv.token}`).join('\n');
+                        navigator.clipboard.writeText(allLinks);
+                        toast({ title: 'Todos los links copiados' });
+                      }}
+                      className="w-full h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest"
+                    >
+                      Copiar Todos los Links
+                    </Button>
+                    <Button variant="ghost" onClick={() => setGeneratedInvites([])} className="w-full text-slate-400">Limpiar y Volver</Button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -452,8 +562,19 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
   const [creatingCourse, setCreatingCourse] = useState(false);
   
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showMassiveModal, setShowMassiveModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteQuantity, setInviteQuantity] = useState(40);
+  const [inviteCourseId, setInviteCourseId] = useState('');
+  const [generatedInvites, setGeneratedInvites] = useState<any[]>([]);
+  const [massiveInput, setMassiveInput] = useState('');
+  const [massiveCourseId, setMassiveCourseId] = useState('');
+  const [massiveRoleId, setMassiveRoleId] = useState('10');
+  const [isProcessingMassive, setIsProcessingMassive] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Record<number, boolean>>({});
+
   const [newNodeRole, setNewNodeRole] = useState('10');
-  const [userFilter, setUserFilter] = useState('all'); // 9: Profe, 10: Estudiante
+  const [userFilter, setUserFilter] = useState('all'); 
   const [newUser, setNewUser] = useState({ nombre: '', email: '', password: 'admin' });
   const [creatingUser, setCreatingUser] = useState(false);
 
@@ -889,13 +1010,40 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                   ))}
                 </div>
               </div>
-              <Button 
-                onClick={() => setShowCreateUser(true)}
-                className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white shadow-lg"
-                style={{background:'var(--inst-blue)'}}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Añadir Usuario
-              </Button>
+              <div className="flex items-center gap-3 relative z-10 w-full md:w-auto">
+                <Button 
+                  onClick={() => {
+                    const url = `${window.location.origin}/institucional/registro/${user.institucionId}`;
+                    navigator.clipboard.writeText(url);
+                    toast({ title: '✓ Link Copiado', description: 'Envíe este link a los padres de familia para el registro.' });
+                  }}
+                  variant="outline"
+                  className="h-12 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] text-emerald-600 border-emerald-100 hover:bg-emerald-50"
+                >
+                  <Globe className="w-4 h-4 mr-2" /> Link Padres
+                </Button>
+                <Button 
+                  onClick={() => setShowInviteModal(true)}
+                  variant="outline"
+                  className="h-12 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] text-purple-600 border-purple-100 hover:bg-purple-50"
+                >
+                  <Ticket className="w-4 h-4 mr-2" /> Generar Lote
+                </Button>
+                <Button 
+                  onClick={() => setShowMassiveModal(true)}
+                  variant="outline"
+                  className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] text-blue-600 border-blue-100 hover:bg-blue-50"
+                >
+                  <Upload className="w-4 h-4 mr-2" /> Registro Masivo
+                </Button>
+                <Button 
+                  onClick={() => setShowCreateUser(true)}
+                  className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white shadow-lg"
+                  style={{background:'var(--inst-blue)'}}
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Añadir Usuario
+                </Button>
+              </div>
             </div>
             
             <Card className="blueprint-card overflow-hidden">
@@ -911,7 +1059,7 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-slate-50/50">
-                        {['Usuario / Interventor', 'Asignación Académica', 'Rol', 'Estado', 'Acciones'].map(h => (
+                        {['Usuario / Interventor', 'Asignación Académica', 'Rol', 'Estado', 'Credencial', 'Acciones'].map(h => (
                           <th key={h} className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b" style={{borderColor:'rgba(26,86,219,0.06)'}}>{h}</th>
                         ))}
                       </tr>
@@ -975,6 +1123,21 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                                 {u.activo ? 'Activo' : 'Inactivo'}
                               </span>
                             </button>
+                          </td>
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono text-slate-500">
+                                {showPasswords[u.id] ? u.password : '••••••••'}
+                              </span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setShowPasswords(prev => ({ ...prev, [u.id]: !prev[u.id] }))}
+                                className="h-6 w-6 p-0 rounded-md"
+                              >
+                                {showPasswords[u.id] ? <X className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                              </Button>
+                            </div>
                           </td>
                           <td className="px-8 py-5">
                             <Button 
@@ -1461,8 +1624,223 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
           </div>
         )}
       </AnimatePresence>
+      {/* MASSIVE CREATION MODAL */}
+      <AnimatePresence>
+        {showMassiveModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowMassiveModal(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl border border-blue-100 overflow-hidden"
+            >
+              <div className="p-10 space-y-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tighter uppercase italic" style={{color:'var(--inst-deep)'}}>Carga Masiva de Alumnos</h2>
+                    <p className="technical-label">Ingreso de datos en lote vía protocolo de texto</p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setShowMassiveModal(false)} className="rounded-2xl hover:bg-slate-50"><X className="w-5 h-5" /></Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="technical-label">Sector de Asignación</p>
+                    <select 
+                      value={massiveCourseId}
+                      onChange={(e) => setMassiveCourseId(e.target.value)}
+                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-[11px] font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
+                    >
+                      <option value="">Seleccionar Curso...</option>
+                      {courses.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="technical-label">Protocolo de Interfaz</p>
+                    <select 
+                      value={massiveRoleId}
+                      onChange={(e) => setMassiveRoleId(e.target.value)}
+                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-[11px] font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
+                    >
+                      <option value="10">Estudiante Institucional</option>
+                      <option value="11">Estudiante Kids</option>
+                      <option value="6">Kids (Pure Gamification)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="technical-label">Lista de Usuarios (Un nombre por línea)</p>
+                  <Textarea 
+                    value={massiveInput}
+                    onChange={(e) => setMassiveInput(e.target.value)}
+                    placeholder="Ej: Juan Perez&#10;Maria Garcia&#10;Carlos Lopez"
+                    className="min-h-[200px] rounded-2xl border-slate-100 bg-slate-50 p-6 text-sm font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest italic mt-2">
+                    * El sistema generará correos @edu.com y claves automáticamente.
+                  </p>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <Button variant="ghost" onClick={() => setShowMassiveModal(false)} className="flex-1 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-slate-100">Cancelar</Button>
+                  <Button 
+                    disabled={!massiveInput || !massiveCourseId || isProcessingMassive}
+                    onClick={async () => {
+                      setIsProcessingMassive(true);
+                      try {
+                        const lines = massiveInput.split('\n').filter(l => l.trim().length > 0);
+                        const students = lines.map(name => ({ nombre: name.trim(), roleId: Number(massiveRoleId) }));
+                        await institutionApi.createMassiveUsers({
+                          students,
+                          institucionId: user.institucionId,
+                          cursoId: Number(massiveCourseId)
+                        });
+                        toast({ title: '✓ Carga Completada', description: `Se han creado ${lines.length} usuarios con éxito.` });
+                        setShowMassiveModal(false);
+                        setMassiveInput('');
+                        fetchData();
+                      } catch (err) {
+                        toast({ title: 'Error', description: 'No se pudo procesar la carga masiva.', variant: 'destructive' });
+                      } finally {
+                        setIsProcessingMassive(false);
+                      }
+                    }}
+                    className="flex-1 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white shadow-xl shadow-blue-500/20"
+                    style={{background:'var(--inst-blue)'}}
+                  >
+                    {isProcessingMassive ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-2" /> Ejecutar Carga</>}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* INVITE BATCH MODAL */}
+      <AnimatePresence>
+        {showInviteModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowInviteModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl border border-purple-100 overflow-hidden"
+            >
+              <div className="p-10 space-y-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
+                      <QrCode className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-tighter text-slate-800">Lote de Invitaciones</h3>
+                      <p className="technical-label">Generar enlaces únicos para registro externo</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setShowInviteModal(false)} className="rounded-2xl hover:bg-slate-50"><X className="w-5 h-5" /></Button>
+                </div>
+
+                {generatedInvites.length === 0 ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="technical-label">Cantidad</p>
+                        <Input 
+                          type="number" 
+                          value={inviteQuantity} 
+                          onChange={(e) => setInviteQuantity(Number(e.target.value))}
+                          className="h-12 rounded-xl border-slate-100 font-bold"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="technical-label">Grado / Curso</p>
+                        <select 
+                          value={inviteCourseId}
+                          onChange={(e) => setInviteCourseId(e.target.value)}
+                          className="w-full h-12 rounded-xl border border-slate-100 bg-white px-4 font-bold text-xs outline-none"
+                        >
+                          <option value="GENERAL">Cualquier Curso (El padre elige)</option>
+                          {courses.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={async () => {
+                        setIsProcessingMassive(true);
+                        try {
+                          const res = await institutionApi.generateInvitations({
+                            quantity: inviteQuantity,
+                            institucionId: user.institucionId!,
+                            cursoId: inviteCourseId === 'GENERAL' || !inviteCourseId ? null : Number(inviteCourseId)
+                          }) as any[];
+                          setGeneratedInvites(res);
+                        } finally {
+                          setIsProcessingMassive(false);
+                        }
+                      }}
+                      disabled={isProcessingMassive}
+                      className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase tracking-widest text-[10px]"
+                    >
+                      {isProcessingMassive ? 'Generando...' : `Generar ${inviteQuantity} Invitaciones`}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 max-h-[300px] overflow-y-auto space-y-3 custom-scrollbar">
+                      {generatedInvites.map((inv, idx) => {
+                        const url = `${window.location.origin}/institucional/registro/${user.institucionId}?token=${inv.token}`;
+                        return (
+                          <div key={inv.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                            <span className="text-[10px] font-mono text-slate-500">{idx + 1}. {inv.token}</span>
+                            <Button 
+                              size="sm" variant="ghost" 
+                              onClick={() => {
+                                navigator.clipboard.writeText(url);
+                                toast({ title: 'Link Copiado' });
+                              }}
+                              className="h-8 text-[9px] font-black uppercase text-purple-600 hover:bg-purple-50"
+                            >
+                              Copiar Link
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-4">
+                        <Button 
+                        onClick={() => {
+                            const allLinks = generatedInvites.map((inv, idx) => `${idx + 1}. ${window.location.origin}/institucional/registro/${user.institucionId}?token=${inv.token}`).join('\n');
+                            navigator.clipboard.writeText(allLinks);
+                            toast({ title: 'Todos los links copiados' });
+                        }}
+                        className="flex-1 h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest text-[10px]"
+                        >
+                        Copiar Todos
+                        </Button>
+                        <Button variant="outline" onClick={() => setGeneratedInvites([])} className="flex-1 h-14 rounded-2xl border-slate-200 text-slate-400 font-black uppercase tracking-widest text-[10px]">Nueva Lista</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <Toaster />
     </div>
   );
-};
+}
 
 export default InstitutionalAdminDashboard;

@@ -12,3 +12,4 @@ export { ChatbotBuilderLab } from './components/labs/ChatbotBuilderLab';
 export { ActionPlatformerLab } from './components/labs/ActionPlatformerLab';
 export { ArduinoWokwiLab } from './components/labs/ArduinoWokwiLab';
 export { InstitutionalGradesView } from './components/reports/InstitutionalGradesView';
+export { InstitutionalParentRegistration } from './roles/public/InstitutionalParentRegistration';

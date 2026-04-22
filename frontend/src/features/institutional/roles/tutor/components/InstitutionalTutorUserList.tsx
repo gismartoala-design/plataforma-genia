@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   Fingerprint,
   RefreshCw,
-  KeyRound
+  KeyRound,
+  Globe
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -131,6 +132,17 @@ export function InstitutionalTutorUserList({ institutionId }: TutorUserListProps
                         />
                     </div>
                     <Button 
+                        onClick={() => {
+                            const url = `${window.location.origin}/institucional/registro/${institutionId}`;
+                            navigator.clipboard.writeText(url);
+                            toast({ title: '✓ Link Copiado', description: 'Envíe este link a los padres de familia para el registro.' });
+                        }}
+                        variant="outline" 
+                        className="h-12 px-6 rounded-2xl bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-black uppercase text-[10px] tracking-widest hover:bg-emerald-500/20"
+                    >
+                        <Globe className="w-4 h-4 mr-2" /> Link Padres
+                    </Button>
+                    <Button 
                         variant="outline" 
                         onClick={fetchUsers}
                         className="h-12 w-12 rounded-2xl bg-white/5 border-white/10 p-0 flex items-center justify-center hover:bg-white/10 transition-all text-white"
@@ -204,7 +216,7 @@ export function InstitutionalTutorUserList({ institutionId }: TutorUserListProps
                                     <td className="px-8 py-6">
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="min-w-[180px]">
-                                                {showPasswords[u.id] ? renderPassword(u.clave) : <span className="text-slate-500 font-mono">••••••••</span>}
+                                                {showPasswords[u.id] ? renderPassword(u.password) : <span className="text-slate-500 font-mono">••••••••</span>}
                                             </div>
                                             <Button variant="ghost" size="icon" onClick={() => togglePassword(u.id)} className="text-slate-400 hover:text-white hover:bg-white/10 h-9 w-9 rounded-lg">
                                                 {showPasswords[u.id] 

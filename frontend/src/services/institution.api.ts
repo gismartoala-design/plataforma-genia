@@ -107,4 +107,25 @@ export const institutionApi = {
         formData.append('file', file);
         return apiClient.patch(`/api/instituciones/${instId}/logo`, formData);
     },
+    
+    // Massive Registration
+    createMassiveUsers: async (data: { students: any[], institucionId: number, cursoId: number }) => {
+        return apiClient.post('/api/instituciones/usuarios/masivo', data);
+    },
+
+    registerStudentFromParent: async (data: { token?: string, studentData: any }) => {
+        return apiClient.post('/api/public/instituciones/registro-padres', data);
+    },
+
+    getPublicCourses: async (instId: number) => {
+        return apiClient.get(`/api/public/instituciones/${instId}/cursos`);
+    },
+
+    generateInvitations: async (data: { quantity: number, institucionId: number, cursoId: number }) => {
+        return apiClient.post('/api/instituciones/invitaciones', data);
+    },
+
+    getInvitation: async (token: string) => {
+        return apiClient.get(`/api/public/instituciones/invitacion/${token}`);
+    },
 };

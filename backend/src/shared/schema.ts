@@ -87,6 +87,16 @@ export const usuarios = pgTable('usuarios', {
   googleRefreshToken: text('google_refresh_token'),
 });
 
+// 3.5 Tabla de Invitaciones
+export const invitaciones = pgTable('invitaciones', {
+  id: serial('id').primaryKey(),
+  token: varchar('token', { length: 100 }).unique().notNull(),
+  institucionId: integer('institucion_id').references(() => instituciones.id),
+  cursoId: integer('curso_id').references(() => cursos.id),
+  usada: boolean('usada').default(false),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
 // 4. Tabla de Módulos
 export const modulos = pgTable('modulos', {
   id: serial('id').primaryKey(),

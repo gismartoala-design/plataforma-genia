@@ -16,7 +16,7 @@ import { Login, KidsLogin, InstitutionalLogin } from "@/features/auth";
 import { KidsDashboard, KidsActivityViewer, KidsModuleViewer } from "@/features/kids";
 import { KidsProfessorDashboard, KidsCourseEditor, KidsModuleEditor } from "@/features/kids-professor";
 import { Button } from "@/components/ui/button";
-import { CityDashboard, InstitutionalDashboard, InstitutionalTeacherDashboard, InstitutionalTutorDashboard, InstitutionalModuleEditor, InstitutionalSidebar, InstitutionalGradesView, TechToolViewer, WebBuilderLab, MinecraftCodeLab, ChatbotBuilderLab, ActionPlatformerLab, ArduinoWokwiLab } from "@/features/institutional";
+import { CityDashboard, InstitutionalDashboard, InstitutionalTeacherDashboard, InstitutionalTutorDashboard, InstitutionalModuleEditor, InstitutionalSidebar, InstitutionalGradesView, TechToolViewer, WebBuilderLab, MinecraftCodeLab, ChatbotBuilderLab, ActionPlatformerLab, ArduinoWokwiLab, InstitutionalParentRegistration } from "@/features/institutional";
 import { LatamLogin, LatamStudentDashboard, LatamTeacherDashboard, LatamSessionViewer } from "@/features/latam";
 import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
@@ -130,8 +130,16 @@ function App() {
     clearSession();
   };
 
-  // If not logged in and not on login page or asistente-web, redirect to login
-  if (!user && location !== "/login" && location !== "/login-kids" && location !== "/instituciones-login" && location !== "/latam-login" && location !== "/asistente-web" && location !== "/ayuda") {
+  const isPublicRoute = 
+    location === "/login" || 
+    location === "/login-kids" || 
+    location === "/instituciones-login" || 
+    location === "/latam-login" || 
+    location === "/asistente-web" || 
+    location === "/ayuda" || 
+    location.startsWith("/institucional/registro/");
+
+  if (!user && !isPublicRoute) {
     return <Redirect to="/instituciones-login" />;
   }
 
@@ -184,6 +192,10 @@ function App() {
           </Route>
           <Route path="/ayuda">
             <AsistenteWeb />
+          </Route>
+
+          <Route path="/institucional/registro/:institucionId">
+            {(params: any) => <InstitutionalParentRegistration params={params} />}
           </Route>
 
           <Route path="/login">
