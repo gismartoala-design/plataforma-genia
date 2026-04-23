@@ -1079,31 +1079,7 @@ export const InstitutionalCurriculumExplorer = ({
               </div>
             )}
 
-            {selectedModule && (
-              <div className="flex w-full items-center gap-2 flex-wrap justify-start xl:justify-end">
-                <div className="flex w-full xl:w-auto p-1 bg-slate-100 rounded-[1.25rem] border border-slate-200 shadow-inner shrink-0 flex-wrap">
-                  <button
-                    onClick={() => setShowTeacherNotes(!showTeacherNotes)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 md:px-3.5 py-2 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.14em] transition-all',
-                      showTeacherNotes ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
-                    )}
-                  >
-                    <UserCheck className="w-4 h-4" /> Notas Docente
-                  </button>
-                  <button
-                    onClick={() => setIsFocusMode(!isFocusMode)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 md:px-3.5 py-2 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.14em] transition-all',
-                      isFocusMode ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
-                    )}
-                  >
-                    {isFocusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                    {isFocusMode ? 'Salir Foco' : 'Enfocar'}
-                  </button>
-                </div>
-              </div>
-            )}
+
 
             {showGridActions && (
               <div className="flex items-center gap-3">
