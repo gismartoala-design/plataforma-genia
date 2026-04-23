@@ -42,10 +42,32 @@ export function KidsProfessorDashboard({ user }: { user: any }) {
     try {
       setLoading(true);
       const data = await kidsProfessorApi.getModules(user.id);
-      setModules(data);
       
       const coursesData = await professorApi.getProfessorCourses(user.id);
       setCourses(coursesData);
+
+      try {
+        const { institutionalCurriculumApi } = await import('../../institutional/services/curriculum.api');
+        const allInstModules = await Promise.all(
+          coursesData.map((c: any) => institutionalCurriculumApi.getModulesByCourse(c.id))
+        );
+        const instModules = allInstModules.flat().map((m: any) => ({
+            id: m.id,
+            cursoId: m.cursoId,
+            nombreModulo: m.titulo,
+            descripcion: m.descripcion || 'Módulo Institucional',
+            isInst: true,
+            tipo: m.tipo
+        }));
+        
+        // merge them avoiding duplicates by ID? no, modulos and modulos_inst IDs could overlap.
+        // for now just add them, KidsModuleEditor may need adjustments if it's an institutional module
+        setModules([...data, ...instModules]);
+      } catch (err) {
+        console.error("Error loading inst modules", err);
+        setModules(data);
+      }
+      
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({ title: "Error", description: "No se pudieron cargar los datos.", variant: "destructive" });

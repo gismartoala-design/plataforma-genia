@@ -34,6 +34,10 @@ import {
   Link2,
   CheckCircle2,
   Sparkles,
+  AlertTriangle,
+  Car,
+  Users,
+  TrafficCone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
@@ -340,6 +344,24 @@ const CarouselView = ({
     concepto: getBlockText(rawBlock.concept) || getBlockText(rawBlock.content?.concept) || getBlockText(currentMoment?.student?.concept)
   };
 
+  const mainText = textBlocks.contexto || 
+                   textBlocks.concepto || 
+                   ((currentSlide.content !== textBlocks.instrucción && currentSlide.content !== textBlocks.pregunta) ? currentSlide.content : null) || 
+                   'Estableciendo conexión con el centro de mando...';
+
+  const items = mainText.split(/•\s*|\-\s*|(?=\d+\.\s*)/).filter(s => s.trim().length > 1);
+  const [intro, ...listItems] = mainText.split(/•\s*|\-\s*|(?=\d+\.\s*)/);
+  const hasMultipleItems = items.length > 1;
+
+  const getScenarioIcon = (txt: string) => {
+    const lower = txt.toLowerCase();
+    if (lower.includes('auto') || lower.includes('vehículo') || lower.includes('carro')) return Car;
+    if (lower.includes('peatón') || lower.includes('gente') || lower.includes('persona') || lower.includes('niño')) return Users;
+    if (lower.includes('caos') || lower.includes('problema') || lower.includes('falla') || lower.includes('error')) return Zap;
+    if (lower.includes('tráfico') || lower.includes('semáforo') || lower.includes('calle')) return TrafficCone;
+    return AlertTriangle;
+  };
+
   const teacherObservation = getBlockText(currentMoment?.teacher?.observation) || getBlockText(currentMoment?.teacher?.intention);
   const teacherPedagogy = Array.isArray(currentMoment?.teacher?.pedagogy) ? currentMoment.teacher.pedagogy.filter(Boolean) : [];
   
@@ -438,9 +460,38 @@ const CarouselView = ({
                   </span>
                 </motion.div>
 
-                <h2 className="text-xl md:text-3xl lg:text-4xl font-black italic tracking-wide text-blue-800 leading-tight">
-                  <TypewriterText text={textBlocks.contexto || currentSlide.content || 'Estableciendo conexión con el centro de mando...'} key={`txt-${idx}`} />
-                </h2>
+                <div className="space-y-6 w-full">
+                  <h2 className="text-xl md:text-3xl lg:text-4xl font-black italic tracking-wide text-blue-800 leading-tight">
+                    <TypewriterText 
+                      text={hasMultipleItems ? (intro || 'Situación Detectada:') : mainText} 
+                      key={`txt-${idx}`} 
+                    />
+                  </h2>
+
+                  {hasMultipleItems && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 w-full">
+                      {items.map((item, i) => {
+                        const Icon = getScenarioIcon(item);
+                        return (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 + (i * 0.15) }}
+                            className="flex items-center gap-4 p-5 rounded-[1.8rem] bg-white border border-blue-100 shadow-sm hover:shadow-md transition-all text-left"
+                          >
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-600">
+                              <Icon className="w-6 h-6" />
+                            </div>
+                            <p className="text-sm md:text-base font-bold text-slate-700 leading-snug">
+                              {item.trim()}
+                            </p>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Action/Instruction Area (Accent Box) */}

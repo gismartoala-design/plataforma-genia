@@ -16,7 +16,8 @@ import {
   Search,
   Wrench,
   Rocket,
-  Target
+  Target,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -468,12 +469,12 @@ export const InstitutionalTutorDashboard = ({ user }: { user: any }) => {
                         className="group bg-white rounded-[3.5rem] p-12 border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-100 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between min-h-[360px]"
                       >
                         <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
-                          <span className="text-[10rem] font-black leading-none tracking-tighter italic text-slate-900">{idx + 1}</span>
+                          <Layers className="w-40 h-40 text-slate-900" />
                         </div>
 
                         <div className="space-y-6 relative z-10">
                           <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-300 text-xl shadow-inner group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
-                            {idx + 1}
+                            <BookOpen className="w-8 h-8" />
                           </div>
                           <div className="space-y-3">
                             <Badge className="bg-blue-50 text-blue-600 border-none text-[9px] font-black uppercase tracking-widest px-3 py-1">

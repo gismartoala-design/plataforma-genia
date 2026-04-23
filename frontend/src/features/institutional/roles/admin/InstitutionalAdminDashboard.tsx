@@ -37,6 +37,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { institutionApi } from '@/services/institution.api';
 import { toast } from '@/hooks/use-toast';
@@ -137,110 +138,6 @@ function ActivityRow({ mod, professors, onRefresh, onDelete }: { mod: any; profe
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
-      {/* INVITE BATCH MODAL */}
-      <AnimatePresence>
-        {showInviteModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-2xl">
-              <div className="p-10 space-y-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
-                      <QrCode className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black uppercase tracking-tighter text-slate-800">Generar Lote de Invitaciones</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Crear links únicos para padres</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" onClick={() => setShowInviteModal(false)} className="rounded-full">Cerrar</Button>
-                </div>
-
-                {generatedInvites.length === 0 ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cantidad</label>
-                        <Input 
-                          type="number" 
-                          value={inviteQuantity} 
-                          onChange={(e) => setInviteQuantity(Number(e.target.value))}
-                          className="h-14 rounded-2xl border-slate-100 font-bold"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Grado / Curso</label>
-                        <select 
-                          value={inviteCourseId}
-                          onChange={(e) => setInviteCourseId(e.target.value)}
-                          className="w-full h-14 rounded-2xl border border-slate-100 bg-white px-4 font-bold text-sm outline-none"
-                        >
-                          <option value="">Seleccionar...</option>
-                          {courses.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={async () => {
-                        if (!inviteCourseId) { toast({ title: 'Error', description: 'Seleccione un curso' }); return; }
-                        setIsProcessingMassive(true);
-                        try {
-                          const res = await institutionApi.generateInvitations({
-                            quantity: inviteQuantity,
-                            institucionId: user.institucionId!,
-                            cursoId: Number(inviteCourseId)
-                          }) as any[];
-                          setGeneratedInvites(res);
-                        } finally {
-                          setIsProcessingMassive(false);
-                        }
-                      }}
-                      disabled={isProcessingMassive}
-                      className="w-full h-16 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase tracking-widest"
-                    >
-                      {isProcessingMassive ? 'Generando...' : `Generar ${inviteQuantity} Invitaciones`}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 max-h-[300px] overflow-y-auto space-y-3 custom-scrollbar">
-                      {generatedInvites.map((inv, idx) => {
-                        const url = `${window.location.origin}/institucional/registro/${user.institucionId}?token=${inv.token}`;
-                        return (
-                          <div key={inv.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
-                            <span className="text-[10px] font-mono text-slate-500">{idx + 1}. {inv.token}</span>
-                            <Button 
-                              size="sm" variant="ghost" 
-                              onClick={() => {
-                                navigator.clipboard.writeText(url);
-                                toast({ title: 'Link Copiado' });
-                              }}
-                              className="h-8 text-[9px] font-black uppercase text-purple-600"
-                            >
-                              Copiar Link
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <Button 
-                      onClick={() => {
-                        const allLinks = generatedInvites.map((inv, idx) => `${idx + 1}. ${window.location.origin}/institucional/registro/${user.institucionId}?token=${inv.token}`).join('\n');
-                        navigator.clipboard.writeText(allLinks);
-                        toast({ title: 'Todos los links copiados' });
-                      }}
-                      className="w-full h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest"
-                    >
-                      Copiar Todos los Links
-                    </Button>
-                    <Button variant="ghost" onClick={() => setGeneratedInvites([])} className="w-full text-slate-400">Limpiar y Volver</Button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -1079,11 +976,11 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                             </div>
                           </td>
                           <td className="px-8 py-5">
-                            <div className="flex flex-wrap gap-1.5 max-w-[240px]">
+                            <div className="flex flex-wrap gap-1.5 max-w-[400px] max-h-[120px] overflow-y-auto pr-1 custom-scrollbar">
                               {(userCoursesMap[u.id] ?? (u.cursoId ? [u.cursoId] : [])).map((cid: number) => {
                                 const course = courses.find(c => Number(c.id) === Number(cid));
                                 return course ? (
-                                  <span key={cid} className="px-2 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider" style={{background:'var(--inst-blue-lt)', color:'var(--inst-blue)', border:'1px solid rgba(26,86,219,0.1)'}}>
+                                  <span key={cid} className="px-2 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider whitespace-nowrap" style={{background:'var(--inst-blue-lt)', color:'var(--inst-blue)', border:'1px solid rgba(26,86,219,0.1)'}}>
                                     {course.nombre}
                                   </span>
                                 ) : null;
@@ -1325,12 +1222,12 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
       {/* Create User Modal */}
       <AnimatePresence>
         {showCreateUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--inst-navy)]/40 backdrop-blur-md">
+          <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 bg-[var(--inst-navy)]/60 backdrop-blur-xl overflow-y-auto">
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white border p-10 rounded-[3rem] w-full max-w-md shadow-2xl relative"
+              className="bg-white border p-10 rounded-[3rem] w-full max-w-md shadow-2xl relative my-auto"
               style={{borderColor:'rgba(26,86,219,0.1)'}}
             >
               <button
@@ -1391,14 +1288,98 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                     className="h-12 bg-slate-50 border-blue-50 focus:border-blue-200 rounded-xl text-sm font-bold shadow-inner"
                     required
                   />
-                  <Input
-                    type="password"
-                    value={newUser.password}
-                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                    placeholder="Contraseña de acceso"
-                    className="h-12 bg-slate-50 border-blue-50 focus:border-blue-200 rounded-xl text-sm font-bold shadow-inner"
-                    required
-                  />
+                  {newNodeRole === '11' ? (
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contraseña (Secuencia de Animales)</Label>
+                      <div className="flex gap-2 justify-center p-3 bg-slate-50 border border-blue-50 rounded-xl shadow-inner">
+                        {newUser.password && /^[1-9]-[1-9]-[1-9]-[1-9]$/.test(newUser.password) ? (
+                          newUser.password.split('-').map((id, idx) => {
+                            const icons = [
+                                { id: '1', emoji: '🐶' }, { id: '2', emoji: '🐱' }, { id: '3', emoji: '🐭' },
+                                { id: '4', emoji: '🐰' }, { id: '5', emoji: '🦊' }, { id: '6', emoji: '🐻' },
+                                { id: '7', emoji: '🐼' }, { id: '8', emoji: '🐸' }, { id: '9', emoji: '🐵' },
+                            ];
+                            return (
+                              <button
+                                type="button"
+                                key={idx}
+                                onClick={() => {
+                                  // remove this digit
+                                  const parts = newUser.password.split('-');
+                                  parts.splice(idx, 1);
+                                  setNewUser({...newUser, password: parts.join('-')});
+                                }}
+                                className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm border border-slate-200 hover:bg-red-50 hover:border-red-200 transition-colors"
+                              >
+                                {icons.find(i => i.id === id)?.emoji || '?'}
+                              </button>
+                            );
+                          })
+                        ) : (
+                          newUser.password.split('-').filter(p => p.length === 1 && /[1-9]/.test(p)).map((id, idx) => {
+                            const icons = [
+                                { id: '1', emoji: '🐶' }, { id: '2', emoji: '🐱' }, { id: '3', emoji: '🐭' },
+                                { id: '4', emoji: '🐰' }, { id: '5', emoji: '🦊' }, { id: '6', emoji: '🐻' },
+                                { id: '7', emoji: '🐼' }, { id: '8', emoji: '🐸' }, { id: '9', emoji: '🐵' },
+                            ];
+                            return (
+                              <button
+                                type="button"
+                                key={idx}
+                                onClick={() => {
+                                  const parts = newUser.password.split('-').filter(p => p.length === 1 && /[1-9]/.test(p));
+                                  parts.splice(idx, 1);
+                                  setNewUser({...newUser, password: parts.join('-')});
+                                }}
+                                className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm border border-slate-200 hover:bg-red-50 hover:border-red-200 transition-colors"
+                              >
+                                {icons.find(i => i.id === id)?.emoji || '?'}
+                              </button>
+                            );
+                          })
+                        )}
+                        {(!newUser.password || newUser.password.split('-').filter(p => p.length === 1 && /[1-9]/.test(p)).length < 4) && (
+                          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl shadow-inner border border-slate-200 border-dashed animate-pulse text-slate-300">
+                            ?
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Animal picker grid */}
+                      {(!newUser.password || newUser.password.split('-').filter(p => p.length === 1 && /[1-9]/.test(p)).length < 4) && (
+                        <div className="grid grid-cols-5 gap-2 mt-2">
+                          {[
+                            { id: '1', emoji: '🐶' }, { id: '2', emoji: '🐱' }, { id: '3', emoji: '🐭' },
+                            { id: '4', emoji: '🐰' }, { id: '5', emoji: '🦊' }, { id: '6', emoji: '🐻' },
+                            { id: '7', emoji: '🐼' }, { id: '8', emoji: '🐸' }, { id: '9', emoji: '🐵' },
+                          ].map(animal => (
+                            <button
+                              key={animal.id}
+                              type="button"
+                              onClick={() => {
+                                const currentParts = newUser.password ? newUser.password.split('-').filter(p => p.length === 1 && /[1-9]/.test(p)) : [];
+                                if (currentParts.length < 4) {
+                                  setNewUser({...newUser, password: [...currentParts, animal.id].join('-')});
+                                }
+                              }}
+                              className="h-10 bg-white border border-slate-200 rounded-lg text-xl shadow-sm hover:bg-blue-50 transition-colors flex items-center justify-center"
+                            >
+                              {animal.emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Input
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      placeholder="Contraseña de acceso"
+                      className="h-12 bg-slate-50 border-blue-50 focus:border-blue-200 rounded-xl text-sm font-bold shadow-inner"
+                      required
+                    />
+                  )}
                 </div>
 
                 <Button
@@ -1466,6 +1447,63 @@ export const InstitutionalAdminDashboard = ({ user }: { user: any }) => {
                     />
                   </div>
                 </div>
+
+                {editingUser.roleId === '11' && (
+                  <div className="space-y-3 p-6 rounded-[2.5rem] bg-white border shadow-sm border-blue-50">
+                    <Label className="text-xs font-black text-slate-500 uppercase tracking-widest">Credenciales (Secuencia Animal)</Label>
+                    <div className="flex gap-2 justify-center p-4 bg-slate-50 rounded-2xl border border-blue-50/50 shadow-inner">
+                      {Array.from({ length: 4 }).map((_, idx) => {
+                        const icons = [
+                          { id: '1', emoji: '🐶' }, { id: '2', emoji: '🐱' }, { id: '3', emoji: '🐭' },
+                          { id: '4', emoji: '🐰' }, { id: '5', emoji: '🦊' }, { id: '6', emoji: '🐻' },
+                          { id: '7', emoji: '🐼' }, { id: '8', emoji: '🐸' }, { id: '9', emoji: '🐵' },
+                        ];
+                        const parts = (editingUser.password || '').split('-').filter(p => p.length === 1 && /[1-9]/.test(p));
+                        const id = parts[idx];
+                        
+                        return (
+                          <div 
+                            key={idx} 
+                            onClick={() => {
+                              const newParts = [...parts];
+                              newParts.splice(idx, 1);
+                              setEditingUser({...editingUser, password: newParts.join('-')});
+                            }}
+                            className={cn(
+                              "w-12 h-12 rounded-xl flex items-center justify-center text-2xl border shadow-sm transition-all cursor-pointer",
+                              id ? "bg-white border-blue-100 hover:border-red-200 hover:bg-red-50" : "bg-slate-100 border-dashed border-slate-300 text-slate-300 animate-pulse"
+                            )}
+                          >
+                            {id ? icons.find(i => i.id === id)?.emoji : '?'}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="grid grid-cols-9 gap-1.5">
+                      {[
+                        { id: '1', emoji: '🐶' }, { id: '2', emoji: '🐱' }, { id: '3', emoji: '🐭' },
+                        { id: '4', emoji: '🐰' }, { id: '5', emoji: '🦊' }, { id: '6', emoji: '🐻' },
+                        { id: '7', emoji: '🐼' }, { id: '8', emoji: '🐸' }, { id: '9', emoji: '🐵' },
+                      ].map(animal => (
+                        <button
+                          key={animal.id}
+                          type="button"
+                          onClick={() => {
+                            const parts = (editingUser.password || '').split('-').filter(p => p.length === 1 && /[1-9]/.test(p));
+                            if (parts.length < 4) {
+                              setEditingUser({...editingUser, password: [...parts, animal.id].join('-')});
+                            }
+                          }}
+                          className="h-10 bg-white border border-slate-100 rounded-lg text-lg shadow-sm hover:bg-blue-50 transition-colors"
+                        >
+                          {animal.emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center mt-2 italic">Solo si deseas cambiar la secuencia de acceso</p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <label className="technical-label ml-1">Rol Académico</label>
