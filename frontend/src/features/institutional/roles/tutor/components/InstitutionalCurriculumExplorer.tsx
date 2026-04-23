@@ -400,26 +400,10 @@ const CarouselView = ({
       {/* ─────────────────────────────────────────────────────────────────────────────
           GENIA BLUE HEADER 
           ───────────────────────────────────────────────────────────────────────────── */}
-      <div className="absolute top-0 left-0 right-0 z-[200] px-6 py-6 md:px-12 md:py-10 flex items-start gap-6">
-        <button 
-          onClick={onBack}
-          className="group relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white border-2 border-slate-100 shadow-sm transition-all hover:scale-105 active:scale-95 z-[210]"
-        >
-          <ChevronLeft className="h-6 w-6 text-blue-600 transition-transform group-hover:-translate-x-0.5" />
-        </button>
-
-        <div className="flex flex-col gap-0.5 mt-0.5">
-          <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-            {moduleTitle || 'Módulo Educativo'}
-          </span>
-          <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-blue-800">
-            ¡MISIÓN {currentMomentIndex + 1}
-          </h1>
-        </div>
-      </div>
+      {/* Removed redundant internal header */}
 
       {/* Main Content Area Wrap */}
-      <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center justify-start md:justify-center px-4 md:px-12 pt-24 md:pt-32 pb-10">
+      <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center justify-start md:justify-center px-4 md:px-12 pt-4 md:pt-8 pb-10">
         
         {/* THE MISSION CARD */}
         <div className="relative w-full max-w-6xl min-h-[400px] md:min-h-[600px] bg-[#f1f3f7] rounded-[2rem] md:rounded-[3.5rem] shadow-sm flex flex-col items-center justify-center p-6 md:p-16 overflow-visible">
@@ -995,7 +979,9 @@ export const InstitutionalCurriculumExplorer = ({
               variant="outline"
               size="icon"
               onClick={() => {
-                if (selectedModule) {
+                if (sessionStarted) {
+                  setSessionStarted(false);
+                } else if (selectedModule) {
                   setSelectedModule(null);
                 } else if (selectedSectionId) {
                   setSelectedSectionId(null);
@@ -1393,7 +1379,7 @@ export const InstitutionalCurriculumExplorer = ({
                           onToggleVisibility={handleLevelToggleVisibility}
                           allSlides={allSlides}
                           initialSlideIndex={initialSlideIndex}
-                          onBack={() => setSelectedModule(null)}
+                          onBack={() => setSessionStarted(false)}
                         />
                       )}
                     </div>
