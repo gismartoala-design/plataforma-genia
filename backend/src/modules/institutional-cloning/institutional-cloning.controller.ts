@@ -29,4 +29,12 @@ export class InstitutionalCloningController {
   ) {
     return this.cloningService.cloneModule(moduleId, targetSectionId);
   }
+
+  @Post('copy-curriculum/:sourceId/:targetId')
+  async copyCurriculum(
+    @Param('sourceId', ParseIntPipe) sourceId: number,
+    @Param('targetId', ParseIntPipe) targetId: number
+  ) {
+    return this.cloningService.copyCurriculum(sourceId, targetId);
+  }
 }

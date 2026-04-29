@@ -67,6 +67,9 @@ export const institutionApi = {
     cloneInstitution: async (id: number, data: any) => {
         return apiClient.post(`/api/institutional-cloning/clone/${id}`, data);
     },
+    copyCurriculum: async (sourceId: number, targetId: number) => {
+        return apiClient.post(`/api/institutional-cloning/copy-curriculum/${sourceId}/${targetId}`, {});
+    },
     cloneModule: async (moduleId: number, targetSectionId?: number) => {
         return apiClient.post(`/api/institutional-cloning/module/${moduleId}/clone`, { targetSectionId });
     },

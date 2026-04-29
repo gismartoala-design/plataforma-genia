@@ -235,6 +235,69 @@ const CloneInstitutionDialog = ({
     </Dialog>
   );
 };
+
+/* ── Copy Curriculum Dialog ── */
+const CopyCurriculumDialog = ({
+  open, onClose, targetInstitution, institutions, onCreated
+}: { open: boolean; onClose: () => void; targetInstitution: any; institutions: any[]; onCreated: () => void }) => {
+  const [sourceId, setSourceId] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+
+  const handle = async () => {
+    if (!sourceId) return;
+    setSaving(true);
+    try {
+      await institutionApi.copyCurriculum(parseInt(sourceId), targetInstitution.id);
+      toast({ 
+        title: '✅ Currículo Copiado', 
+        description: `Se han copiado los contenidos hacia ${targetInstitution.nombre}.` 
+      });
+      onCreated();
+      onClose();
+    } catch (err: any) {
+      toast({ 
+        title: 'Error al copiar', 
+        description: err?.data?.message || 'No se pudo copiar el currículo.', 
+        variant: 'destructive' 
+      });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Importar Currículo</DialogTitle>
+          <p className="text-xs text-slate-500">
+            Copia los cursos, secciones y módulos desde otra institución hacia <span className="font-bold">{targetInstitution?.nombre}</span>.
+          </p>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-1.5">
+            <Label>Institución de Origen *</Label>
+            <Select value={sourceId} onValueChange={setSourceId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona una institución..." /></SelectTrigger>
+              <SelectContent>
+                {institutions.filter(i => i.id !== targetInstitution?.id).map(inst => (
+                  <SelectItem key={inst.id} value={inst.id.toString()}>{inst.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handle} disabled={saving || !sourceId}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+            Empezar Copia
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const CreateCourseDialog = ({
   open, onClose, institutionId, onCreated
 }: { open: boolean; onClose: () => void; institutionId: number; onCreated: () => void }) => {
@@ -291,7 +354,7 @@ const CreateCourseDialog = ({
 };
 
 /* ── Institution Card ── */
-const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefresh: () => void }) => {
+const InstitutionCard = ({ institution, allInstitutions, onRefresh }: { institution: any; allInstitutions: any[]; onRefresh: () => void }) => {
   const [expanded, setExpanded] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
@@ -299,6 +362,7 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
   const [showAddUser, setShowAddUser] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showClone, setShowClone] = useState(false);
+  const [showCopyCurriculum, setShowCopyCurriculum] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showRename, setShowRename] = useState(false);
@@ -401,9 +465,18 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
           <Button 
             size="icon" 
             variant="ghost" 
+            className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+            onClick={(e) => { e.stopPropagation(); setShowCopyCurriculum(true); }}
+            title="Importar contenidos (Copiar)"
+          >
+            <BookOpen className="w-4 h-4" />
+          </Button>
+          <Button 
+            size="icon" 
+            variant="ghost" 
             className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
             onClick={(e) => { e.stopPropagation(); setShowClone(true); }}
-            title="Clonar institución (Plantilla)"
+            title="Clonar institución (Nueva Sede)"
           >
             <Copy className="w-4 h-4" />
           </Button>
@@ -534,6 +607,10 @@ const InstitutionCard = ({ institution, onRefresh }: { institution: any; onRefre
       {showClone && (
         <CloneInstitutionDialog open sourceInstitution={institution}
           onClose={() => setShowClone(false)} onCreated={onRefresh} />
+      )}
+      {showCopyCurriculum && (
+        <CopyCurriculumDialog open targetInstitution={institution} institutions={allInstitutions}
+          onClose={() => setShowCopyCurriculum(false)} onCreated={loadDetails} />
       )}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-sm">
@@ -683,7 +760,7 @@ export const AdminInstitutionsView = () => {
       ) : (
         <div className="space-y-3">
           {filtered.map(inst => (
-            <InstitutionCard key={inst.id} institution={inst} onRefresh={load} />
+            <InstitutionCard key={inst.id} institution={inst} allInstitutions={institutions} onRefresh={load} />
           ))}
         </div>
       )}

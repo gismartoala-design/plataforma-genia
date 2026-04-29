@@ -116,4 +116,64 @@ export class InstitutionalCloningService {
 
     return cloned;
   }
+
+  /**
+   * Copies curriculum (courses, sections, modules) from one existing institution to another.
+   */
+  async copyCurriculum(sourceId: number, targetId: number) {
+    return await this.db.transaction(async (tx) => {
+      // Fetch Source Courses
+      const sourceCourses = await tx.select().from(schema.cursos).where(eq(schema.cursos.institucionId, sourceId));
+
+      for (const course of sourceCourses) {
+        // Create Clone Course in Target Institution
+        const [newCourse] = await tx.insert(schema.cursos).values({
+          nombre: course.nombre,
+          institucionId: targetId,
+          profesorId: null, // Reset professor assignment
+          companiaId: course.companiaId,
+        }).returning();
+
+        // Fetch Source Sections (SeccionesInst)
+        const sourceSections = await tx.select().from(schema.seccionesInst).where(eq(schema.seccionesInst.cursoId, course.id));
+
+        for (const section of sourceSections) {
+          // Create Clone Section
+          const [newSection] = await tx.insert(schema.seccionesInst).values({
+            nombre: section.nombre,
+            descripcion: section.descripcion,
+            cursoId: newCourse.id,
+            orden: section.orden,
+          }).returning();
+
+          // Fetch Source Institutional Modules (ModulosInst)
+          const sourceModules = await tx.select().from(schema.modulosInst).where(eq(schema.modulosInst.seccionId, section.id));
+
+          for (const mod of sourceModules) {
+            // Create Clone Module
+            await tx.insert(schema.modulosInst).values({
+              titulo: mod.titulo,
+              descripcion: mod.descripcion,
+              seccionId: newSection.id,
+              cursoId: newCourse.id,
+              profesorId: null, // Reset
+              tipo: mod.tipo,
+              contenido: mod.contenido,
+              activo: mod.activo,
+              bloqueado: mod.bloqueado,
+              xpRecompensa: mod.xpRecompensa,
+              orden: mod.orden,
+            });
+          }
+        }
+      }
+
+      return {
+        success: true,
+        sourceInstitutionId: sourceId,
+        targetInstitutionId: targetId,
+        coursesCopied: sourceCourses.length,
+      };
+    });
+  }
 }
